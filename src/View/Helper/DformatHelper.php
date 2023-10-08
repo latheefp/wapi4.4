@@ -1,0 +1,66 @@
+<?php
+
+namespace App\View\Helper;
+
+//use Cake\Controller\Controller;
+use Cake\View\Helper;
+use Cake\View\View;
+
+class DformatHelper extends Helper {
+
+    public function initialize(array $config): void {
+        //     debug($config);
+    }
+
+    function format($option = []) {
+        $result = null;
+        $oformat = $option['format'];
+        $odata = $option['data'];
+
+        switch ($oformat) {
+            case "number":
+                if (is_int($odata)) {
+                    $result = "$odata";
+                } else {
+                    $result = $odata;
+                }
+
+                break;
+            case "email":
+                if (!empty($odata)) {
+                    $result = $odata;
+                }
+                break;
+            case "DT2DT":
+                if (!empty($odata)) {
+                    $result = $odata->format('d-m-Y H:i:s');
+                }
+                break;
+            case "boolean":
+                if ($odata == true) {
+                    if (isset($option['boolean_yes'])) {
+                        $result = $option['boolean_yes'];
+                    } else {
+                        $result = '<i class="fas fa-check"></i>';
+                    }
+                } else {
+                    if (isset($option['boolean_no'])) {
+                        $result = $option['boolean_no'];
+                    } else {
+                        $result = '<i class="fas fa-times"></i>';
+                    }
+                }
+//            }
+                break;
+            case "DT2D":
+                if (!empty($odata)) {
+                    $result = $odata->format('Y-m-d');
+                }
+                break;
+            default:
+                $result = $option['data'];
+        }
+        return $result;
+    }
+
+}

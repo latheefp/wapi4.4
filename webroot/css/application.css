@@ -1,0 +1,143 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Sep 4, 2021, 2:07:28 AM
+    Author     : latheefp
+*/
+
+.ui-autocomplete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    float: left;
+    display: none;
+    min-width: 160px;
+    _width: 160px;
+    padding: 4px 0;
+    margin: 2px 0 0 0;
+    list-style: none;
+    background-color: #ffffff;
+    border-color: #ccc;
+    border-color: rgba(0, 0, 0, 0.2);
+    border-style: solid;
+    border-width: 1px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    -webkit-background-clip: padding-box;
+    -moz-background-clip: padding;
+    background-clip: padding-box;
+    *border-right-width: 2px;
+    *border-bottom-width: 2px;
+
+    .ui-menu-item > a.ui-corner-all {
+        display: block;
+        padding: 3px 15px;
+        clear: both;
+        font-weight: normal;
+        line-height: 18px;
+        color: #555555;
+        white-space: nowrap;
+
+        &.ui-state-hover, &.ui-state-active {
+            color: #ffffff;
+            text-decoration: none;
+            background-color: #0088cc;
+            border-radius: 0px;
+            -webkit-border-radius: 0px;
+            -moz-border-radius: 0px;
+            background-image: none;
+        }
+    }
+}
+
+.ui-menu .ui-menu-item-wrapper:hover, .ui-menu .ui-menu-item-wrapper.ui-state-active {
+    color: #303030;
+    background-color: skyblue;
+    border: #fff 1px solid;
+}
+
+.navselected
+{
+    border:2px solid #007bff;
+}
+
+
+ion-icon {
+    pointer-events: none;
+}
+
+/*to fix the select2 sewarch issue in modal*/ 
+
+
+span.select2-container {
+    z-index:10050;
+}
+
+
+.whatsappbg {
+  height: calc(100% - 12px);
+  position: relative;
+  background: #efe7dd url("/img/wabg.jpg") repeat;
+  z-index: 0;
+}
+
+
+.custom-bullet-list li {
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 10px;
+}
+
+.custom-bullet-list li:before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  background-color: #28a745;
+  border-radius: 50%;
+}
+
+/*//class for audio message play in streams and*/ 
+
+.audio-message {
+  display: flex;
+  align-items: center;
+}
+
+.audio-player {
+  flex-grow: 1;
+}
+
+.play-button {
+  width: 30px;
+  height: 30px;
+  background-color: #1c78c0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.play-button:before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 14px solid white;
+  margin: 7px;
+}
+
+.playing .play-button:before {
+  border-left: none;
+  border-right: 14px solid white;
+}

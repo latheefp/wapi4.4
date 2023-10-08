@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Help.egrand" default="build" basedir=".">
+    <property name="version" value="4.4"/>
+    
+    <!-- Add an optional property to control pushing the latest image -->
+    <property name="push-latest" value="true"/>
+    
+    <target name="docker-build" description="Build Docker image">
+        <exec executable="docker" failonerror="true">
+            <arg value="build"/>
+            <arg value="--build-arg"/>
+            <arg value="APP_VERSION=${version}"/>
+            <arg value="-t"/>
+            <arg value="registry.egrand.in/wapi:${version}"/>
+            <arg value="."/>
+        </exec>
+    </target>
+    
+    <!-- Add this target to tag the image as "latest" -->
+    <target name="docker-tag-latest" depends="docker-build"   description="Tag Docker image as latest">
+        <exec executable="docker" failonerror="true">
+            <arg value="tag"/>
+            <arg value="registry.egrand.in/wapi:${version}"/>
+            <arg value="registry.egrand.in/wapi:latest"/>
+        </exec>
+    </target>
+
+    <!-- Add a condition to push the "latest" image only if "push-latest" is set to "true" -->
+    <target name="docker-push-latest" if="push-latest" depends="docker-tag-latest" description="Push Docker latest">
+        <exec executable="docker" failonerror="true">
+            <arg value="push"/>
+            <arg value="registry.egrand.in/wapi:latest"/>
+        </exec>
+    </target>
+    
+    <target name="docker-push" depends="docker-build"  description="Push Docker image" if="push-latest">
+        <exec executable="docker" failonerror="true">
+            <arg value="push"/>
+            <arg value="registry.egrand.in/wapi:${version}"/>
+        </exec>
+    </target>
+    
+      <target name="local-build and restart"   description="Local build and start">
+        <exec executable="docker-compose" failonerror="true">
+            <arg value="-p"/>
+            <arg value="docker-mysql"/>
+            <arg value="up"/>
+            <arg value="--build"/>
+        </exec>
+    </target>
+    
+    <target name="build" depends="docker-push" description="Build and push Docker image"/>
+</project>

@@ -1,0 +1,895 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link      https://cakephp.org CakePHP(tm) Project
+ * @since     0.2.9
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
+ */
+
+namespace App\Controller;
+
+use Cake\Controller\Controller;
+use Cake\Core\Configure;
+//use Cake\Core\Configure;
+use Cake\Http\Session\DatabaseSession;
+use Cake\Datasource\ConnectionManager;
+
+/**
+ * Application Controller
+ *
+ * Add your application-wide methods in the class below, your controllers
+ * will inherit them.
+ *
+ * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
+ */
+class AppController extends Controller {
+//    public $components = ['Session'];
+
+    /**
+     * Initialization hook method.
+     *
+     * Use this method to add common initialization code like loading components.
+     *
+     * e.g. `$this->loadComponent('FormProtection');`
+     *
+     * @return void
+     */
+    public function initialize(): void {
+        parent::initialize();
+
+        $this->loadComponent('RequestHandler');
+        $this->loadComponent('Flash');
+        $this->loadComponent('Authentication.Authentication');
+//        $this->loadComponent('Session');
+
+        /*
+         * Enable the following component for recommended CakePHP form protection settings.
+         * see https://book.cakephp.org/4/en/controllers/components/form-protection.html
+         */
+        //$this->loadComponent('FormProtection');
+    }
+
+    function _ajaxvalidation1($Table, $data) {
+//  debug("table is $Table");
+        $result = [];
+        $this->loadModel($Table);
+        $newrow = $this->$Table->newEmptyEntity();
+        $newrow = $this->$Table->patchEntity($newrow, $data);
+        $errors = $newrow->getErrors();
+//        debug ($data);
+//        debug ($errors);
+        if (empty($errors)) {
+            return $errors;
+        } else {
+// pr($errors);
+            foreach ($errors as $key => $val) {
+                $error['field'] = $key;
+
+                foreach ($val as $msgkey => $msgval) {
+                    $error['error'] = $msgval;
+                }
+                $result[] = $error;
+                $error = array();
+            }
+//    debug ($result);
+            return $result;
+        }
+    }
+
+    function _dteditvalidation($Table, $data) {
+        $result = [];
+        $this->loadModel($Table);
+        $table = $this->getTableLocator()->get($Table);
+//    debug($data);
+        $action = $data['action'];
+        $id = array_key_first($data['data']);
+        $data = $data['data'][$id];
+        if ($action == "edit") {
+            $newrow = $table->findById($id)->firstOrFail();
+        } else {
+//         debug("checking for new entity");
+            $newrow = $table->newEmptyEntity();
+        }
+//   debug ($data);
+        $newrow = $table->patchEntity($newrow, $data);
+        $errors = $newrow->getErrors();
+        if (empty($errors)) {
+            return $errors;
+        } else {
+            foreach ($errors as $key => $val) {
+                $error['name'] = $key;
+                foreach ($val as $msgkey => $msgval) {
+                    $error['status'] = $msgval;
+                }
+                $result['fieldErrors'][] = $error;
+                $error = array();
+            }
+            return $result;
+        }
+    }
+
+    public function _getsettings($attr = null) {
+        if (isset($attr)) {
+            $query = $this->getTableLocator()->get('Settings')->find();
+            $resultsArray = $query
+                    ->where(['params' => $attr])
+                    ->toArray();
+            if (!empty($resultsArray)) {
+                return ($resultsArray[0]->value);
+            }
+        }
+    }
+
+    public function _checkallowed($action = null, $uid = null) {
+        if (!isset($uid)) {
+            $uid = $this->getRequest()->getSession()->read('Auth.User.id');
+//   debug($this->getRequest()->getSession()->read());
+        }
+        if ($uid == 1) {
+            return true;
+        }
+        $grppermission = $this->getTableLocator()->get('UgroupsPermissions');
+        $query = $grppermission->find()
+                ->contain(['Permissions'])
+                ->where(['permstring' => $action])
+                ->contain(['Ugroups.Users' => function ($q) use ($uid) {
+                return $q->where(['Users.id' => $uid]);
+            }
+                ])
+        ;
+        $number = $query->count();
+        if ($number == 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function _fieldtypes($table_name = null) {
+        $result = [];
+        $flagship = $this->getTableLocator()->get('Flagships');
+        $queryarray = $flagship->find()
+                ->where(['tbl_name' => $table_name])
+//->toList()
+                ->order(['Flagships.order_index ASC'])
+        ;
+//  pr($query->execute());        
+        foreach ($queryarray as $field => $val) {
+// debug((array)$val);
+            $row = [];
+            $valarray = json_decode(json_encode($val), true);
+            $title = $val->title;
+            foreach ($valarray as $fkey => $fval) {
+                $row[$fkey] = $fval;
+            }
+            $result[$title] = $row;
+        }
+        return $result;
+    }
+
+//    public function beforeFilter(EventInterface $event) {
+//        parent::beforeFilter($event);
+//        $this->Security->setConfig('validatePost', false);
+////   $this->Auth->allow(['login', 'logout','forgetpass','resetpass','test','pubpasswordsetajax']);
+//    }
+
+    function gen_rand_string($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0;
+                $i < $length;
+                $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
+    public function _check_view_permission($view = null, $uid = null) {
+        if (isset($action)) {
+            if (!isset($uid)) {
+                $uid = $this->getRequest()->getSession()->read('Auth.User.id');
+            }
+            if ($uid == 1) {
+                return true;
+            }
+            if (!isset($uid)) {
+                return false;
+            }
+//            $grppermission = TableRegistry::get('GroupsPermissions');
+            $grppermission = $this->getTableLocator()->get('GroupsPermissions');
+            $query = $grppermission->find()
+                    ->contain(['Permissions'])
+                    ->where(['permstring LIKE' => "view_" . $view . "%"])
+                    ->contain(['Groups.Users' => function ($q) use ($uid) {
+                    return $q->where(['Users.id' => $uid]);
+                }
+                    ])
+            ;
+            $number = $query->count();
+            if ($number == 0) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+        return false;
+    }
+
+    function validateField($model = null, $field = null, $value = null, $action = "add") {
+        $tables = $this->getTableLocator()->get($model);
+        $table = $tables->newEntity(array($field => $value));
+        $result = array();
+        if ($table->getError($field)) {
+            $error = array_flip($table->getError($field));
+            $result['msg'] = array_key_first($error);
+            $result['status'] = "failed";
+        } else {
+            $result['status'] = "success";
+        }
+        return $result;
+    }
+
+    function _genrand($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0;
+                $i < $length;
+                $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
+    function _despatch_msg($contact, $form, $templateQuery, $FBSettings, $type = "template") {
+//        debug("Despatching");
+//  debug($contact);
+        switch ($type) {
+            case "template":
+                $this->writelog($contact, "Despatching message, Contact");
+                $this->writelog($form, "Despatching message, Form");
+                $this->writelog($templateQuery, "Despatching message, templateQuery");
+//CAP: below is the sample array. we will change the paramers based on form.
+                $json_array = '{
+                    "messaging_product": "whatsapp",
+                    "recipient_type":"individual",
+                    "type": "template",
+                    "template": {
+                        "language": {
+                            "policy": "deterministic",
+                            "code": "en"
+                        },
+                        "name": "samsung_freestyle_offer",
+                        "components": [
+                            {
+                                "type": "header",
+                                "parameters": [
+                                    {
+                                        "type": "image",
+                                        "image": {
+                                            "id": "558075166148411"
+
+                                        }
+                                    }
+                                ]
+                            }, 
+                {
+                                "type": "body",
+                                "parameters": [
+
+                                ]
+                            }
+                        ]
+                    }
+                }';
+                $sendarray = json_decode($json_array, true);
+
+                $sendarray['template']['components'] = [];
+                $bodyarray = [];
+                $bodyarray['type'] = "body";
+                $bodyarray['parameters'] = [];
+                foreach ($form as $key => $val) {
+                    $component = [];
+                    $param = [];
+                    $field_name = $val['field_name'];
+                    $keyarray = explode("-", $field_name);
+                    if (($keyarray[0] == "file") && ($keyarray[2] == "header")) {
+                        $headerarray['type'] = 'header';
+                        $headerarray['parameters'] = [];
+                        $component['type'] = $keyarray[2]; //header
+                        $param['type'] = $keyarray[3];
+                        if (isset($val['filename'])) {
+                            $param[$keyarray[3]]['filename'] = $val['filename'];
+                        }
+                        $param[$keyarray[3]]['id'] = $val['fbimageid'];
+                        $headerarray['parameters'][] = $param;
+                    }
+
+                    if ($keyarray[0] == "var") {  //parmeters injection. 
+                        $param['type'] = "text";
+                        $param['text'] = $val['field_value'];
+
+                        $bodyarray['parameters'][] = $param;
+                    }
+
+                    if ($keyarray[0] == "button") {  //parmeters for button variables. 
+                        $json = '{"type": "button", "sub_type": "url", "index": "0", "parameters": [{"type": "payload", "payload": "btntwo"}]}';
+                        $button_array = json_decode($json, true);
+                        $button_array['parameters'][0]['payload'] = $val['field_value'];
+//   debug($button_array);
+                        $sendarray['template']['components'][] = $button_array;
+// $sendarray=
+                    }
+                }
+
+                if (isset($headerarray)) {
+                    $sendarray['template']['components'][] = $headerarray;
+                }
+
+                if (isset($bodyarray)) {
+                    $sendarray['template']['components'][] = $bodyarray;
+                }
+
+                $mobile = $this->getTableLocator()->get('ContactStreams')->get($contact->contact_stream_id);
+//     debug($mobile->contact_number);
+
+                $sendarray['to'] = $mobile->contact_number;
+                $sendarray['template']['name'] = $templateQuery->name;
+                $sendarray['template']['language']['code'] = $templateQuery->language;
+
+                $this->writelog($sendarray, "Send array");
+
+                break;
+            case "text":
+                $json_array = '{
+                        "messaging_product": "whatsapp",
+                        "recipient_type": "individual",
+                        "to": "966565660638",
+                        "type": "text",
+                        "text": {
+                            "preview_url": false,
+                            "body": "MESSAGE_CONTENT"
+                        }
+                    }';
+                $sendarray = json_decode($json_array, true);
+                $mobile = $this->getTableLocator()->get('ContactStreams')->get($contact->contact_stream_id);
+//     debug($mobile->contact_number);
+
+                $sendarray['to'] = $mobile->contact_number;
+///    $sendarray['template']['name'] = $templateQuery->name;
+                $sendarray['text']['body'] = $form['message'];
+
+                break;
+        }
+
+//  debug($sendarray);
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode($sendarray),
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $FBSettings['ACCESSTOKENVALUE'],
+            ),
+        ));
+
+        $jsonresponse = curl_exec($curl);
+        $response = json_decode($jsonresponse, true);
+
+        curl_close($curl);
+        $this->writelog($response, "Despatch response");
+
+        $table = $this->getTableLocator()->get('Streams');
+        $row = $table->get($contact->id);
+// debug($row);
+//  debug($response);
+        if (isset($response['messages'][0]['id'])) {
+            $row->messageid = $response['messages'][0]['id'];
+            $row->type = "send";
+            $row->has_wa = true;
+            $row->success = true;
+            $row->result = $jsonresponse;
+            $row->sendarray = json_encode($sendarray);
+            $table->save($row);
+        } else {
+            $this->writelog($response, "Response error");
+            $row->has_wa = false;
+            $row->result = $jsonresponse;
+            $row->success = false;
+            $row->sendarray = json_encode($sendarray);
+            $table->save($row);
+        }
+        return $response;
+    }
+
+    function writelog($data, $type = null) {
+//        if (!$this->_getsettings("log_enabled")) {
+//            return false;
+//        }
+     //   print (getenv('LOG'));
+        if (intval(getenv('LOG')) == false) {
+
+            //   debug("No logs");
+            return false;
+        }
+        // debug("Logs are enabled");
+        $file = LOGS . 'GrandWA' . '.log';
+#  $data =json_encode($event)."\n";  
+        $time = date("Y-m-d H:i:s", time());
+        $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
+        fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
+        fwrite($handle, print_r($data, true));
+        fclose($handle);
+    }
+
+    function writeinteractive($data, $type = null) {
+        $file = LOGS . 'GrandInt' . '.log';
+#  $data =json_encode($event)."\n";  
+        $time = date("Y-m-d H:i:s", time());
+        $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
+        fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
+        fwrite($handle, print_r($data, true));
+        fclose($handle);
+    }
+
+    function getWastreamsContactId($mobile_number, $fbsettings) {
+//   debug("Mobile number in getWastreamsContactId is $contact_waid" );
+        $contact_waid = $this->_format_mobile($mobile_number, $fbsettings);
+        $contactinfo = $this->getTableLocator()->get('ContactNumbers')->find()->where(['mobile_number' => $contact_waid])->first();
+        $contact_stream_table = $this->getTableLocator()->get('ContactStreams');
+
+        $existing = $this->getTableLocator()->get('ContactStreams')->find()->where(['contact_number' => $contact_waid])->toArray();
+        if (empty($existing)) {
+            $row = $contact_stream_table->newEmptyEntity();
+            if (!empty($contactinfo->name)) {
+                $row->name = $contactinfo->name;
+            }
+            $row->contact_number = $contact_waid;
+            $contact_stream_table->save($row);
+            return $row->id;
+        } else {
+            $row = $contact_stream_table->get($existing[0]->id);
+            if (isset($contactinfo->name)) {
+                $row->name = $contactinfo->name;
+            }
+            $contact_stream_table->save($row);
+            return $row->id;
+        }
+    }
+
+    function updateProfileWastreamsContact($contact_waid, $profile, $FBSettings) {
+        $contact_waid = $this->_format_mobile($contact_waid, $FBSettings);
+        $table = $this->getTableLocator()->get('ContactStreams');
+        $record = $table->find()->where(['contact_number' => $contact_waid])->toArray();
+        if (isset($record)) {
+            $row = $table->get($record[0]['id']);
+            $row->profile_name = $profile;
+            if ($table->save($row)) {
+//                debug("Saved");
+            }
+        } else {
+            debug("nothign found");
+        }
+    }
+
+    function _format_mobile($mobile_number, $FBSettings) {
+        $country_code = $FBSettings['def_isd'];
+        $len = strlen((string) $mobile_number);
+
+        $mobile_number = preg_replace("/^\+/", '', $mobile_number);
+        $mobile_number = str_replace('/', '', $mobile_number);
+        $mobile_number = str_replace('\\', '', $mobile_number);
+        $mobile_number = preg_replace("/\s+/", '', $mobile_number);
+
+        if ($len == 10) {
+            $mobile_number = $country_code . $mobile_number;
+        }
+        return $mobile_number;
+    }
+
+    public function _getFBsettings($data) {
+//you can either send the uid , api_key, phone_number_id to get fbsettings. 
+        if (isset($data['api_key'])) {
+            $table = $this->getTableLocator()->get('ApiKeys');
+            $apiquery = $table->find()
+                    ->where(['api_key' => $data['api_key'], 'enabled' => true])
+                    ->first();
+            if (empty($apiquery)) {
+                $data['status']['type'] = "Error";
+                $data['status']['message'] = "Wrong API Key";
+                $data['status']['code'] = 404;
+                return $data;
+            }
+            $acquery = $this->getTableLocator()->get('Accounts')->find();
+            $result = $acquery
+                    ->where(['id' => $apiquery->account_id])
+                    ->first();
+        } elseif (isset($data['user_id'])) {
+//debug($data);
+            $table = $this->getTableLocator()->get('Users');
+            $userquery = $table->find()
+                    ->where(['Users.id' => $data['user_id']])
+                    ->first();
+//  debug($userquery);
+            if (empty($userquery)) {
+                $data['status']['type'] = "Error";
+                $data['status']['message'] = "Wrong user info";
+                $data['status']['code'] = 404;
+                return $data;
+            }
+            $acquery = $this->getTableLocator()->get('Accounts')->find();
+            $result = $acquery
+                    ->where(['id' => $userquery->account_id])
+                    ->first();
+        } elseif (isset($data['phone_number_id'])) {
+// debug($data);
+            $acquery = $this->getTableLocator()->get('Accounts')->find();
+            $result = $acquery
+                    ->where(['phone_number_id' => $data['phone_number_id']])
+                    ->first();
+        } elseif (isset($data['account_id'])) {
+            $acquery = $this->getTableLocator()->get('Accounts')->find();
+            $result = $acquery
+                    ->where(['id' => $data['account_id']])
+                    ->first();
+        }
+
+
+// ->toArray();
+        if (empty($result)) {
+            $data['status']['type'] = "Error";
+            $data['status']['message'] = "No related account info found.";
+            $data['status']['code'] = 403;
+            return $data;
+        }
+
+        $data['ACCESSTOKENVALUE'] = $result->ACCESSTOKENVALUE;
+        $data['WBAID'] = $result->WBAID;
+        $data['API_VERSION'] = $result->API_VERSION;
+        $data['phone_number_id'] = $result->phone_number_id;
+        $data['def_language'] = $result->def_language;
+        $data['test_number'] = $result->test_number;
+        $data['def_isd'] = $result->def_isd;
+        $data['interactive_webhook'] = $result->interactive_webhook;
+        $data['interactive_notification_numbers'] = $result->interactive_notification_numbers;
+        if (intval(getenv('SEND_MSG')) == true) {
+            $data['interactive_api_key'] = $result->interactive_api_key;
+        } else {
+            $data['interactive_api_key'] = "Message not enabled, current value is " . intval(getenv('SEND_MSG'));
+        }
+
+        $data['def_isd'] = $result->def_isd;
+        $data['account_id'] = $result->id;
+        $data['status']['type'] = "Sucess";
+        $data['status']['code'] = 200;
+        $data['interactive_menu_function'] = $result->interactive_menu_function;
+        return $data;
+    }
+
+//Billing and Rating section.
+
+
+    function _rateMe($price_array) {
+        $streamTable = $this->getTableLocator()->get('Streams');
+        debug("Message ID is " . $price_array['id']);
+        $record = $streamTable->find()
+                ->contain('ContactStreams') // Include the related "ContactStreams" records
+                ->where(['messageid' => $price_array['id']])
+                ->first();
+
+        if (!$record) {
+            // Stop code execution or handle the situation as needed
+            $this->_notify("No record found msg id " . $price_array['id'], "Warning");
+            return; // or return; depending on where this code is located
+        }
+
+
+        // debug($record->conversationid);
+//
+        $alreadyCosted = $streamTable->find()
+                ->where([
+                    'conversationid' => $record->conversationid,
+                    'rated > ' => false,
+                        //  'delivered_time IS NOT NULL',
+                        //  'delivered_time >=' => date('Y-m-d H:i:s') // Assuming current date and time
+                ])
+                ->all();
+
+        if ($alreadyCosted->isEmpty()) {
+
+            //Process charging if not already.
+            debug("Charging $record->conversationid");
+            $this->_chargeMe($record);
+        } else {
+            // debug($alreadyCosted);
+            debug("Already charged $record->conversationid");
+        }
+    }
+
+    function _chargeMe($record) {
+//  debug($record);
+        $msgType = $record->type;
+        $ph = $record->contact_stream->contact_number;
+        $countryinfo = $this->_getCountry($ph);
+        // debug($countryinfo);
+        if (empty($countryinfo)) {
+            debug("Exiting due to wrong coutnry phone $ph");
+            // Log::debug("Country info is empty for $ph");
+            $this->_notify("Country info is empty for $ph", "critical");
+            return;
+        } else {
+            debug($countryinfo->country);
+        }
+        $msgCategory = $record->category;
+        $msgpricing_model = $record->pricing_model;
+        $StreamsTable = $this->getTableLocator()->get('Streams');
+        $row = $StreamsTable->get($record->id);
+        switch ($msgType) {
+            case "send":
+                $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
+                $cost['cost'] = round($cost['cost'], 2);
+                $row->cost = $cost['cost'];
+                if ($StreamsTable->save($row)) {
+                    $result = $this->_updatebalance($row->account_id, $cost['cost']);
+//             debug($cost);
+//  debug($countryinfo);
+                    $RatingTable = $this->getTableLocator()->get('Ratings');
+                    $rating = $RatingTable->newEmptyEntity();
+                    $rating->stream_id = $record->id;
+                    $rating->old_balance = $result['old_balance']['current_balance'];
+                    $rating->new_balance = $result['new_balance']['current_balance'];
+                    $rating->cost = $cost['cost'];
+                    $rating->conversation = $record->conversationid;
+                    $rating->country = $countryinfo->country;
+                    $rating->charging_status = $result['status'];
+                    $rating->tax = $cost['tax'];
+                    $rating->p_perc = $cost['p_perc'];
+                    $rating->fb_cost = $cost['fb_cost'];
+                    $rating->rate_with_tax = $cost['rate_with_tax'];
+                    if (!$RatingTable->save($rating)) {
+                        //  debug($rating->getError);
+                        $this->_notify(json_encode($rating->getError), "critical");
+                    } else {
+                        $streamsTable = $this->getTableLocator()->get('Streams');
+                        $streamsTable->updateAll(
+                                ['rated' => true],
+                                ['conversationid' => $record->conversationid]
+                        );
+                        debug("Rating save  as true for all  record" . $record->conversationid);
+                    }
+                }
+                break;
+            default:
+                debug("Message type is $msgType. not charged");
+                break;
+        }
+    }
+
+    function _calculateCost($countryinfo, $msgCategory, $msgpricing_model) {
+
+//debug($countryinfo);
+        $cost = [];
+        $tax_perc = $this->_getsettings('tax');
+        $profit_perc = $this->_getsettings('profit_margin');
+        $fb_cost = $countryinfo->$msgCategory;
+        $rate_with_tax = ($fb_cost * ($tax_perc / 100)) + $fb_cost;
+        $customer_rate_single = ($rate_with_tax * ($profit_perc / 100)) + $rate_with_tax;
+        $cost['tax'] = $tax_perc;
+        $cost['p_perc'] = $profit_perc;
+        $cost['fb_cost'] = $fb_cost;
+        $cost['rate_with_tax'] = $rate_with_tax;
+        $cost['cost'] = $customer_rate_single;
+        return $cost;
+    }
+
+    function _updatebalance($account_id, $cost) {
+//UPDATE `streams` SET `cost` = '0' WHERE `streams`.`id` = 58588; 
+        $result = [];
+        $accountTable = $this->getTableLocator()->get('Accounts');
+        $result['old_balance'] = $accountTable->get($account_id)->toArray();
+//    debug($old_balance);
+        $result['status'] = 1;
+
+// debug("updating $account_id with cost of $cost");
+        $connection = ConnectionManager::get('default');
+
+        try {
+// Begin the transaction
+            $connection->begin();
+
+// Lock the table
+            $connection->execute('LOCK TABLES accounts WRITE');
+
+//  debug("Locking table to update $cost");
+// Update the balance column
+            $query = $connection->newQuery();
+            $query->update('accounts')
+                    ->set(['current_balance' => $query->newExpr('current_balance - :cost')])
+                    ->bind(':cost', $cost, 'float')
+                    ->where(['id' => $account_id])
+                    ->execute();
+
+// debug($query);
+// debug("updating the balance");
+// Unlock the table
+//   debug($query->sql());
+            $connection->execute('UNLOCK TABLES');
+
+// Commit the transaction
+            $connection->commit();
+        } catch (\Exception $e) {
+            $result['status'] = 10;
+            debug($e);
+            debug("Rolling back");
+// Rollback the transaction in case of an error
+            $connection->rollback();
+// Handle the error appropriately
+        }
+
+        $result['new_balance'] = $accountTable->get($account_id)->toArray();
+        return $result;
+    }
+
+    function _getCountry($ph = null) {
+//   debug($contact);
+//    $ph = "972345449595050";
+        if (strlen($ph) === 12) {
+            
+        }
+        //$this->_format_mobile($ph, $data)
+        $Country = [];
+
+        $this->writelog($ph, "phone number");
+
+        $pricaTable = $this->getTableLocator()->get('PriceCards');
+        $codes = $pricaTable->find()
+                ->order(['country_code DESC'])
+                ->all();
+
+        foreach ($codes as $key => $val) {
+            $this->writelog($val, "Current code array");
+            if (substr($ph, 0, strlen((string) $val->country_code)) == $val->country_code) {
+                $Country = $val;
+                break;
+            }
+        }
+        return $Country;
+
+//  debug($Country);
+    }
+
+    function viewRcvImg($file_id = null, $filetype = null) {
+
+        $file_id = "6371848519559997";
+        $filetype = "image/jpeg";
+//        $session = $this->request->getSession();
+        $data['account_id'] = $this->getMyAccountID();
+        $FBsettings = $this->_getFBsettings($data);
+
+        $this->viewBuilder()->setLayout('ajax');
+        $file = tmpfile();
+        $file_path = stream_get_meta_data($file)['uri'];
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $file_id,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: ' . $filetype,
+                'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
+            ),
+        ));
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $result = json_decode($response, true);
+        $url = $result['url'];
+// debug($url);
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 0,
+            CURLOPT_HEADER => 0,
+            CURLOPT_ENCODING => '',
+//            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+//            CURLOPT_FILE => $file_handle,
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE'],
+                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
+            ),
+        ));
+
+        $raw = curl_exec($curl);
+
+        curl_close($curl);
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+        $file_handle = fopen($file_path, 'x');
+
+        fwrite($file_handle, $raw);
+
+        fclose($file_handle);
+        $response = $this->response->withFile($file_path,
+                ['download' => true, 'name' => "myfilename"]
+        );
+        $response->withType($filetype);
+        return $response;
+    }
+
+    public function _notify($message, $severity) {
+        //$functionName = __FUNCTION__;
+        //$lineNumber = __LINE__;
+
+
+        $backtrace = debug_backtrace();
+
+        if (isset($backtrace[1])) {
+            $function = $backtrace[1]['function'];
+            $linenumber = $backtrace[1]['line'];
+        } else {
+            $function = null;
+            $linenumber = null;
+        }
+
+        $table = $this->getTableLocator()->get('Notifications');
+        $newrow = $table->newEmptyEntity();
+        $newrow->line = $linenumber;
+        $newrow->function = $function;
+        $newrow->details = $message;
+        $newrow->severity = $severity;
+        $table->save($newrow);
+    }
+
+    public function getMyAccountID() {
+        $user = $this->Authentication->getIdentity();
+        if ($user) {
+            $session = $this->request->getSession();
+            return $session->read('Config.account_id');
+            //   return $account_id;
+        } else {
+            // User is not authenticated
+        }
+    }
+
+    public function getMyUID() {
+        $user = $this->Authentication->getIdentity();
+        if ($user) {
+            return $user->id;
+        } else {
+            // User is not authenticated
+        }
+    }
+}

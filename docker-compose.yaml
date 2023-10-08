@@ -1,0 +1,25 @@
+version: "3"
+#project_name: dev  # Specify your project name here
+services:
+  wap44:
+    volumes:
+      - D:\web\wa4.4:/var/www/html
+#      - D:\web\wa4.4\docker\env.sh:/var/www/html/config/k8s/.env
+#    build: .
+    image: registry.egrand.in/wapi:latest
+  #  image: grandhelp
+#    env_file:
+#      - ./docker/.env
+    ports:
+      - "8086:80"
+      - "8088:8080"
+    networks:
+      dev-network:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/healthcheck"]
+      interval: 60s
+      timeout: 5s
+      retries: 3      
+networks:
+  dev-network:
+    driver: bridge
