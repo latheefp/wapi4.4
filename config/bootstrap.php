@@ -61,26 +61,26 @@ use Cake\Utility\Security;
  * for more information for recommended practices.
  */
 
-//if (!env('APP_NAME') && file_exists(CONFIG . 'k8s/.env')) {
-//    $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . 'k8s/.env']);
-//    $dotenv->parse()
-//            ->putenv()
-//            ->toEnv()
-//          
-//            ->toServer();
-//}
-
-
-
-$overwrite = true;
-if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {
-    $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . '.env']);
+if (!env('APP_NAME') && file_exists(CONFIG . 'k8s/.env')) {
+    $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . 'k8s/.env']);
     $dotenv->parse()
-            ->putenv($overwrite)
+            ->putenv()
             ->toEnv()
-            ->toServer()
-            ;
+          
+            ->toServer();
 }
+
+
+
+//$overwrite = true;
+//if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {
+//    $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . '.env']);
+//    $dotenv->parse()
+//            ->putenv($overwrite)
+//            ->toEnv()
+//            ->toServer()
+//            ;
+//}
 
 
 
@@ -245,4 +245,13 @@ Configure::write('app.description', 'Streamlining Your Messages');
 
 //Configure::write('DebugKit.panels', ['DebugKit.Packages' => false]);
 Configure::write('Locale.validation.dateFormat', 'Y-m-j');
+
+
+// config/bootstrap.php
+
+//use App\Service\RedisService;
+//
+//// Register the Redis service in CakePHP's container
+//$container = \Cake\Core\ContainerInterface::class;
+//$container->add(RedisService::class, new RedisService());
 

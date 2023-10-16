@@ -1,6 +1,8 @@
 # Use an official PHP runtime as a parent image
 #FROM php:7.3-apache
 FROM php:8.1.18-apache
+#FROM php:8.3-apache
+#FROM php:8.3.0RC3-apache-bullseye
 # Set the COMPOSER_ALLOW_SUPERUSER environment variable
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
@@ -8,9 +10,10 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN docker-php-ext-install mysqli pdo pdo_mysql pcntl 
 
 #installing required packags.
-RUN apt-get update && apt-get install -y  unzip  libicu-dev  libicu-dev iputils-ping &&  docker-php-ext-install intl  \
+RUN apt-get update && apt-get install -y  unzip  libicu-dev  libicu-dev iputils-ping libhiredis-dev &&  docker-php-ext-install intl  \
     && rm -rf /var/lib/apt/lists/* 
     
+RUN pecl install redis && docker-php-ext-enable redis;
 
 # Install Composer globally
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -30,6 +33,9 @@ RUN composer install --no-interaction --prefer-dist #//temporary disabled.
 RUN chown -R www-data:www-data /var/www/html
 #RUN chown -R www-data:www-data app/logs
 
+
+#COPY  docker/000-default.conf /etc/apache2/sites-enabled/000-default.conf 
+#COPY docker/passenv.conf /etc/apache2/conf-available/passenv.conf
 
 #RUN ln -s conf/env config/.env
 

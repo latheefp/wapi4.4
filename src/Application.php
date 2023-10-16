@@ -118,7 +118,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         $csrf = new CsrfProtectionMiddleware();
 
         $csrf->skipCheckCallback(function ($request) {
-            $allowedActions = ['webhook', 'sendschedule','healthcheck'];
+            $allowedActions = ['webhook', 'sendschedule', 'healthcheck','runjob'];
             $actionToCheck = $request->getParam('action');
             if (in_array($actionToCheck, $allowedActions)) {
                 return true;
@@ -193,4 +193,19 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 
         return $service;
     }
+
+//    public function console(CommandRunner $commands) {
+//        // Create the RedisService instance
+//        $redisService = new RedisService();
+//
+//        // Register the ProcessrcvqCommand and inject the RedisService
+//        $commands->addCommand('processrcvq', [
+//            'class' => 'App\Command\ProcessrcvqCommand',
+//            'constructor' => [
+//                'redisService' => $redisService,
+//            ],
+//        ]);
+//
+//        // ...
+//    }
 }

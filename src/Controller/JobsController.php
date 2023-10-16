@@ -2,197 +2,217 @@
 
 declare(strict_types=1);
 
-namespace App\Command;
+namespace App\Controller;
 
-use Cake\Command\Command;
-use Cake\Console\Arguments;
-use Cake\Console\ConsoleIo;
-use Cake\Console\ConsoleOptionParser;
-use Cake\Datasource\ConnectionManager;
-// In your Controller or Table class
+use App\Controller\AppController;
+use Cake\Utility\Hash;
+use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
-//use Cake\Datasource\ConnectionManager as CakeConnectionManager;
-use App\Controller\AppController; //(path to your controller).
+use Cake\Auth\DefaultPasswordHasher;
+use Cake\Validation\Validator;
+use Cake\Event\EventInterface;
+use Cake\Event\Event;
+use DateTime;
+use Cake\Mailer\Mailer;
+use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\ServerRequest;
 use Cake\Cache\Cache;
 
-//use Cake\I18n\Time;
+/**
+ * 
+ * 
+ * Apis Controller
+ *
+ * @method \App\Model\Entity\Api[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
+ */
+class JobsController extends AppController {
 
-class ProcessrcvqCommand extends Command {
-
-    public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser {
-        $parser = parent::buildOptionParser($parser);
-
-        $parser->addOptions(
-                [
-                    'queue_id' => [
-                        'short' => 'i',
-                        'help' => 'The queue_id',
-                        'required' => false,
-                    ],
-                ]
-        );
-
-        return $parser;
+    public function isAuthorized($user) {
+        return true;
     }
 
-    public function execute(Arguments $args, ConsoleIo $io) {
-        $queue_id = $args->getOption('queue_id');
-        if (isset($queue_id)) {
-//            debug($queue_id);
-            $this->processMe($queue_id);
-            // $this->test();
-        } else {
-            $this->process_rcvq();
+    public function beforeFilter(EventInterface $event): void {
+        parent::beforeFilter($event);
+
+        $allowedActions = ['runjob']; // List of allowed actions
+
+        if (in_array($this->request->getParam('action'), $allowedActions)) {
+//            $this->FormProtection->setConfig('validate', false);
         }
-        print("running with arg\n");
-        ;
+        $this->Authentication->allowUnauthenticated(['runjob']);
     }
 
-    public function initialize(): void {
-        parent::initialize();
-        $this->app = new AppController();
-    }
+//    function runjob() {
+//        
+//    }
 
-    function process_rcvq() {
-        $apiKey = 'sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh';
-        $table = TableRegistry::getTableLocator()->get('RcvQueues');
-//        $pids = [];
-        $queued = $query = $table->find()
-                ->where([
-                    'status' => 'queued',
-                ])
-                ->all();
+    public function runjob() {
+        $this->viewBuilder()->setLayout('ajax');
+        // Retrieve the API key from the request header
+//        debug($this->request->getHeaders());
+        $apiKey = $this->request->getHeaderLine('X-Api-Key');
+//        $request = new ServerRequest();
+        //  debug($apiKey);
+        $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]);
+        //   debug($FBSettings);
+        // Check if the API key matches the expected value
+//        $validApiKey = 'sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh';
 
-        foreach ($queued as $key => $val) {
-            $lockTimeout = 3; // Example: 2 seconds
-            $connection = ConnectionManager::get('default');
-            $limit = $this->checklimit();
-            while ($limit == false) {
-                //  debug("Limit is False, Sleeping");
-                //   print ".";
-                sleep(2);
-                $limit = $this->checklimit();
-            }
+        if ($FBSettings['status']['code'] == 404) {
+            $this->response = $this->response->withStatus(401); // Unauthorized
 
-            try {
-                // Attempt to begin a transaction with a lock timeout
-                $connection->begin(['timeout' => $lockTimeout]);
-//                $currentTimestamp = Time::now();
-                $mysqlFormattedTimestamp = date('Y-m-d H:i:s');
-                $stmt = $connection->execute('UPDATE rcv_queues SET status = ? , process_start_time= ?  WHERE id = ? AND status = ?', ["processing", $mysqlFormattedTimestamp, $val->id, 'queued']);
-                // debug($stmt);
-                $affectedRows = $stmt->rowCount();
-                if ($connection->commit()) {
-                    if ($affectedRows > 0) {
-                        debug("Transaction committed successfully. {$affectedRows} rows were affected.");
-                        $maxParallelProcesses = $this->app->_getsettings('max_parallel_que_processing');
-                        $cmd = ROOT . '/bin/runprocess.pl  -i ' . $val->id . ' -k ' . $apiKey . ' >' . ROOT . '/logs/process.log 2>&1 &';
-                        debug($cmd);
-                        exec($cmd);
-                    } else {
-                        debug("Transaction committed, but no rows were affected.");
-                        continue;
-                    }
-                } else {
-                    debug("Transaction failed to commit. Database changes not applied.");
-                    continue;
-                }
-            } catch (\PDOException $e) {
-                $connection->rollback();
-                echo "Database operation failed: " . $e->getMessage();
-                debug("failed");
-            }
+            $response['error'] = 'Invalid qid APIKEY';
+            $this->set('response', $response);
+            return;
         }
+
+        // Retrieve the 'qid' value from the request
+        $qid = $this->request->getData('qid'); // Assuming this is a POST request
+        // Validate 'qid' as needed
+        // Example: Check if 'qid' is an integer and not empty
+        if (!is_numeric($qid) || empty($qid)) {
+            $this->response = $this->response->withStatus(400); // Bad Request
+            http_response_code(400); // Bad Request
+            $response['error'] = 'Invalid qid ' . $qid;
+            $this->set('response', $response);
+            return;
+        }
+        $this->processMe($qid);
+        $response['success'] = 'Success';
+        $this->set('response', $response);
+//        $this->set('message', 'API Call Successful');
+//        $this->set('_serialize', 'message');
     }
 
-    function checklimit() {
-        $maxParallelProcesses = $this->app->_getsettings('max_parallel_que_processing');
-        $table = TableRegistry::getTableLocator()->get('RcvQueues');
-        #    date('Y-m-d H:i:s');
-        $recent_count = $table->find()
-                ->where([
-                    'status' => 'processing',
-                    'process_start_time >=' => 'DATE_SUB(NOW(), INTERVAL 10 MINUTE'
-                ])
-                ->count();
+    public function processMe($id) {
+        // $table = TableRegistry::getTableLocator()->get('RcvQueues');
+//        $io->out('proessing ' . $record->id);
+        $Qtable = TableRegistry::getTableLocator()->get('RcvQueues');
+        $record = $Qtable->get($id);
 
-        print".$recent_count.";
-        if ($recent_count <= $maxParallelProcesses) {
-            //   debug("Current processing count is $recent_count and max is $maxParallelProcesses TRUE");
-            //    print " $recent_count ";
+        // debug(getenv('LOG'));
+        $input = json_decode($record->json, true);
+        //   debug($input);
+        $this->writelog($input, "Post Data");
 
-            return true;
-        } else {
-            //   debug("Current processing count is $recent_count and max is $maxParallelProcesses FALSE");
-
+        $dataarray['hookid'] = $input['entry'][0]['id'];
+        $dataarray['messaging_product'] = $input['entry'][0]['changes'][0]['value']['messaging_product'];
+        $phone_number_id = $input['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
+        $FBSettings = $this->_getFBsettings(['phone_number_id' => $phone_number_id]);
+        if ($FBSettings['status']['code'] != 200) {
+            $record->status = $FBSettings['status']['message'];
+            $Qtable->save($record);
             return false;
         }
-    }
-
-    function _refreshPID($pids = []) {
-        foreach ($pids as $key => $pid) {
-            //  debug($pid);
-            if (posix_kill(intval($pid), 0)) {
-                
-            } else {
-                debug("the process with  $pid is Not runing");
-                unset($pids[array_search($pid, $pids)]);
+        //   debug($FBSettings);
+        $dataarray['account_id'] = $FBSettings['account_id'];
+        $this->writelog($FBSettings, "FB settings");
+        $display_phone_number = $input['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'];
+        $dataarray['display_phone_number'] = $display_phone_number;
+        $dataarray['phonenumberid'] = $phone_number_id;
+        if (isset($input['entry'][0]['changes'][0]['value']['messages'])) { //type is message
+            $message = $input['entry'][0]['changes'][0]['value']['messages'][0];
+            $dataarray['recievearray'] = file_get_contents('php://input');
+            $messageid = $message['id'];
+            $this->writelog($messageid, "Picked up by message");
+            $dataarray['messageid'] = $messageid;
+            $dataarray['message_format_type'] = $message['type'];
+            if (isset($dataarray['message_context'])) {
+                $dataarray['message_context'] = $message_context;
             }
-        }
-        return $pids;
-    }
+            $msgtype = $dataarray['message_format_type'];
 
-    function processMe($qidsjson) {
-        debug($qids);
-        $qids = json_decode($qidsjson, true);
-        debug($qids);
-        debug(date('Y-m-d H:i:s') . " processing QIDs");
-        debug($qids);
-        $baseURL = 'http://localhost/jobs/runjob';
-        $apiKey = 'sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh';
-        foreach ($qids as $key => $qid) {
-            $url = $baseURL . '?qid=' . $qid;
-            ${"ch" . $qid} = curl_init();
-            curl_setopt(${"ch" . $qid}, CURLOPT_URL, $url);
-            curl_setopt(${"ch" . $qid}, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt(${"ch" . $qid}, CURLOPT_ENCODING, '');
-            $postData = array('qid' => $qid);
-            curl_setopt(${"ch" . $qid}, CURLOPT_POST, 1);
-            curl_setopt(${"ch" . $qid}, CURLOPT_POSTFIELDS, http_build_query($postData));
-            curl_setopt(${"ch" . $qid}, CURLOPT_HTTPHEADER, array(
-                'X-Api-Key: sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh'
-            ));
-        }
-
-        debug(date('Y-m-d H:i:s') . " CURL Array created");
-
-//create the multiple cURL handle
-        $mh = curl_multi_init();
-        foreach ($qids as $key => $qid) {
-            curl_multi_add_handle($mh, ${"ch" . $qid});
-        }
-
-        debug(date('Y-m-d H:i:s') . " Multi URL Handle Done");
-
-        do {
-//            debug ("Running ".${"ch" . $qid});
-            $status = curl_multi_exec($mh, $active);
-            //     debug($status);
-            if ($active) {
-                // Wait a short time for more activity
-                curl_multi_select($mh);
+            switch ($msgtype) {
+                case "text":
+                    $dataarray['message_txt_body'] = $message['text']['body'];
+                    break;
+                case "button":
+                    $dataarray['button_payload'] = $message['button']['payload'];
+                    $dataarray['button_text'] = $message['button']['text'];
+                    break;
+                case "document":
+                    break;
+                case "sticker":
+                    break;
+                case "unknown":
+                    break;
+                case "contacts":
+                    break;
+                case "video":
+                    break;
+                case "image":
+                    break;
+                case "interactive":
+                    $this->_processInteractive($record->json, $FBSettings);
+                    $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
+                    break;
             }
-        } while ($active && $status == CURLM_OK);
+            $dataarray['delivered_time'] = date("Y-m-d h:i:s", time());
+            $dataarray['type'] = "receive";
+            $this->writelog($message, "message");
+            $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+            $this->writelog($sender, "is the sender");
+            $dataarray['message_timestamp'] = $this->_formate_date($input['entry'][0]['changes'][0]['value']['messages'][0]['timestamp']);
+            $dataarray['contacts_profile_name'] = $input['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name'];
+            $dataarray['contact_waid'] = $sender;
+            $newmsg = $this->_checktimeout($dataarray['contact_waid']); //dont move this function from here , it should be 
+            if (isset($input['entry'][0]['changes'][0]['value']['messages'][0]['context'])) {  //reply of existing msg
+                $dataarray['message_context'] = "reply";
+                $dataarray['message_contextId'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['id'];
+                $dataarray['message_context_rom'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['from'];
+                $this->writelog($dataarray, "Save data for new Reply message");
+                $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
+            } else { //new msg
+                $dataarray['message_context'] = "new";
+                $this->writelog($dataarray, "Save New Massage in streams");
+                $save_status = $this->_savedata($dataarray, $FBSettings); //save data before sending welcome msg.
 
-        debug(date('Y-m-d H:i:s') . " CURL Executed");
+                if (($newmsg) && ($msgtype != "interactive")) {  // new message and not reply for interactive msg
+                    $this->writelog($msgtype, "Sending Interactive Menu to " . $dataarray['contact_waid']);
+                    $data = [
+                        "mobile_number" => $dataarray['contact_waid'],
+                        "schedule_name" => "welcomemsg_grand"
+                    ];
+                    //  debug($FBSettings);
+                    $notification_numbers = (explode(',', $FBSettings['interactive_notification_numbers']));
+                    $notification_numbers[] = $dataarray['contact_waid'];
+                    $this->writelog($notification_numbers, "Iteractive Menu notification array");
+                    foreach ($notification_numbers as $key => $contact_number) {
+                        if (!empty($contact_number)) {
+                            $this->writelog($contact_number, "Sending Interactive Menu to $contact_number for customer id: " . $dataarray['contact_waid']);
+                            if (!empty($FBSettings['interactive_menu_function'])) {
+                                $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
+                                $interactive_menu_function = $FBSettings['interactive_menu_function'];
+                                $this->$interactive_menu_function($dataarray['contact_waid'], $contact_number, $FBSettings);
+                            }
+                            //can add welcome message function here. 
+                        }
+                    }
+                } else {
+                    $this->writelog("Skipping welcome message time out is not yet happen after last message or Intrective message");
+                }
+            }
+            $result = array("success" => true);
+            // return $this->response->withType("application/json")->withStringBody(json_encode($result));
+        } elseif (isset($input['entry'][0]['changes'][0]['value']['statuses'])) {  //type ie status update.
+            //    $status = $input['entry'][0]['changes'][0]['value']['statuses'][0];
+            $status = $input['entry'][0]['changes'][0]['value']['statuses'];
+            $this->writelog($status, "Picked up by Status update");
 
-        foreach ($qids as $key => $qid) {
-            curl_multi_remove_handle($mh, ${"ch" . $qid});
+            $this->_update_status($status);
+            $this->writelog('Status update', "Message Type");
+        } else {
+            $this->writelog($input, "Posted data");
         }
-        debug(date('Y-m-d H:i:s') . " Connection removed");
-        curl_multi_close($mh);
-//        sleep ();
-        debug(date('Y-m-d H:i:s') . " Process submitted");
+
+        // debug($save_status);
+//        $Qtable = TableRegistry::getTableLocator()->get('RcvQueues');
+//        $row=$Qtable->get($record->id);
+        $record->processed = 1;
+        $record->status = "processed";
+        $Qtable->save($record);
+//        debug($row);
+        sleep(2);
     }
 
     function _processInteractive($input, $FBSettings) {
@@ -313,7 +333,7 @@ class ProcessrcvqCommand extends Command {
         $table = $this->getTableLocator()->get('Streams');
         $row = $table->newEmptyEntity();
 
-        $row->contact_stream_id = $this->app->getWastreamsContactId($wa_id, $FBSettings);
+        $row->contact_stream_id = $this->getWastreamsContactId($wa_id, $FBSettings);
         $row->account_id = $FBSettings['account_id'];
         if (isset($response['messages'][0]['id'])) {
             $row->messageid = $response['messages'][0]['id'];
@@ -323,7 +343,7 @@ class ProcessrcvqCommand extends Command {
             $row->result = $jsonresponse;
             $row->sendarray = $jsonlist;
         } else {
-            $this->app->writelog($response, "Response error");
+            $this->writelog($response, "Response error");
             $row->has_wa = false;
             $row->type = "ISend";
             $row->result = $jsonresponse;
@@ -339,13 +359,13 @@ class ProcessrcvqCommand extends Command {
 
     function readmsg($MESSAGE_ID, $FBSettings) { //Notify FB about message is read. 
         $curl = curl_init();
-        $this->app->writelog($MESSAGE_ID, "Message ID");
+        $this->writelog($MESSAGE_ID, "Message ID");
         $POSTFIELDS = '{
           "messaging_product": "whatsapp",
           "status": "read",
           "message_id": "' . $MESSAGE_ID . '"
         }';
-        $this->app->writelog($POSTFIELDS, "POSTFIELDS");
+        $this->writelog($POSTFIELDS, "POSTFIELDS");
         curl_setopt_array($curl, array(
             CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
             CURLOPT_RETURNTRANSFER => true,
@@ -363,15 +383,15 @@ class ProcessrcvqCommand extends Command {
         ));
         $response = curl_exec($curl);
         curl_close($curl);
-        $this->app->writelog($response, "Read Response");
+        $this->writelog($response, "Read Response");
     }
 
     function _formate_date($ts) {
-        //  $this->app->writelog($ts, "coverting");
+        //  $this->writelog($ts, "coverting");
         if (isset($ts)) {
             $ts = (int) $ts;
             $newdate = (date('Y-m-d H:i:s', $ts));
-            $this->app->writelog($newdate, "new date");
+            $this->writelog($newdate, "new date");
             return $newdate;
         } else {
             return null;
@@ -379,10 +399,10 @@ class ProcessrcvqCommand extends Command {
     }
 
     function _checktimeout($contact = null) {
-        $this->app->writelog($contact, "Checking timout for  $contact");
+        $this->writelog($contact, "Checking timout for  $contact");
         $mobile = $this->getTableLocator()->get('ContactStreams')->find()->where(['contact_number' => $contact])->toArray();
         if (!empty($mobile)) {
-            $CHAT_TIMEOUT = $this->app->_getsettings('CHAT_TIMEOUT');
+            $CHAT_TIMEOUT = $this->_getsettings('CHAT_TIMEOUT');
             $query = $this->getTableLocator()->get('Streams')->find();
             $query->where([
                         'Streams.created >=' => date('Y-m-d H:i:s', strtotime('-' . $CHAT_TIMEOUT . ' seconds')),
@@ -396,12 +416,12 @@ class ProcessrcvqCommand extends Command {
             //   debug(sql($query));
             if (empty($result)) {
                 // debug("Sending message");
-                $this->app->writelog($contact, "new message will be replied $contact");
+                $this->writelog($contact, "new message will be replied $contact");
                 return true;
             } else {
                 //   debug($result);
                 //  debug("not Sending message");
-                $this->app->writelog($contact, "new message not be replied to $contact");
+                $this->writelog($contact, "new message not be replied to $contact");
                 return false;
             }
         }
@@ -411,10 +431,10 @@ class ProcessrcvqCommand extends Command {
     function _savedata($data = array(), $FBSettings) {
         # $this->writelog($data, "Data to be saved");
         if (isset($data['contact_waid'])) {
-            $data['contact_stream_id'] = $this->app->getWastreamsContactId($data['contact_waid'], $FBSettings);
+            $data['contact_stream_id'] = $this->getWastreamsContactId($data['contact_waid'], $FBSettings);
         }
         if (isset($data['contacts_profile_name'])) {
-            $this->app->updateProfileWastreamsContact($data['contact_waid'], $data['contacts_profile_name'], $FBSettings);
+            $this->updateProfileWastreamsContact($data['contact_waid'], $data['contacts_profile_name'], $FBSettings);
         }
         $Table = $this->getTableLocator()->get('Streams');
         $record = $Table->newEntity($data);
@@ -422,7 +442,7 @@ class ProcessrcvqCommand extends Command {
             $result['status'] = "failed";
             $result['msg'] = "Validation errors";
             $this->set('result', $result);
-            $this->app->writelog($record->getErrors(), "Error");
+            $this->writelog($record->getErrors(), "Error");
         }
 
         if ($Table->save($record)) {
@@ -432,24 +452,24 @@ class ProcessrcvqCommand extends Command {
         } else {
             $result['status'] = "failed";
             $result['msg'] = "Not able to save the streams";
-            $this->app->writelog($record->getErrors(), "Stream save Failed due to below error");
+            $this->writelog($record->getErrors(), "Stream save Failed due to below error");
         }
 
-        $this->app->writelog($result, "Save status");
+        $this->writelog($result, "Save status");
         return $result;
     }
 
     function _update_status($statuses) {
         foreach ($statuses as $key => $status) {
-            $this->app->writelog($status, "Updating status $key");
+            $this->writelog($status, "Updating status $key");
             $query = $this->getTableLocator()->get('Streams')->find();
             $query->where([
                 'OR' => ['replyid' => $status['id'], 'messageid' => $status['id']]
             ]);
             $result = $query->toArray();
-            $this->app->writelog($result, "Reply ID match in Streams table");
+            $this->writelog($result, "Reply ID match in Streams table");
             $id = $result[0]['id'];
-            $this->app->writelog($result, "is  the result of searching reply ID:" . $status['id']);
+            $this->writelog($result, "is  the result of searching reply ID:" . $status['id']);
             $Table = $this->getTableLocator()->get('Streams');
 
             if (isset($id)) {
@@ -471,11 +491,11 @@ class ProcessrcvqCommand extends Command {
                         $editrow->errors = json_encode($status['errors']);
                         break;
                     default:
-                        $this->app->writelog(($status['status']), "Wrong status");
+                        $this->writelog(($status['status']), "Wrong status");
                         break;
                 }
                 if (isset($status['pricing'])) {
-                    $this->app->writelog($status['pricing'], "UpdatingPricing");
+                    $this->writelog($status['pricing'], "UpdatingPricing");
                     $editrow->billable = $status['pricing']['billable'];
                     $editrow->pricing_model = $status['pricing']['pricing_model'];
                     $editrow->category = $status['pricing']['category'];
@@ -492,9 +512,9 @@ class ProcessrcvqCommand extends Command {
                 $editrow->tmp_upate_json = $existing_update . ",\n" . json_encode($status);
 
                 if ($Table->save($editrow)) {
-                    $this->app->writelog($editrow, "Save Success");
+                    $this->writelog($editrow, "Save Success");
                 } else {
-                    $this->app->writelog($editrow, "Save Failed");
+                    $this->writelog($editrow, "Save Failed");
                 }
 
                 if (isset($status['conversation'])) {
@@ -507,7 +527,7 @@ class ProcessrcvqCommand extends Command {
                     //Billing is needed only for Uniq conversation IDS. 
                     if ($ratingResults->isEmpty()) {
                         debug("Rating " . $status['conversation']['id']);
-                        $this->app->_rateMe($status);
+                        $this->_rateMe($status);
                     } else {
                         // debug($ratingquery);
 
@@ -527,7 +547,7 @@ class ProcessrcvqCommand extends Command {
                     }
                 }
             } else {
-                $this->app->writelog($id, "Got null ID for search " . $status['id']);
+                $this->writelog($id, "Got null ID for search " . $status['id']);
             }
         }
     }
@@ -637,7 +657,7 @@ class ProcessrcvqCommand extends Command {
         ));
 
         $jsonresponse = curl_exec($curl);
-        $this->app->writeinteractive($jsonresponse, "Response from initial menu");
+        $this->writeinteractive($jsonresponse, "Response from initial menu");
         curl_close($curl);
 
         $response = json_decode($jsonresponse, true);
@@ -645,7 +665,7 @@ class ProcessrcvqCommand extends Command {
         $table = $this->getTableLocator()->get('Streams');
         $row = $table->newEmptyEntity();
 
-        $row->contact_stream_id = $this->app->getWastreamsContactId($contactToSend, $FBSettings);
+        $row->contact_stream_id = $this->getWastreamsContactId($contactToSend, $FBSettings);
         $row->account_id = $FBSettings['account_id'];
 
         if (isset($response['messages'][0]['id'])) {
@@ -664,9 +684,9 @@ class ProcessrcvqCommand extends Command {
             $row->sendarray = $jsonlist;
         }
         if ($table->save($row)) {
-            $this->app->writeinteractive($row, "updated Stream table");
+            $this->writeinteractive($row, "updated Stream table");
         } else {
-            $this->app->writeinteractive($record->getErrors(), "Failed to update Stream table");
+            $this->writeinteractive($record->getErrors(), "Failed to update Stream table");
         }
     }
 }
