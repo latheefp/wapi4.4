@@ -802,7 +802,7 @@ class ApisController extends AppController {
         }
     }
 
-    function _processInteractive($input = null, $FBSettings) {
+    function _processInteractive($input, $FBSettings) {
 
         $postarray = json_decode(file_get_contents('php://input'), true);
         $this->writeinteractive($postarray, "input array ");

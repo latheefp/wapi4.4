@@ -6,36 +6,41 @@ use App\Controller\AppController;
 use Cake\Utility\Hash;
 use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
+use Cake\Database\Expression\QueryExpression;
 use Cake\Auth\DefaultPasswordHasher;
-use Cake\Validation\Validator;
+//use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
 use Cake\Event\Event;
-use DateTime;
-use Cake\Mailer\Mailer;
-use Cake\Http\Exception\ForbiddenException;
-use Cake\Datasource\ConnectionManager;
-use Cake\Core\Configure;
-use Cake\Cache\Cache;
+//use Cake\Http\Exception\ForbiddenException;
+//use Cake\Datasource\ConnectionManager;
+//use Cake\Cache\Cache;
+use Cake\ORM\Query;
 
-//use Predis\Client;
-
-/**
- * Apis Controller
- *
- * @method \App\Model\Entity\Api[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
- */
 class TestsController extends AppController {
 
-    /**
-     * Index method
-     *
-     * @return \Cake\Http\Response|null|void Renders view
-     * 
-     * 
-     * 
-     * 
-     * 
-     */
+    function test() {
+        $this->viewBuilder()->setLayout('ajax');
+//        $query = TableRegistry::getTableLocator()->get('RcvQueues')
+//                ->find();
+//        $query->where(function (QueryExpression $exp, Query $q) {
+//            return $exp
+//                    ->eq('status', 'processing')
+//                    ->gt('process_start_time', $q->func()->dateSub('NOW()', 'INTERVAL 10 MINUTE'));
+//        });
+
+        $query = TableRegistry::getTableLocator()->get('RcvQueues')
+                ->find();
+        // Add the WHERE clause
+        $query->where([
+            'STATUS' => 'processing',
+            'process_start_time >' => Time::now()->subMinutes(10),
+        ]);
+
+        $count = $query->count();
+        debug($query->sql());
+        debug($count);
+    }
+
     function redistest() {
         $lockKey = "abc2343243434234";
 
@@ -311,24 +316,6 @@ class TestsController extends AppController {
 
         $result['new_balance'] = $accountTable->get($account_id)->toArray();
         return $result;
-    }
-
-    function test() {
-        $query = TableRegistry::getTableLocator()->get('RcvQueues')
-                ->find();
-        $query->where(function (QueryExpression $exp, Query $q) {
-            return $exp
-                    ->eq('status', 'processing')
-                    ->gt('process_start_time', $q->func()->dateSub('NOW()', 'INTERVAL 10 MINUTE'));
-        });
-
-        $query = $articles->find();
-        $query->where(function (QueryExpression $exp, Query $q) {
-            return $exp->eq('published', true);
-        });
-
-        $count = $query->count();
-        debug($count);
     }
 
     function setredis() {

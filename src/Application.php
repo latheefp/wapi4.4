@@ -118,7 +118,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         $csrf = new CsrfProtectionMiddleware();
 
         $csrf->skipCheckCallback(function ($request) {
-            $allowedActions = ['webhook', 'sendschedule', 'healthcheck','runjob'];
+            $allowedActions = ['webhook', 'sendschedule', 'healthcheck','runjob','pricing','contact','getrate'];
             $actionToCheck = $request->getParam('action');
             if (in_array($actionToCheck, $allowedActions)) {
                 return true;

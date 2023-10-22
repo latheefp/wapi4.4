@@ -13,6 +13,9 @@ use Cake\ORM\Entity;
  * @property string|null $json
  * @property \Cake\I18n\FrozenTime|null $created
  * @property bool|null $processed
+ * @property \Cake\I18n\FrozenTime|null $process_start_time
+ * @property \Cake\I18n\FrozenTime|null $process_end_time
+ * @property string $http_response_code
  */
 class RcvQueue extends Entity
 {
@@ -23,12 +26,15 @@ class RcvQueue extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'status' => true,
         'json' => true,
         'created' => true,
         'processed' => true,
+        'process_start_time' => true,
+        'process_end_time' => true,
+        'http_response_code' => true,
     ];
 }

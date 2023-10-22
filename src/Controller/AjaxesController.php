@@ -29,12 +29,8 @@ class AjaxesController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
-//        $this->Security->setConfig('unlockedActions', ['getdata', 'edit']);
-//        $this->FormProtection->setConfig('validate', false);
-//        if ($this->request->getParam('controller') === 'Ajaxes') {
-//            $this->FormProtection->setConfig('validate', false);
-//        }
-//        $this->Auth->allow(['getrate']);
+        $this->Authentication->allowUnauthenticated(['getrate']);
+        $this->FormProtection->setConfig('unlockedActions', ['getrate']);
     }
 
     public function isAuthorized($user) {
@@ -255,24 +251,23 @@ class AjaxesController extends AppController {
         $data = $this->request->getData();
         $ContactformTable = $this->getTableLocator()->get('ContactForms');
         $row = $ContactformTable->newEmptyEntity();
-        $$row = $ContactformTable->patchEntity($row, $data); 
-        if($ContactformTable->save($row)){
-            $result['status']="success";
-            $result['msg']="Thank you for your contacting us, we will reach you soon back";
-        }else{
-            $error=$row->getErrors();
-           // debug($error);
-            $msg=null;
-            foreach($error as $key =>$valarray){
-                foreach ($valarray as $valkey=>$valmsg){
-                    $msg=$msg."<b>".$key."</b>".":".$valmsg."<br>";
+        $$row = $ContactformTable->patchEntity($row, $data);
+        if ($ContactformTable->save($row)) {
+            $result['status'] = "success";
+            $result['msg'] = "Thank you for your contacting us, we will reach you soon back";
+        } else {
+            $error = $row->getErrors();
+            // debug($error);
+            $msg = null;
+            foreach ($error as $key => $valarray) {
+                foreach ($valarray as $valkey => $valmsg) {
+                    $msg = $msg . "<b>" . $key . "</b>" . ":" . $valmsg . "<br>";
                 }
             }
-            $result['status']="failed";
-            $result['msg']="Failed to save data, $msg";
+            $result['status'] = "failed";
+            $result['msg'] = "Failed to save data, $msg";
         }
-        
-        $this->set('result',$result);
-    }
 
+        $this->set('result', $result);
+    }
 }

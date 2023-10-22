@@ -11,6 +11,8 @@ use Cake\Console\ConsoleOptionParser;
 use Cake\Datasource\ConnectionManager;
 // In your Controller or Table class
 use Cake\ORM\TableRegistry;
+//use Cake\I18n\Time;
+use Cake\I18n\FrozenTime; // Import FrozenTime
 //use Cake\Datasource\ConnectionManager as CakeConnectionManager;
 use App\Controller\AppController; //(path to your controller).
 use Cake\Cache\Cache;
@@ -56,51 +58,54 @@ class ProcessrcvqCommand extends Command {
     function process_rcvq() {
         $apiKey = 'sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh';
         $table = TableRegistry::getTableLocator()->get('RcvQueues');
-//        $pids = [];
-        $queued = $query = $table->find()
-                ->where([
-                    'status' => 'queued',
-                ])
-                ->all();
+        while (true) {
+//            print ".";
+            $queued = $query = $table->find()
+                    ->where([
+                        'status' => 'queued',
+                    ])
+                    ->all();
 
-        foreach ($queued as $key => $val) {
-            $lockTimeout = 3; // Example: 2 seconds
-            $connection = ConnectionManager::get('default');
-            $limit = $this->checklimit();
-            while ($limit == false) {
-                //  debug("Limit is False, Sleeping");
-                //   print ".";
-                sleep(2);
+            foreach ($queued as $key => $val) {
+                $lockTimeout = 3; // Example: 2 seconds
+                $connection = ConnectionManager::get('default');
                 $limit = $this->checklimit();
-            }
+                while ($limit == false) {
+                    //  debug("Limit is False, Sleeping");
+                    //   print ".";
+                    sleep(2);
+                    $limit = $this->checklimit();
+                }
 
-            try {
-                // Attempt to begin a transaction with a lock timeout
-                $connection->begin(['timeout' => $lockTimeout]);
+                try {
+                    // Attempt to begin a transaction with a lock timeout
+                    $connection->begin(['timeout' => $lockTimeout]);
 //                $currentTimestamp = Time::now();
-                $mysqlFormattedTimestamp = date('Y-m-d H:i:s');
-                $stmt = $connection->execute('UPDATE rcv_queues SET status = ? , process_start_time= ?  WHERE id = ? AND status = ?', ["processing", $mysqlFormattedTimestamp, $val->id, 'queued']);
-                // debug($stmt);
-                $affectedRows = $stmt->rowCount();
-                if ($connection->commit()) {
-                    if ($affectedRows > 0) {
-                        debug("Transaction committed successfully. {$affectedRows} rows were affected.");
-                        $maxParallelProcesses = $this->app->_getsettings('max_parallel_que_processing');
-                        $cmd = ROOT . '/bin/runprocess.pl  -i ' . $val->id . ' -k ' . $apiKey . ' >' . ROOT . '/logs/process.log 2>&1 &';
-                        debug($cmd);
-                        exec($cmd);
+                    $mysqlFormattedTimestamp = date('Y-m-d H:i:s');
+                    $stmt = $connection->execute('UPDATE rcv_queues SET status = ? , process_start_time= ?  WHERE id = ? AND status = ?', ["processing", $mysqlFormattedTimestamp, $val->id, 'queued']);
+                    // debug($stmt);
+                    $affectedRows = $stmt->rowCount();
+                    if ($connection->commit()) {
+                        if ($affectedRows > 0) {
+                            debug("Transaction committed successfully. {$affectedRows} rows were affected.");
+                            $maxParallelProcesses = $this->app->_getsettings('max_parallel_que_processing');
+                            $cmd = ROOT . '/bin/runprocess.pl  -i ' . $val->id . ' -k ' . $apiKey . ' >' . ROOT . '/logs/process.log 2>&1 &';
+                            debug($cmd);
+                            usleep(100);
+                            exec($cmd);
+                        } else {
+                         //   debug("Transaction committed, but no rows were affected.");
+                            continue;
+                        }
                     } else {
-                        debug("Transaction committed, but no rows were affected.");
+                        debug("Transaction failed to commit. Database changes not applied.");
                         continue;
                     }
-                } else {
-                    debug("Transaction failed to commit. Database changes not applied.");
-                    continue;
+                } catch (\PDOException $e) {
+                    $connection->rollback();
+                    echo "Database operation failed: " . $e->getMessage();
+                    debug("failed");
                 }
-            } catch (\PDOException $e) {
-                $connection->rollback();
-                echo "Database operation failed: " . $e->getMessage();
-                debug("failed");
             }
         }
     }
@@ -109,10 +114,12 @@ class ProcessrcvqCommand extends Command {
         $maxParallelProcesses = $this->app->_getsettings('max_parallel_que_processing');
         $table = TableRegistry::getTableLocator()->get('RcvQueues');
         #    date('Y-m-d H:i:s');
-        $recent_count = $table->find()
-                ->where([
-                    'status' => 'processing',
-                    'process_start_time >=' => 'DATE_SUB(NOW(), INTERVAL 10 MINUTE'
+        $query = TableRegistry::getTableLocator()->get('RcvQueues')
+                ->find();
+        // Add the WHERE clause
+        $recent_count = $query->where([
+                    'STATUS' => 'processing',
+                    'process_start_time >' => FrozenTime::now()->subMinutes(5),
                 ])
                 ->count();
 

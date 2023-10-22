@@ -48,19 +48,11 @@ class JobsController extends AppController {
 
     public function runjob() {
         $this->viewBuilder()->setLayout('ajax');
-        // Retrieve the API key from the request header
-//        debug($this->request->getHeaders());
         $apiKey = $this->request->getHeaderLine('X-Api-Key');
-//        $request = new ServerRequest();
-        //  debug($apiKey);
         $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]);
-        //   debug($FBSettings);
-        // Check if the API key matches the expected value
-//        $validApiKey = 'sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh';
-
         if ($FBSettings['status']['code'] == 404) {
             $this->response = $this->response->withStatus(401); // Unauthorized
-
+            $this->_update_http_code($qid, '404');
             $response['error'] = 'Invalid qid APIKEY';
             $this->set('response', $response);
             return;
@@ -72,16 +64,23 @@ class JobsController extends AppController {
         // Example: Check if 'qid' is an integer and not empty
         if (!is_numeric($qid) || empty($qid)) {
             $this->response = $this->response->withStatus(400); // Bad Request
+            $this->_update_http_code($qid, '400');
             http_response_code(400); // Bad Request
             $response['error'] = 'Invalid qid ' . $qid;
             $this->set('response', $response);
             return;
         }
         $this->processMe($qid);
+        $this->_update_http_code($qid, '200');
         $response['success'] = 'Success';
-        $this->set('response', $response);
-//        $this->set('message', 'API Call Successful');
-//        $this->set('_serialize', 'message');
+        $this->set('response', $response);;
+    }
+
+    function _update_http_code($qid, $code) {
+        $table = TableRegistry::getTableLocator()->get('RcvQueues');
+        $row = $table->get($qid);
+        $row->http_response_code = $code;
+        $table->save($row);
     }
 
     public function processMe($id) {

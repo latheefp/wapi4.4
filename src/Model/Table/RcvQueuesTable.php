@@ -55,12 +55,8 @@ class RcvQueuesTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->scalar('status')
-            ->maxLength('status', 16)
+            ->maxLength('status', 512)
             ->allowEmptyString('status');
 
         $validator
@@ -71,6 +67,19 @@ class RcvQueuesTable extends Table
         $validator
             ->boolean('processed')
             ->allowEmptyString('processed');
+
+        $validator
+            ->dateTime('process_start_time')
+            ->allowEmptyDateTime('process_start_time');
+
+        $validator
+            ->dateTime('process_end_time')
+            ->allowEmptyDateTime('process_end_time');
+
+        $validator
+            ->scalar('http_response_code')
+            ->maxLength('http_response_code', 3)
+            ->notEmptyString('http_response_code');
 
         return $validator;
     }

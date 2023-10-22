@@ -6,6 +6,12 @@ FROM php:8.1.18-apache
 # Set the COMPOSER_ALLOW_SUPERUSER environment variable
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
+
+
+# Set an environment variable with the build date
+ARG BUILD_DATE
+ENV BUILD_DATE=${BUILD_DATE}
+
 # Install required PHP extensions
 RUN docker-php-ext-install mysqli pdo pdo_mysql pcntl 
 
@@ -49,7 +55,7 @@ EXPOSE 80
 
 # Start the Apache web server
 
-CMD ["apache2-foreground"]
-#CMD ["bash", "-c", "service apache2 restart &&  /var/www/html/bin/cake Processrcvq"]
+#CMD ["apache2-foreground"]
+CMD ["bash", "-c", "service apache2 restart &&  /var/www/html/bin/cake Processrcvq"]
 
 

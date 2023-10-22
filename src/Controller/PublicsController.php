@@ -33,10 +33,10 @@ class PublicsController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
-        $this->Authentication->allowUnauthenticated(['pricing', 'index', 'contact', 'healthcheck']);
+        $this->Authentication->allowUnauthenticated(['pricing', 'landingpage', 'contact', 'healthcheck']);
     }
 
-    public function index() {
+    public function landingpage() {
         $this->viewBuilder()->setLayout('public');
     }
 
