@@ -591,7 +591,7 @@ class AppController extends Controller {
 
     function _rateMe($price_array) {
         $streamTable = $this->getTableLocator()->get('Streams');
-        debug("Message ID is " . $price_array['id']);
+      //  debug("Message ID is " . $price_array['id']);
         $record = $streamTable->find()
                 ->contain('ContactStreams') // Include the related "ContactStreams" records
                 ->where(['messageid' => $price_array['id']])
@@ -618,7 +618,7 @@ class AppController extends Controller {
         if ($alreadyCosted->isEmpty()) {
 
             //Process charging if not already.
-            debug("Charging $record->conversationid");
+     //       debug("Charging $record->conversationid");
             $this->_chargeMe($record);
         } else {
             // debug($alreadyCosted);
@@ -638,7 +638,7 @@ class AppController extends Controller {
             $this->_notify("Country info is empty for $ph", "critical");
             return;
         } else {
-            debug($countryinfo->country);
+     //       debug($countryinfo->country);
         }
         $msgCategory = $record->category;
         $msgpricing_model = $record->pricing_model;
@@ -680,7 +680,7 @@ class AppController extends Controller {
                 }
                 break;
             default:
-                debug("Message type is $msgType. not charged");
+  //              debug("Message type is $msgType. not charged");
                 break;
         }
     }

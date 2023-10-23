@@ -213,33 +213,33 @@ class ApisController extends AppController {
         }
     }
 
-    function msg_process($stream_id) {
-        switch ($msgtype) {
-            case "text":
-                $dataarray['message_txt_body'] = $message['text']['body'];
-                break;
-            case "button":
-                $dataarray['button_payload'] = $message['button']['payload'];
-                $dataarray['button_text'] = $message['button']['text'];
-                break;
-            case "document":
-                break;
-            case "sticker":
-                break;
-            case "unknown":
-                break;
-            case "contacts":
-                break;
-            case "video":
-                break;
-            case "image":
-                break;
-            case "interactive":
-                $this->_processInteractive(file_get_contents('php://input'), $FBSettings);
-                $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
-                break;
-        }
-    }
+    // function msg_process($stream_id) {
+    //     switch ($msgtype) {
+    //         case "text":
+    //             $dataarray['message_txt_body'] = $message['text']['body'];
+    //             break;
+    //         case "button":
+    //             $dataarray['button_payload'] = $message['button']['payload'];
+    //             $dataarray['button_text'] = $message['button']['text'];
+    //             break;
+    //         case "document":
+    //             break;
+    //         case "sticker":
+    //             break;
+    //         case "unknown":
+    //             break;
+    //         case "contacts":
+    //             break;
+    //         case "video":
+    //             break;
+    //         case "image":
+    //             break;
+    //         case "interactive":
+    //             $this->_processInteractive(file_get_contents('php://input'), $FBSettings);
+    //             $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
+    //             break;
+    //     }
+    // }
 
 //    function _sendInteractiveMenu($customer_number, $contactToSend, $FBSettings) {
 //        //send hte menu to customer Mobile

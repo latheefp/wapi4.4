@@ -155,18 +155,5 @@
 
     }
 
-  
-
-
-
-
-
-
-
-
-
-
-
-
 
     <?php $this->Html->scriptEnd(); ?>

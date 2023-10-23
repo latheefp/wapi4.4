@@ -27,7 +27,8 @@ if (!defined $api_key || !defined $ids) {
 
 my $curl_command = "curl --location 'http://localhost/jobs/runjob/$ids' " .
        "--header 'X-Api-Key: $api_key' " .
-        "--form \"qid=$ids\"";
+        "--form \"qid=$ids\"" .
+        "--form \"type=receive\"";
 
 # Get the current timestamp
 my $timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime);
