@@ -616,7 +616,7 @@ class ApisController extends AppController {
         return $msg;
     }
 
-    function sendschedule() {
+    function sendscheduleold() {
         // debug("Send Schdule");
         $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
@@ -649,6 +649,51 @@ class ApisController extends AppController {
             $this->set($result, $result);
             $this->writelog($data, "Not Post data");
         }
+    }
+
+    function sendschedule() {
+        // debug("Send Schdule");
+        $this->viewBuilder()->setLayout('ajax');
+        $this->writelog("Whatsapp Schedule function hit", null);
+        $data = $this->request->getData();
+        ;
+        if ($this->request->is('post')) {
+            $this->writelog($data, "The is post data");
+            $data = $this->_getFBsettings($data);
+            if ($data['status']['code'] == 200) {
+                $this->writelog($data['status']['code'], "Api Validated");
+                $data['user_id'] = null;
+                //passing the post data to real send funtion.
+                $sendQ = $this->getTableLocator()->get('SendQueues');
+                $sendQrow = $sendQ->newEmptyEntity();
+                $sendQrow->form_data = json_encode($data);
+                $sendQrow->status = "queued";
+                $sendQ->save($sendQrow);
+
+                http_response_code(200); // Bad Request
+                $response['error'] = 'Message Submitted';
+                $this->set('result', $response);
+                return;
+
+
+
+          //      $result = $this->_send_schedule($data);
+            //    $this->set('result', $result);
+            } else {
+                http_response_code(404); // Bad Request
+                $response['error'] = 'Wrong API';
+                $this->set('result', $response);
+                return;
+            }
+        } else {
+            $this->writelog($data, "Not Post data");
+            http_response_code(400); // Bad Request
+                $response['error'] = 'Bad  request';
+            $this->set('result', $response);
+              //  return;
+        }
+
+        $this->set('response', $return['result']);
     }
 
     function _send_schedule($data) {

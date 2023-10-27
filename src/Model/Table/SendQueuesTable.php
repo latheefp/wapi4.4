@@ -66,6 +66,10 @@ class SendQueuesTable extends Table
             ->notEmptyString('status');
 
         $validator
+            ->dateTime('process_start_time')
+            ->allowEmptyDateTime('process_start_time');
+
+        $validator
             ->boolean('processed')
             ->notEmptyString('processed');
 

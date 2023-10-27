@@ -255,8 +255,10 @@ class AppController extends Controller {
     }
 
     function _despatch_msg($contact, $form, $templateQuery, $FBSettings, $type = "template") {
-//        debug("Despatching");
-//  debug($contact);
+        //        debug("Despatching");
+        //  debug($contact);
+
+ //       debug($FBSettings);
         switch ($type) {
             case "template":
                 $this->writelog($contact, "Despatching message, Contact");
@@ -563,7 +565,7 @@ class AppController extends Controller {
             return $data;
         }
 
-        $data['ACCESSTOKENVALUE'] = $result->ACCESSTOKENVALUE;
+        
         $data['WBAID'] = $result->WBAID;
         $data['API_VERSION'] = $result->API_VERSION;
         $data['phone_number_id'] = $result->phone_number_id;
@@ -572,10 +574,13 @@ class AppController extends Controller {
         $data['def_isd'] = $result->def_isd;
         $data['interactive_webhook'] = $result->interactive_webhook;
         $data['interactive_notification_numbers'] = $result->interactive_notification_numbers;
+        $data['interactive_api_key'] = $result->interactive_api_key;
         if (intval(getenv('SEND_MSG')) == true) {
-            $data['interactive_api_key'] = $result->interactive_api_key;
+         //   debug("Message enabled ". getenv('SEND_MSG'));
+            $data['ACCESSTOKENVALUE'] = $result->ACCESSTOKENVALUE;
         } else {
-            $data['interactive_api_key'] = "Message not enabled, current value is " . intval(getenv('SEND_MSG'));
+          // debug("Message disabled ". getenv('SEND_MSG'));
+            $data['ACCESSTOKENVALUE'] =  "Message not enabled, current value is " . intval(getenv('SEND_MSG'));
         }
 
         $data['def_isd'] = $result->def_isd;

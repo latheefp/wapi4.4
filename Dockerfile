@@ -55,7 +55,9 @@ EXPOSE 80
 
 # Start the Apache web server
 
-#CMD ["apache2-foreground"]
-CMD ["bash", "-c", "service apache2 restart &&  /var/www/html/bin/cake Processrcvq"]
+# CMD ["apache2-foreground"]
+#CMD ["bash", "-c", "service apache2 restart &&  /var/www/html/bin/cake Processrcvq &&  /var/www/html/bin/cake Processsendq"]
+CMD ["bash", "-c", "service apache2 restart & /var/www/html/bin/cake Processrcvq & /var/www/html/bin/cake Processsendq"]
+
 
 
