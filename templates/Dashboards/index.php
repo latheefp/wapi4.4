@@ -400,7 +400,7 @@
         })
 
 //        $('input[name="dateRangeSelector"]').trigger('change');
-        setInterval(fetchData, 10000); // Fetch data every 5 seconds
+        setInterval(fetchData, 60000); // Fetch data every 30 seconds
 
 
     });

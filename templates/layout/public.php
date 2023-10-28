@@ -74,7 +74,7 @@ if (isset($titleforlayout)) {
                             <li class="nav-item dropdown">
                                 <a id="dropdownSubMenu1" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link dropdown-toggle">Services</a>
                                 <ul aria-labelledby="dropdownSubMenu1" class="dropdown-menu border-0 shadow">
-                                    <li><a href="/users/login" class="dropdown-item">Login</a></li>
+                                    <li><a href="/login" class="dropdown-item">Login</a></li>
                                     <li><a href="/pricing" class="dropdown-item">Pricing</a></li>
                                    
                                 </ul>
