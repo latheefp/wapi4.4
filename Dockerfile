@@ -29,7 +29,13 @@ WORKDIR /var/www/html
 
 # Copy the CakePHP application code to the container
 COPY . /var/www/html
-#COPY docker/app_local.php  /var/www/html/config/app_local.php
+
+
+#COPY docker/entrscript /var/www/html/bin
+# COPY docker/entrypoint.sh /var/www/html/bin/entrypoint.sh
+RUN chmod a+x /var/www/html/bin/entrypoint.sh
+
+
 # Install dependencies using Composer
 
 RUN composer install --no-interaction --prefer-dist #//temporary disabled.
@@ -56,8 +62,9 @@ EXPOSE 80
 # Start the Apache web server
 
 # CMD ["apache2-foreground"]
-#CMD ["bash", "-c", "service apache2 restart &&  /var/www/html/bin/cake Processrcvq &&  /var/www/html/bin/cake Processsendq"]
-CMD ["bash", "-c", "service apache2 restart & /var/www/html/bin/cake Processrcvq & /var/www/html/bin/cake Processsendq"]
 
+#CMD ["bash", "-c", "service apache2 restart & /var/www/html/bin/cake Processrcvq & /var/www/html/bin/cake Processsendq"]
+
+ENTRYPOINT ["/var/www/html/bin/entrypoint.sh"]
 
 

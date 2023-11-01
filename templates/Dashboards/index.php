@@ -399,6 +399,8 @@
             },
         })
 
+        fetchData();
+
 //        $('input[name="dateRangeSelector"]').trigger('change');
         setInterval(fetchData, 60000); // Fetch data every 30 seconds
 

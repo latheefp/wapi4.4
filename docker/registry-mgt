@@ -1,0 +1,6 @@
+docker pull quay.io/skopeo/stable
+docker run -it --rm quay.io/skopeo/stable  list-tags docker://registry.egrand.in/wapi
+docker run -it --rm quay.io/skopeo/stable delete docker://registry.egrand.in/wapi:latest
+docker run -it --rm quay.io/skopeo/stable delete docker://registry.egrand.in/wapi:prod
+docker run -it --rm quay.io/skopeo/stable delete docker://registry.egrand.in/wapi:2.0
+

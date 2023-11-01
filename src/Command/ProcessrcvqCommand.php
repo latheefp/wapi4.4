@@ -31,23 +31,25 @@ class ProcessrcvqCommand extends Command {
                         'help' => 'The queue_id',
                         'required' => false,
                     ],
-                ]
+            ]
         );
 
         return $parser;
     }
 
     public function execute(Arguments $args, ConsoleIo $io) {
-        $queue_id = $args->getOption('queue_id');
-        if (isset($queue_id)) {
-//            debug($queue_id);
-            $this->processMe($queue_id);
-            // $this->test();
-        } else {
-            $this->process_rcvq();
+        while (true) {
+            if (intval(getenv('RCVQRUN')) == true) {
+                print("RCVQRUN enabled,  processing");
+                $this->process_rcvq();
+                
+            }else{
+                print("RCVQRUN is disabled,  waiting 300 seconds");
+                sleep (300);
+            }
         }
-        print("running with arg\n");
-        ;
+       
+        
     }
 
     public function initialize(): void {
@@ -59,7 +61,7 @@ class ProcessrcvqCommand extends Command {
         $apiKey = 'sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh';
         $table = TableRegistry::getTableLocator()->get('RcvQueues');
         while (true) {
-//            print ".";
+         //   print ".";
             $queued = $query = $table->find()
                     ->where([
                         'status' => 'queued',
@@ -67,6 +69,7 @@ class ProcessrcvqCommand extends Command {
                     ->all();
 
             foreach ($queued as $key => $val) {
+                debug($val->id);
                 $lockTimeout = 3; // Example: 2 seconds
                 $connection = ConnectionManager::get('default');
                 $limit = $this->checklimit();
@@ -94,7 +97,7 @@ class ProcessrcvqCommand extends Command {
                             usleep(100);
                             exec($cmd);
                         } else {
-                         //   debug("Transaction committed, but no rows were affected.");
+                            debug("Transaction committed, but no rows were affected.");
                             continue;
                         }
                     } else {

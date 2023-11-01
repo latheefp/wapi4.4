@@ -30,9 +30,26 @@ class ProcesssendqCommand extends Command {
     }
 
     public function execute(Arguments $args, ConsoleIo $io) {
-        $queue_id = $args->getOption('queue_id');
-        
-            $this->process_sendq();
+
+        while (true) {
+            if (intval(getenv('SNDQRUN')) == true) {
+                print "SNDQRUN Enabled, processing";
+                $this->process_sendq();
+            }else{
+                print("SNDQRUN is disabled,  waiting 300 seconds");
+                sleep (300);
+            }
+        }
+
+
+        // if (intval(getenv('SNDQRUN')) == true) {
+        //     print "SNDQRUN Enabled, processing";
+        //     $this->process_sendq();
+        // }else{
+        //     debug("SND Q is Disabled by settings");
+        //   //  exit(0);
+        // }
+           
 
         print("running with arg\n");
         ;
@@ -77,8 +94,8 @@ class ProcesssendqCommand extends Command {
                         if ($affectedRows > 0) {
                             debug("Transaction committed successfully. {$affectedRows} rows were affected.");
                             $maxParallelProcesses = $this->app->_getsettings('max_parallel_que_processing');
-                          //  $cmd = ROOT . '/bin/runsendprocess.pl  -i ' . $val->id . ' -k ' . $apiKey . ' >' . ROOT . '/logs/process.log 2>&1 &';
-                            $cmd = ROOT . '/bin/runsendprocess.pl  -i ' . $val->id . ' -k ' . $apiKey ;
+                            $cmd = ROOT . '/bin/runsendprocess.pl  -i ' . $val->id . ' -k ' . $apiKey . ' >' . ROOT . '/logs/process.log 2>&1 &';
+                          //  $cmd = ROOT . '/bin/runsendprocess.pl  -i ' . $val->id . ' -k ' . $apiKey ;
                             debug($cmd);
                             usleep(100);
                             exec($cmd);

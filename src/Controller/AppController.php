@@ -595,8 +595,9 @@ class AppController extends Controller {
 
 
     function _rateMe($price_array) {
+        $this->writelog($price_array,"Rating from rateme");
         $streamTable = $this->getTableLocator()->get('Streams');
-      //  debug("Message ID is " . $price_array['id']);
+         //  debug("Message ID is " . $price_array['id']);
         $record = $streamTable->find()
                 ->contain('ContactStreams') // Include the related "ContactStreams" records
                 ->where(['messageid' => $price_array['id']])
@@ -604,13 +605,15 @@ class AppController extends Controller {
 
         if (!$record) {
             // Stop code execution or handle the situation as needed
+            $this->writelog( $price_array['id'],"No record found msg id in Streams");
             $this->_notify("No record found msg id " . $price_array['id'], "Warning");
-            return; // or return; depending on where this code is located
+            $return['result']['status']="warning";
+            $return['result']['message']="No record found msg id " . $price_array['id'];
+            return $return; // or return; depending on where this code is located
         }
 
 
         // debug($record->conversationid);
-//
         $alreadyCosted = $streamTable->find()
                 ->where([
                     'conversationid' => $record->conversationid,
@@ -623,16 +626,21 @@ class AppController extends Controller {
         if ($alreadyCosted->isEmpty()) {
 
             //Process charging if not already.
-     //       debug("Charging $record->conversationid");
-            $this->_chargeMe($record);
+            //debug("Charging $record->conversationid");
+            $this->writelog($record, "Passing to Charging");
+            $return=$this->_chargeMe($record);
         } else {
             // debug($alreadyCosted);
-            debug("Already charged $record->conversationid");
+           // debug("Already charged $record->conversationid");
+            $this->writelog($record->conversationid, "Already rated Message ID");
+            $return['result']['status']="success";
+            $return['result']['message']="$record->conversationid, Already rated Message ID";
         }
+        return $return;
     }
 
     function _chargeMe($record) {
-//  debug($record);
+        //debug($record);
         $msgType = $record->type;
         $ph = $record->contact_stream->contact_number;
         $countryinfo = $this->_getCountry($ph);
@@ -643,26 +651,31 @@ class AppController extends Controller {
             $this->_notify("Country info is empty for $ph", "critical");
             return;
         } else {
-     //       debug($countryinfo->country);
+           // debug($countryinfo->country);
         }
         $msgCategory = $record->category;
         $msgpricing_model = $record->pricing_model;
         $StreamsTable = $this->getTableLocator()->get('Streams');
         $row = $StreamsTable->get($record->id);
+ #       debug($msgType);
         switch ($msgType) {
             case "send":
+                debug("Message type is send");
                 $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
                 $cost['cost'] = round($cost['cost'], 2);
                 $row->cost = $cost['cost'];
                 if ($StreamsTable->save($row)) {
                     $result = $this->_updatebalance($row->account_id, $cost['cost']);
-//             debug($cost);
-//  debug($countryinfo);
+                    debug($cost);
+                    debug($countryinfo);
                     $RatingTable = $this->getTableLocator()->get('Ratings');
                     $rating = $RatingTable->newEmptyEntity();
                     $rating->stream_id = $record->id;
                     $rating->old_balance = $result['old_balance']['current_balance'];
                     $rating->new_balance = $result['new_balance']['current_balance'];
+                    $return['result']['charginginfo']['old_balance']=$result['old_balance']['current_balance'];
+                    $return['result']['charginginfo']['new_balance']=$result['old_balance']['new_balance'];
+                    $return['result']['charginginfo']['Country']=$countryinfo->country;
                     $rating->cost = $cost['cost'];
                     $rating->conversation = $record->conversationid;
                     $rating->country = $countryinfo->country;
@@ -672,22 +685,41 @@ class AppController extends Controller {
                     $rating->fb_cost = $cost['fb_cost'];
                     $rating->rate_with_tax = $cost['rate_with_tax'];
                     if (!$RatingTable->save($rating)) {
-                        //  debug($rating->getError);
+                          debug($rating->getError);
                         $this->_notify(json_encode($rating->getError), "critical");
+                        $return['result']['message']="Charging failed for message type   $msgType with ". $cost['rate_with_tax'];
+                        $return['result']['status']="failed";
+                        
                     } else {
                         $streamsTable = $this->getTableLocator()->get('Streams');
                         $streamsTable->updateAll(
                                 ['rated' => true],
                                 ['conversationid' => $record->conversationid]
                         );
+                        $return['result']['message']="Charged message type   $msgType with ". $cost['rate_with_tax'];
+                        $return['result']['status']="failed";
                         debug("Rating save  as true for all  record" . $record->conversationid);
                     }
                 }
                 break;
+            case "ISend":
+                    $return['result']['message']="Not Charged for $msgType and updated stream table";
+                    $return['result']['status']="success";
+                    $streamsTable = $this->getTableLocator()->get('Streams');
+                    $streamsTable->updateAll(
+                                ['rated' => true],
+                                ['conversationid' => $record->conversationid]
+                        );
+
+
+                    break;    
             default:
-  //              debug("Message type is $msgType. not charged");
+                $return['result']['message']="Not Charged for $msgType";
+                $return['result']['status']="success";
+             
                 break;
         }
+        return $return;
     }
 
     function _calculateCost($countryinfo, $msgCategory, $msgpricing_model) {
