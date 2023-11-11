@@ -197,7 +197,15 @@ class ApisController extends AppController {
                 $this->writelog($hub_challenge, "hub challenge");
                 # echo $hub_challenge;
 
-                return $this->response->withType("text/plain")->withStringBody(json_encode((int) $hub_challenge));
+                return $this->response
+                ->withType("text/plain")
+                ->withStatus(200)
+                ->withStringBody(json_encode((int) $hub_challenge));
+            }else{
+                return $this->response
+                ->withType("text/plain")
+                ->withStatus(400)
+                ->withStringBody(json_encode((int) "400"));
             }
         }
 

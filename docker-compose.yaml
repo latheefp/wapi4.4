@@ -7,7 +7,7 @@ services:
       - D:\web\wa4.4\docker\env.sh:/var/www/html/config/k8s/.env
       - D:\web\wa4.4\docker\000-default.conf:/etc/apache2/sites-enabled/000-default.conf
 #    build: .
-    image: registry.egrand.in/wapi:latest
+    image: latheefp/wapi:latest
   #  image: grandhelp
 #    env_file:
 #      - ./docker/.env

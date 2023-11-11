@@ -52,6 +52,12 @@ class JobsController extends AppController {
         $apiKey = $this->request->getHeaderLine('X-Api-Key');
         $type = $this->request->getData('type'); 
         $qid = $this->request->getData('qid'); // Assuming this is a POST request
+
+
+     //   print $qid;
+       // return;
+
+
         $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]);
         if ($FBSettings['status']['code'] == 404) {
             $this->response = $this->response->withStatus(401); // Unauthorized
@@ -151,7 +157,7 @@ class JobsController extends AppController {
         //checking schdule name.
         //   debug($data);
         //Temporary hack to overwrite mobile number
-        $data['mobile_number'] = '966547237272' ;
+      //  $data['mobile_number'] = '966547237272' ;
         //Checking shedule name exists or not. 
 
 
@@ -244,6 +250,7 @@ class JobsController extends AppController {
 
    
     public function processrcv($id) {
+       // $this->viewBuilder->setLayout('ajax');
         $return['result']=[];
         // $table = TableRegistry::getTableLocator()->get('RcvQueues');
         //  $io->out('proessing ' . $record->id);
@@ -252,8 +259,10 @@ class JobsController extends AppController {
 
         // debug(getenv('LOG'));
         $input = json_decode($record->json, true);
-        //   debug($input);
+      //  debug($input);
+
         $this->writelog($input, "Post Data from Process Job");
+        
 
         $dataarray['hookid'] = $input['entry'][0]['id'];
         $dataarray['messaging_product'] = $input['entry'][0]['changes'][0]['value']['messaging_product'];
@@ -276,7 +285,8 @@ class JobsController extends AppController {
         if (isset($input['entry'][0]['changes'][0]['value']['messages'])) { //type is message
             
             $message = $input['entry'][0]['changes'][0]['value']['messages'][0];
-            $dataarray['recievearray'] = file_get_contents('php://input');
+            $dataarray['recievearray'] = $record->json;
+           // debug($message);
             $messageid = $message['id'];
             $this->writelog($messageid, "Picked up by message");
             $dataarray['messageid'] = $messageid;
@@ -330,13 +340,13 @@ class JobsController extends AppController {
                 $dataarray['message_contextId'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['id'];
                 $dataarray['message_context_rom'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['from'];
                 $this->writelog($dataarray, "Save data for new Reply message");
-                $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
+            //    $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
             } else { //new msg
                 $return['result']['msg_context']="New message received, No need of rating";
                 $return['result']['status']="success";
                 $dataarray['message_context'] = "new";
                 $this->writelog($dataarray, "Save New Massage in streams");
-                $save_status = $this->_savedata($dataarray, $FBSettings); //save data before sending welcome msg.
+             //   $save_status = $this->_savedata($dataarray, $FBSettings); //save data before sending welcome msg.
 
                 if (($Timeout) && ($msgtype != "interactive")) {  // new message and not reply for interactive msg
                     $this->writelog($msgtype, "Sending Interactive Menu to " . $dataarray['contact_waid']);
@@ -363,6 +373,8 @@ class JobsController extends AppController {
                     $this->writelog("Skipping welcome message time out is not yet happen after last message or Intrective message");
                 }
             }
+            $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
+
            // $result = array("success" => true);
             // return $this->response->withType("application/json")->withStringBody(json_encode($result));
         } elseif (isset($input['entry'][0]['changes'][0]['value']['statuses'])) {  //type ie status update.
@@ -414,30 +426,39 @@ class JobsController extends AppController {
         ));
 
         $response = curl_exec($curl);
+//        print($response);
         $this->writeinteractive($response, "Response json from Grand");
         $responsearray = json_decode($response, true);
+     //   debug($responsearray);
         $this->writeinteractive($responsearray, "Response Array from Grand");
         //  $notification_numbers=$this->_getAccountSettings('interactive_notification_numbers');
         curl_close($curl);
         $notification_numbers = (explode(',', $FBSettings['interactive_notification_numbers']));
         $notification_numbers[] = $wa_id;
-        foreach ($notification_numbers as $key => $contact_number) {
-            $this->_sendIntToCustomer($responsearray, $contact_number, $FBSettings);
+        if(!empty($responsearray)){
+            foreach ($notification_numbers as $key => $contact_number) {
+                $this->_sendIntToCustomer($responsearray, $contact_number, $FBSettings);
+            }
+        }else{
+            $this->writeinteractive($response, "Failed to send response array as its empty");
+            $this->writelog($response, "Failed to send response array as its empty");
         }
+
+        
     }
 
-    function writeinteractive($data, $type = null) {
-        if (intval(getenv('INTERACTIV')) == false) {
-            //   debug("No logs");
-            return false;
-        }
-        $file = LOGS . 'GrandInt' . '.log';
-        $time = date("Y-m-d H:i:s", time());
-        $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
-        fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
-        fwrite($handle, print_r($data, true));
-        fclose($handle);
-    }
+    // function writeinteractive($data, $type) {
+    //     if (intval(getenv('INTERACTIV')) == false) {
+    //         //   debug("No logs");
+    //         return false;
+    //     }
+    //     $file = LOGS . 'GrandInt' . '.log';
+    //     $time = date("Y-m-d H:i:s", time());
+    //     $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
+    //     fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
+    //     fwrite($handle, print_r($data, true));
+    //     fclose($handle);
+    // }
 
     function _sendIntToCustomer($list, $wa_id, $FBSettings) {
         $frame = '{
@@ -714,7 +735,7 @@ class JobsController extends AppController {
                         $return=$this->_rateMe($status);
                         // $return['result']['rating'] = "new";
                     } else {
-                        $return['result']['rating'] = "existing";
+                        $return['result']['rating'] = "existing rating ".$status['conversation']['id'];
                         // debug($ratingquery);
 
                         if (!isset($updated[$status['conversation']['id']])) {
@@ -875,6 +896,40 @@ class JobsController extends AppController {
             $this->writeinteractive($row, "updated Stream table");
         } else {
             $this->writeinteractive($row->getErrors(), "Failed to update Stream table");
+        }
+    }
+
+
+    function _welcomemsg($customer_number, $contactToSend, $FBSettings) {
+        // $FBSettings = $this->_getFBsettings($data);
+        $data['message'] = "Thank you for Contacting us, for support, please call us.";
+        if ($FBSettings['status']['code'] !== 200) {
+            $result['status'] = "failed";
+            $result['msg'] = "Internal system error, Wrong IP info";
+        } else {
+            //  $contactStream = $this->getTableLocator()->get('ContactStreams')->get($data['mobilenumberId']);
+            $streams_table = $this->getTableLocator()->get('Streams');
+            $streamrow = $streams_table->newEmptyEntity();
+//            $streamrow->schedule_id = $sched_id;
+            //  $streamrow->contact_stream_id = $data['mobilenumberId'];
+            $streamrow->contact_stream_id = $this->getWastreamsContactId($contactToSend, $FBSettings);
+            $streamrow->initiator = "welcome";
+            $streamrow->type = "Welcome";
+            $streamrow->postdata = json_encode($data);
+            $streamrow->account_id = $FBSettings['account_id'];
+            $streams_table->save($streamrow);
+            $contact = $streams_table->get($streamrow->id);
+            $form=null;
+            $result = $this->_despatch_msg($contact, $data, $form, $FBSettings, "text");
+            //debug($result);
+            if (isset($result['messages'][0]['id'])) {
+                $status['status'] = "success";
+                $status['msg'] = json_encode($result);
+            } else {
+                $status['status'] = "failed";
+                $status['msg'] = json_encode($result);
+            }
+            $this->set('result', $status);
         }
     }
 }

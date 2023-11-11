@@ -22,7 +22,7 @@ class RcvDataformatHelper extends Helper {
         $result = null;
         //   debug($data);
         foreach ($message_array as $key => $val) {
-            //  debug($val);
+          //    debug($val);
             $type = $val['type'];
             switch ($type) {
                 case "image":

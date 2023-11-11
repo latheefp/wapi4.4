@@ -935,6 +935,9 @@ class CampaignsController extends AppController {
     }
 
     function getstreamdetails($id = null) {
+        $session = $this->request->getSession();
+        $ugroup_id = intval($session->read('Auth.ugroup_id'));
+        $this->set('ugroup_id',$ugroup_id);
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('Streams');
         $query = $table->query()
@@ -953,6 +956,7 @@ class CampaignsController extends AppController {
                 ->contain('Users')
                 ->all();
         $this->set('updates', $updatequery);
+        
     }
 
     function updatecomment() {

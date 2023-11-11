@@ -16,20 +16,22 @@ use Cake\Event\Event;
 //use Cake\Cache\Cache;
 use Cake\ORM\Query;
 
-class TestsController extends AppController {
+class TestsController extends AppController
+{
 
-    function test() {
+    function test()
+    {
         $this->viewBuilder()->setLayout('ajax');
-//        $query = TableRegistry::getTableLocator()->get('RcvQueues')
-//                ->find();
-//        $query->where(function (QueryExpression $exp, Query $q) {
-//            return $exp
-//                    ->eq('status', 'processing')
-//                    ->gt('process_start_time', $q->func()->dateSub('NOW()', 'INTERVAL 10 MINUTE'));
-//        });
+        //        $query = TableRegistry::getTableLocator()->get('RcvQueues')
+        //                ->find();
+        //        $query->where(function (QueryExpression $exp, Query $q) {
+        //            return $exp
+        //                    ->eq('status', 'processing')
+        //                    ->gt('process_start_time', $q->func()->dateSub('NOW()', 'INTERVAL 10 MINUTE'));
+        //        });
 
         $query = TableRegistry::getTableLocator()->get('RcvQueues')
-                ->find();
+            ->find();
         // Add the WHERE clause
         $query->where([
             'STATUS' => 'processing',
@@ -41,7 +43,8 @@ class TestsController extends AppController {
         debug($count);
     }
 
-    function redistest() {
+    function redistest()
+    {
         $lockKey = "abc2343243434234";
 
         $result = Cache::add($lockKey, true);
@@ -55,7 +58,8 @@ class TestsController extends AppController {
         }
     }
 
-    function testbg() {
+    function testbg()
+    {
         $pid = pcntl_fork();
 
         if ($pid == -1) {
@@ -72,7 +76,8 @@ class TestsController extends AppController {
         }
     }
 
-    function bgfunction() {
+    function bgfunction()
+    {
         // Your function's code goes here
         for ($i = 1; $i <= 10; $i++) {
             debug("Iteration $i\n");
@@ -80,45 +85,50 @@ class TestsController extends AppController {
         }
     }
 
-    public function isAuthorized($user) {
+    public function isAuthorized($user)
+    {
         return true;
     }
 
-    public function beforeFilter(EventInterface $event): void {
+    public function beforeFilter(EventInterface $event): void
+    {
         parent::beforeFilter($event);
-//        $this->Security->setConfig('unlockedActions', ['getdata', 'edit',]);
-//        $this->Auth->allow(['ratecard', 'apiEndpoint']);
+        //        $this->Security->setConfig('unlockedActions', ['getdata', 'edit',]);
+        //        $this->Auth->allow(['ratecard', 'apiEndpoint']);
     }
 
-    public function index() {
+    public function index()
+    {
         $this->viewBuilder()->setLayout('ajax');
     }
 
-// Sample API endpoint
-    public function apiEndpoint() {
+    // Sample API endpoint
+    public function apiEndpoint()
+    {
         $apiKey = $this->request->getHeaderLine('X-API-Key'); // Assuming API key is provided in the request header
-// Check if the API key is correct
+        // Check if the API key is correct
         if ($this->_validatekey($apiKey)) {
             throw new ForbiddenException('Invalid API key'); // Throws a 403 Forbidden exception
         }
 
-// Your API logic here
-// Return success response
+        // Your API logic here
+        // Return success response
         $response = [
             'status' => 'success',
             'message' => 'API call successful',
-                // ...
+            // ...
         ];
         $this->set(compact('response'));
         $this->viewBuilder()->setOption('serialize', 'response');
     }
 
-    function _validatekey($data) {
+    function _validatekey($data)
+    {
         $result = [];
         $table = $this->getTableLocator()->get('ApiKeys');
         $query = $table->find()
-                ->where(['api_key' => $data['api_key'], 'enabled' => true])
-                ->first();
+            ->where(['api_key' => $data['api_key'], 'enabled' => true])
+            ->first();
         if (empty($query)) {
             $result['status'] = false;
             $result['msg'] = "Wrong API KEY";
@@ -137,14 +147,15 @@ class TestsController extends AppController {
         return $result;
     }
 
-    function _getCountry($ph = null) {
-//   debug($contact);
-//    $ph = "972345449595050";
+    function _getCountry($ph = null)
+    {
+        //   debug($contact);
+        //    $ph = "972345449595050";
 
         $pricaTable = $this->getTableLocator()->get('PriceCards');
         $codes = $pricaTable->find()
-                ->order(['country_code DESC'])
-                ->all();
+            ->order(['country_code DESC'])
+            ->all();
 
         foreach ($codes as $key => $val) {
             if (substr($ph, 0, strlen($val->country_code)) == $val->country_code) {
@@ -154,40 +165,42 @@ class TestsController extends AppController {
         }
         return $Country;
 
-//  debug($Country);
+        //  debug($Country);
     }
 
-    function rateme($price_array) {
-// $pricing_json = '{"id":"wamid.HBgMOTE5NDk2NDcwODA0FQIAERgSQzA5NzA3NzZDNTBCREJCQjA3AA==","status":"sent","timestamp":"1686250127","recipient_id":"919496470804","conversation":{"id":"eadc0fa322314cefd424e85dbfe1a258","expiration_timestamp":"1686336540","origin":{"type":"marketing"}},"pricing":{"billable":true,"pricing_model":"CBP","category":"marketing"}}';
-// $price_array = json_decode($pricing_json, true);
-//   debug($price_array);
-//Get Steams ID to proceed further. 
+    function rateme($price_array)
+    {
+        // $pricing_json = '{"id":"wamid.HBgMOTE5NDk2NDcwODA0FQIAERgSQzA5NzA3NzZDNTBCREJCQjA3AA==","status":"sent","timestamp":"1686250127","recipient_id":"919496470804","conversation":{"id":"eadc0fa322314cefd424e85dbfe1a258","expiration_timestamp":"1686336540","origin":{"type":"marketing"}},"pricing":{"billable":true,"pricing_model":"CBP","category":"marketing"}}';
+        // $price_array = json_decode($pricing_json, true);
+        //   debug($price_array);
+        //Get Steams ID to proceed further. 
         $streamTable = $this->getTableLocator()->get('Streams');
         $record = $streamTable->find()
-                ->contain('ContactStreams') // Include the related "ContactStreams" records
-                ->where(['messageid' => $price_array['id']])
-// ->toArray()
-                ->first();
-//debug($record->toArray());
-//if the same conversation_id is charged before, dont charge, set it zero.
-//  debug("Checking $record->conversationid");
-//only devlivered message will be charged, there should be cronjob to charge all messsage delivered later.
+            ->contain('ContactStreams') // Include the related "ContactStreams" records
+            ->where(['messageid' => $price_array['id']])
+            // ->toArray()
+            ->first();
+        //debug($record->toArray());
+        //if the same conversation_id is charged before, dont charge, set it zero.
+        //  debug("Checking $record->conversationid");
+        //only devlivered message will be charged, there should be cronjob to charge all messsage delivered later.
         $existingPaidConvID = $streamTable->find()
-                ->where([
-                    'conversationid' => $record->conversationid,
-                    'cost > ' => 0,
-                    'delivered_time IS NOT NULL'
-                ])
-                ->count();
+            ->where([
+                'conversationid' => $record->conversationid,
+                'cost > ' => 0,
+                'delivered_time IS NOT NULL'
+            ])
+            ->count();
         if ($existingPaidConvID == 0) { //nothing is costed yet. 
             $this->_chargeMe($record);
         } else {
-//   debug($record->conversationid . " is already rated");
+            //   debug($record->conversationid . " is already rated");
         }
     }
 
-    function _chargeMe($record) {
-//  debug($record);
+    function _chargeMe($record)
+    {
+        //  debug($record);
         $msgType = $record->type;
         $ph = $record->contact_stream->contact_number;
         $countryinfo = $this->_getCountry($ph);
@@ -202,8 +215,8 @@ class TestsController extends AppController {
                 $row->cost = $cost['cost'];
                 if ($StreamsTable->save($row)) {
                     $result = $this->_updatebalance($row->account_id, $cost['cost']);
-//             debug($cost);
-//  debug($countryinfo);
+                    //             debug($cost);
+                    //  debug($countryinfo);
                     $RatingTable = $this->getTableLocator()->get('Ratings');
                     $rating = $RatingTable->newEmptyEntity();
                     $rating->stream_id = $record->id;
@@ -218,7 +231,7 @@ class TestsController extends AppController {
                     $rating->rate_with_tax = $cost['rate_with_tax'];
 
                     $RatingTable->save($rating);
-//  debug($countryinfo);
+                    //  debug($countryinfo);
                 }
 
                 break;
@@ -228,9 +241,10 @@ class TestsController extends AppController {
         }
     }
 
-    function _calculateCost($countryinfo, $msgCategory, $msgpricing_model) {
+    function _calculateCost($countryinfo, $msgCategory, $msgpricing_model)
+    {
 
-//debug($countryinfo);
+        //debug($countryinfo);
         $cost = [];
         $tax_perc = $this->_getsettings('tax');
         $profit_perc = $this->_getsettings('profit_margin');
@@ -245,20 +259,21 @@ class TestsController extends AppController {
         return $cost;
     }
 
-    function updatebalance() {
+    function updatebalance()
+    {
         $StreamsTable = $this->getTableLocator()->get('Streams');
         $row = $StreamsTable->find()
-                ->where(function ($exp, $q) {
-                    return $exp->isNotNull('tmp_upate_json');
-                })
-                ->all();
+            ->where(function ($exp, $q) {
+                return $exp->isNotNull('tmp_upate_json');
+            })
+            ->all();
         foreach ($row as $key => $val) {
             $data = trim($val->tmp_upate_json, ',');
-//   debug($data);
+            //   debug($data);
             $jsonArray = explode("\n", $data);
             foreach ($jsonArray as $jkey => $jval) {
                 if (!empty($jval)) {
-//    debug($jval);
+                    //    debug($jval);
                     $jval = trim($jval, ',');
                     $price_array = json_decode($jval, true);
                     if (isset($price_array['pricing'])) {
@@ -269,60 +284,63 @@ class TestsController extends AppController {
         }
     }
 
-    function _updatebalance($account_id, $cost) {
-//UPDATE `streams` SET `cost` = '0' WHERE `streams`.`id` = 58588; 
+    function _updatebalance($account_id, $cost)
+    {
+        //UPDATE `streams` SET `cost` = '0' WHERE `streams`.`id` = 58588; 
         $result = [];
         $accountTable = $this->getTableLocator()->get('Accounts');
         $result['old_balance'] = $accountTable->get($account_id)->toArray();
-//    debug($old_balance);
+        //    debug($old_balance);
         $result['status'] = 1;
 
-// debug("updating $account_id with cost of $cost");
+        // debug("updating $account_id with cost of $cost");
         $connection = ConnectionManager::get('default');
 
         try {
-// Begin the transaction
+            // Begin the transaction
             $connection->begin();
 
-// Lock the table
+            // Lock the table
             $connection->execute('LOCK TABLES accounts WRITE');
 
             debug("Locking table to update $cost");
 
-// Update the balance column
+            // Update the balance column
             $query = $connection->newQuery();
             $query->update('accounts')
-                    ->set(['current_balance' => $query->newExpr('current_balance - :cost')])
-                    ->bind(':cost', $cost, 'float')
-                    ->where(['id' => $account_id])
-                    ->execute();
+                ->set(['current_balance' => $query->newExpr('current_balance - :cost')])
+                ->bind(':cost', $cost, 'float')
+                ->where(['id' => $account_id])
+                ->execute();
 
-// debug($query);
-// debug("updating the balance");
-// Unlock the table
+            // debug($query);
+            // debug("updating the balance");
+            // Unlock the table
             debug($query->sql());
             $connection->execute('UNLOCK TABLES');
 
-// Commit the transaction
+            // Commit the transaction
             $connection->commit();
         } catch (\Exception $e) {
             $result['status'] = 10;
             debug($e);
             debug("Rolling back");
-// Rollback the transaction in case of an error
+            // Rollback the transaction in case of an error
             $connection->rollback();
-// Handle the error appropriately
+            // Handle the error appropriately
         }
 
         $result['new_balance'] = $accountTable->get($account_id)->toArray();
         return $result;
     }
 
-    function setredis() {
+    function setredis()
+    {
         Cache::write('rcv_q_count', 0);
     }
 
-    function writeredis() {
+    function writeredis()
+    {
         Cache::increment('rcv_q_count');
         $posts = [
             'name' => 'latheef'
@@ -330,7 +348,8 @@ class TestsController extends AppController {
         Cache::write('posts', $posts);
     }
 
-    function readredis() {
+    function readredis()
+    {
 
 
 
@@ -338,7 +357,8 @@ class TestsController extends AppController {
         debug(Cache::read('rcv_q_count'));
     }
 
-    function txn() {
+    function txn()
+    {
         $connection = ConnectionManager::get('default');
         $connection->begin();
 
@@ -347,7 +367,8 @@ class TestsController extends AppController {
         $connection->commit();
     }
 
-    function txn1() {
+    function txn1()
+    {
         $lockTimeout = 3; // Example: 2 seconds
         $connection = ConnectionManager::get('default');
         try {
@@ -370,5 +391,39 @@ class TestsController extends AppController {
             echo "Database operation failed: " . $e->getMessage();
             debug("failed");
         }
+    }
+
+    function test2()
+    {
+
+        $RcvQueues = $this->getTableLocator()
+            ->get('RcvQueues')
+            ->find()
+            ->where(['status' => 'queued'])
+            ->count();
+        $this->savemetric('RcvQueues', 0, $RcvQueues);
+        $SendQueues = $this->getTableLocator()
+            ->get('SendQueues')
+            ->find()
+            ->where(['status' => 'queued'])
+            ->count();
+
+        $this->savemetric('SendQueues', 0, $SendQueues);
+    }
+
+    function savemetric($module, $account_id = 0, $value)
+    {
+        $metricTable = $this->getTableLocator()->get('Metrics');
+        $newRow = $metricTable->newEmptyEntity();
+        $newRow->module_name = $module;
+        $newRow->metric_value = $value;
+        $newRow->account = $account_id;
+      //  debug($newRow);
+      if (!$metricTable->save($newRow)) {
+        $errors = $newRow->getErrors();
+        debug("Save failed. Errors: " . print_r($errors, true));
+    } else {
+        debug("Save Success");
+    }
     }
 }

@@ -1,4 +1,6 @@
 vendor
 .git
 wa4.4
-logs/*
+logs
+queries
+tmp

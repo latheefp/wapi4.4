@@ -1,6 +1,3 @@
-<?php
-//debug($balance);
-?>
 <div class="container-fluid">
     <!-- Small boxes (Stat box) -->
     <div class="row">
@@ -13,7 +10,7 @@
                     </div>
                     <input type="text" class="form-control float-right" name="dateRangeSelector" id="dateRangeSelector">
                 </div>
-            </div> 
+            </div>
         </div>
         <div class="col-lg-3 col-6">
             <!-- small box -->
@@ -98,8 +95,28 @@
             <!-- small box -->
             <div class="small-box bg-success">
                 <div class="inner">
-                    <h3 id="rcvq" ></h3>
-                    <p>Receive Queue</p>
+                    <h3 id="rcvq"></h3>
+                    <p>Receive Queue/Failed</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-bag"></i>
+                </div>
+
+                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+
+
+
+
+
+
+        <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3 id="sendq"></h3>
+                    <p>Send Queue/Failed</p>
                 </div>
                 <div class="icon">
                     <i class="ion ion-bag"></i>
@@ -192,7 +209,15 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="chart"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+                            <div class="chart">
+                                <div class="chartjs-size-monitor">
+                                    <div class="chartjs-size-monitor-expand">
+                                        <div class=""></div>
+                                    </div>
+                                    <div class="chartjs-size-monitor-shrink">
+                                        <div class=""></div>
+                                    </div>
+                                </div>
                                 <canvas id="MessageStatus" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%; display: block; width: 764px;" class="chartjs-render-monitor" width="764" height="250"></canvas>
                             </div>
                         </div>
@@ -234,14 +259,13 @@
 <input id="end_date" type="hidden"><!-- comment -->
 <?php $this->Html->scriptStart(['block' => true]); ?>
 //<script>
-    $(function () {
+    $(function() {
         var ctxMessageStatusChart = document.getElementById("MessageStatus").getContext("2d");
         var MessageStatusChart = new Chart(ctxMessageStatusChart, {
             type: 'line',
             data: {
                 labels: [],
-                datasets: [
-                    {
+                datasets: [{
                         label: "Success",
                         fill: false,
                         lineTension: 0.1,
@@ -317,10 +341,10 @@
                 },
                 scales: {
                     yAxes: [{
-                            ticks: {
-                                beginAtZero: true
-                            }
-                        }]
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
                 }
             }
         });
@@ -347,7 +371,7 @@
             }
 
 
-        }, function (start, end, label) {
+        }, function(start, end, label) {
             $('#start_date').val(start.format('YYYY-MM-DD hh:mm'));
             $('#end_date').val(end.format('YYYY-MM-DD hh:mm'));
             var json_url = "/dashboards/getdata?start_date=" + start.format('YYYY-MM-DD hh:mm') + '&end_date=' + end.format('YYYY-MM-DD HH:mm');
@@ -359,13 +383,11 @@
             type: 'bar',
             data: {
 
-                datasets: [
-                    {
-//                        label: 'Employee',
-                        backgroundColor: '#caf270',
-//                        data: [12, 59, 5, 56, 58, 12, 59, 87, 45],
-                    }
-                ]
+                datasets: [{
+                    //                        label: 'Employee',
+                    backgroundColor: '#caf270',
+                    //                        data: [12, 59, 5, 56, 58, 12, 59, 87, 45],
+                }]
             },
             options: {
                 tooltips: {
@@ -375,40 +397,39 @@
                     },
                 },
                 scales: {
-                    xAxes: [
-                        {
-                            stacked: true,
-                            gridLines: {
-                                display: false,
-                            },
+                    xAxes: [{
+                        stacked: true,
+                        gridLines: {
+                            display: false,
                         },
-                    ],
-                    yAxes: [
-                        {
-                            stacked: true,
-                            ticks: {
-                                beginAtZero: true,
-                            },
-                            type: 'linear',
+                    }, ],
+                    yAxes: [{
+                        stacked: true,
+                        ticks: {
+                            beginAtZero: true,
                         },
-                    ],
+                        type: 'linear',
+                    }, ],
                 },
                 responsive: true,
                 maintainAspectRatio: false,
-                legend: {position: 'bottom'},
+                legend: {
+                    position: 'bottom'
+                },
             },
         })
 
         fetchData();
 
-//        $('input[name="dateRangeSelector"]').trigger('change');
+        //        $('input[name="dateRangeSelector"]').trigger('change');
         setInterval(fetchData, 60000); // Fetch data every 30 seconds
 
 
     });
+
     function ajax_chart_sched(chart, url, data) {
         var data = data || {};
-        $.getJSON(url, data).done(function (response) {
+        $.getJSON(url, data).done(function(response) {
             chart.data.labels = response.labels;
             chart.data.datasets[0].data = response.data.has_wa; // or you can iterate for multiple datasets
             chart.data.datasets[1].data = response.data.no_wa; // or you can iterate for multiple datasets
@@ -420,7 +441,7 @@
 
     function ajax_chartbar(chart, url, data) {
         var data = data || {};
-        $.getJSON(url, data).done(function (response) {
+        $.getJSON(url, data).done(function(response) {
             chart.data.labels = response.labels;
             chart.data.datasets[0].data = response.data.total; // or you can iterate for multiple datasets
             chart.update(); // finally update our chart
@@ -435,9 +456,9 @@
             url: '/dashboards/fetchdata?start_date=' + start_date + '&end_date=' + end_date,
             method: 'GET', // Use 'POST' if needed
             dataType: 'json', // Adjust as per your response format
-            success: function (jsonData) {
+            success: function(jsonData) {
                 for (var key in jsonData) {
-                   // console.log(key);
+                    // console.log(key);
                     //console.log(jsonData[key]);
                     if (jsonData.hasOwnProperty(key)) {
                         var textValue = jsonData[key];
@@ -445,12 +466,12 @@
                         if (element) {
                             element.textContent = textValue;
                         } else {
-                          //  console.log("Failed to set it");
+                            //  console.log("Failed to set it");
                         }
                     }
                 }
             },
-            error: function (error) {
+            error: function(error) {
                 console.error('Error:', error);
             }
         });
@@ -459,5 +480,6 @@
 
 
 
-//</script>
+    //
+</script>
 <?php $this->Html->scriptEnd(); ?>

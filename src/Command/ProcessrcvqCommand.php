@@ -94,7 +94,7 @@ class ProcessrcvqCommand extends Command {
                             $maxParallelProcesses = $this->app->_getsettings('max_parallel_que_processing');
                             $cmd = ROOT . '/bin/runrcvprocess.pl  -i ' . $val->id . ' -k ' . $apiKey . ' >' . ROOT . '/logs/process.log 2>&1 &';
                             debug($cmd);
-                            usleep(100);
+                           // usleep(100);
                             exec($cmd);
                         } else {
                             debug("Transaction committed, but no rows were affected.");

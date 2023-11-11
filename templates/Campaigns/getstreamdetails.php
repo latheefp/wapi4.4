@@ -1,7 +1,6 @@
 <?php
-$session = $this->request->getSession();
-$ugroup_id = $session->read('Auth.User.ugroup_id');
-//debug($data);
+
+//debug ($data);
 ?>
 <ul class="nav nav-tabs">
     <li class="nav-item">
@@ -25,7 +24,7 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
         </li>
 
         <li class="nav-item">
-            <a class="nav-link" data-toggle="tab" href="#tab-json-<?= $data->id ?>"">Json</a>
+            <a class="nav-link" data-toggle="tab" href="#tab-json-<?= $data->id ?>">Json</a>
         </li>
 
 
@@ -58,9 +57,14 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
                 <tbody>
                     <tr><td><pre>
                                 <?php
-                                $decoded_object = json_decode($data->recievearray, true);
-                                $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
-                                echo ($beautified_json_string);
+                                if(isset($data->recievearray)){
+                                   // debug($data->recievearray);
+                                    $decoded_object = json_decode($data->recievearray, true);
+                                    $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
+                                    echo ($beautified_json_string);
+
+                                }
+
                                 ?>
                             </pre>
                         </td></tr>
@@ -74,14 +78,16 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
                 <tbody>
                     <tr><td><pre>
                                 <?php
-                                $json = trim($data->tmp_upate_json, ',');
-                                $jsonArray = explode("\n", $json);
-                                foreach ($jsonArray as $jkey => $jval) {
-                                    if (!empty($jval)) {
-                                        //    debug($jval);
-                                        $jval = trim($jval, ',');
-                                        $status = json_decode($jval, true);
-                                        print_r($status);
+                                 if(isset($data->tmp_upate_json)){
+                                    $json = trim($data->tmp_upate_json, ',');
+                                    $jsonArray = explode("\n", $json);
+                                    foreach ($jsonArray as $jkey => $jval) {
+                                            if (!empty($jval)) {
+                                            //    debug($jval);
+                                            $jval = trim($jval, ',');
+                                            $status = json_decode($jval, true);
+                                            print_r($status);
+                                        }
                                     }
                                 }
                                 ?>
@@ -98,9 +104,11 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
             <tbody>
                 <tr><td><pre>
                             <?php
-                            $decoded_object = json_decode($data->sendarray, true);
-                            $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
-                            echo ($beautified_json_string);
+                            if(isset($data->sendarray)){
+                                $decoded_object = json_decode($data->sendarray, true);
+                                $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
+                                echo ($beautified_json_string);
+                            }
                             ?>
                         </pre>
                     </td></tr>
@@ -112,9 +120,11 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
             <tbody>
                 <tr><td><pre>
                             <?php
-                            $decoded_object = json_decode($data->result, true);
-                            $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
-                            echo ($beautified_json_string);
+                             if(isset($data->result)){
+                                $decoded_object = json_decode($data->result, true);
+                                $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
+                                echo ($beautified_json_string);
+                             }
                             ?>
                         </pre>
                     </td></tr>
@@ -126,9 +136,11 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
             <tbody>
                 <tr><td><pre>
                             <?php
-                            $decoded_object = json_decode($data->postdata, true);
-                            $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
-                            echo ($beautified_json_string);
+                             if(isset($data->postdata)){
+                                $decoded_object = json_decode($data->postdata, true);
+                                $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
+                                echo ($beautified_json_string);
+                             }
                             ?>
                         </pre>
                     </td></tr>
@@ -136,21 +148,6 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
         </table>
     </div>
 
-<!--    <div id="tab6-<?= $data->id ?>" class="tab-pane fade show active">
-    <table>
-        <tbody>
-            <tr><td><pre>
-    <?php
-    $rcvData['json'] = $data->recievearray;
-    $rcvData['id'] = $data->id;
-    $rcvData['FBsettings'] = $FBsettings;
-    print($this->RcvDataformat->format($rcvData));
-    ?>
-                    </pre>
-                </td></tr>
-        </tbody>
-    </table>
-</div>-->
 
 
 
@@ -160,7 +157,9 @@ $ugroup_id = $session->read('Auth.User.ugroup_id');
                 <tr><td><pre>
                             <?php
                             $rcvData['json'] = $data->recievearray;
+                            $rcvData['id']=$data->id;
                             $rcvData['FBsettings'] = $FBsettings;
+                    //        debug($rcvData);
                             print($this->RcvDataformat->format($rcvData));
                             ?>
                         </pre>

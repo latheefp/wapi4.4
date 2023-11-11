@@ -444,9 +444,23 @@ class AppController extends Controller {
         fclose($handle);
     }
 
-    function writeinteractive($data, $type = null) {
+//     function writeinteractive($data, $type ) {
+//         $file = LOGS . 'GrandInt' . '.log';
+// #  $data =json_encode($event)."\n";  
+//         $time = date("Y-m-d H:i:s", time());
+//         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
+//         fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
+//         fwrite($handle, print_r($data, true));
+//         fclose($handle);
+//     }
+
+    
+    function writeinteractive($data, $type) {
+        if (intval(getenv('INTERACTIV')) == false) {
+            //   debug("No logs");
+            return false;
+        }
         $file = LOGS . 'GrandInt' . '.log';
-#  $data =json_encode($event)."\n";  
         $time = date("Y-m-d H:i:s", time());
         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
         fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
@@ -485,9 +499,14 @@ class AppController extends Controller {
         $record = $table->find()->where(['contact_number' => $contact_waid])->toArray();
         if (isset($record)) {
             $row = $table->get($record[0]['id']);
+           
             $row->profile_name = $profile;
+           // $row->profile_name = "latheef";
+      //      debug($row);
             if ($table->save($row)) {
 //                debug("Saved");
+            }else{
+               debug($row->getError);
             }
         } else {
             debug("nothign found");
@@ -610,6 +629,8 @@ class AppController extends Controller {
             $return['result']['status']="warning";
             $return['result']['message']="No record found msg id " . $price_array['id'];
             return $return; // or return; depending on where this code is located
+        }else{
+            $this->writelog( $price_array['id'],"Record Found in streams");
         }
 
 
@@ -624,7 +645,6 @@ class AppController extends Controller {
                 ->all();
 
         if ($alreadyCosted->isEmpty()) {
-
             //Process charging if not already.
             //debug("Charging $record->conversationid");
             $this->writelog($record, "Passing to Charging");
@@ -660,21 +680,21 @@ class AppController extends Controller {
  #       debug($msgType);
         switch ($msgType) {
             case "send":
-                debug("Message type is send");
+            //    debug("Message type is send");
                 $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
                 $cost['cost'] = round($cost['cost'], 2);
                 $row->cost = $cost['cost'];
                 if ($StreamsTable->save($row)) {
                     $result = $this->_updatebalance($row->account_id, $cost['cost']);
-                    debug($cost);
-                    debug($countryinfo);
+                    // debug($cost);
+                    // debug($countryinfo);
                     $RatingTable = $this->getTableLocator()->get('Ratings');
                     $rating = $RatingTable->newEmptyEntity();
                     $rating->stream_id = $record->id;
                     $rating->old_balance = $result['old_balance']['current_balance'];
                     $rating->new_balance = $result['new_balance']['current_balance'];
                     $return['result']['charginginfo']['old_balance']=$result['old_balance']['current_balance'];
-                    $return['result']['charginginfo']['new_balance']=$result['old_balance']['new_balance'];
+                    $return['result']['charginginfo']['new_balance']=$result['new_balance']['current_balance'];
                     $return['result']['charginginfo']['Country']=$countryinfo->country;
                     $rating->cost = $cost['cost'];
                     $rating->conversation = $record->conversationid;
@@ -697,8 +717,8 @@ class AppController extends Controller {
                                 ['conversationid' => $record->conversationid]
                         );
                         $return['result']['message']="Charged message type   $msgType with ". $cost['rate_with_tax'];
-                        $return['result']['status']="failed";
-                        debug("Rating save  as true for all  record" . $record->conversationid);
+                        $return['result']['status']="sucess";
+                    //  debug("Rating save  as true for all  record" . $record->conversationid);
                     }
                 }
                 break;
@@ -740,25 +760,25 @@ class AppController extends Controller {
     }
 
     function _updatebalance($account_id, $cost) {
-//UPDATE `streams` SET `cost` = '0' WHERE `streams`.`id` = 58588; 
-        $result = [];
-        $accountTable = $this->getTableLocator()->get('Accounts');
-        $result['old_balance'] = $accountTable->get($account_id)->toArray();
-//    debug($old_balance);
+        //UPDATE `streams` SET `cost` = '0' WHERE `streams`.`id` = 58588; 
+                $result = [];
+                $accountTable = $this->getTableLocator()->get('Accounts');
+                $result['old_balance'] = $accountTable->get($account_id)->toArray();
+        //    debug($old_balance);
         $result['status'] = 1;
 
-// debug("updating $account_id with cost of $cost");
+        // debug("updating $account_id with cost of $cost");
         $connection = ConnectionManager::get('default');
 
         try {
-// Begin the transaction
+        // Begin the transaction
             $connection->begin();
 
-// Lock the table
+        // Lock the table
             $connection->execute('LOCK TABLES accounts WRITE');
 
-//  debug("Locking table to update $cost");
-// Update the balance column
+        //  debug("Locking table to update $cost");
+        // Update the balance column
             $query = $connection->newQuery();
             $query->update('accounts')
                     ->set(['current_balance' => $query->newExpr('current_balance - :cost')])
@@ -766,21 +786,21 @@ class AppController extends Controller {
                     ->where(['id' => $account_id])
                     ->execute();
 
-// debug($query);
-// debug("updating the balance");
-// Unlock the table
-//   debug($query->sql());
+        // debug($query);
+        // debug("updating the balance");
+        // Unlock the table
+        //   debug($query->sql());
             $connection->execute('UNLOCK TABLES');
 
-// Commit the transaction
+        // Commit the transaction
             $connection->commit();
         } catch (\Exception $e) {
             $result['status'] = 10;
             debug($e);
             debug("Rolling back");
-// Rollback the transaction in case of an error
+            // Rollback the transaction in case of an error
             $connection->rollback();
-// Handle the error appropriately
+            // Handle the error appropriately
         }
 
         $result['new_balance'] = $accountTable->get($account_id)->toArray();

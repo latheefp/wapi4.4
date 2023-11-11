@@ -13,7 +13,6 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\StreamViewsTable&\Cake\ORM\Association\HasMany $StreamViews
  * @property \App\Model\Table\StreamsTable&\Cake\ORM\Association\HasMany $Streams
- * @property \App\Model\Table\Streams-25-janTable&\Cake\ORM\Association\HasMany $Streams-25-jan
  *
  * @method \App\Model\Entity\ContactStream newEmptyEntity()
  * @method \App\Model\Entity\ContactStream newEntity(array $data, array $options = [])
@@ -49,16 +48,19 @@ class ContactStreamsTable extends Table
 
         $this->addBehavior('Timestamp');
 
+        $this->hasMany('RatingViews', [
+            'foreignKey' => 'contact_stream_id',
+        ]);
+        $this->hasMany('RecentChats', [
+            'foreignKey' => 'contact_stream_id',
+        ]);
         $this->hasMany('StreamViews', [
             'foreignKey' => 'contact_stream_id',
         ]);
         $this->hasMany('Streams', [
             'foreignKey' => 'contact_stream_id',
         ]);
-        $this->hasMany('Streams-25-jan', [
-            'foreignKey' => 'contact_stream_id',
-        ]);
-        $this->hasMany('Streams-feb-9', [
+        $this->hasMany('Streams-aug-30', [
             'foreignKey' => 'contact_stream_id',
         ]);
     }
@@ -72,12 +74,8 @@ class ContactStreamsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->scalar('contact_number')
-            ->maxLength('contact_number', 12)
+            ->maxLength('contact_number', 18)
             ->requirePresence('contact_number', 'create')
             ->notEmptyString('contact_number');
 
@@ -89,8 +87,7 @@ class ContactStreamsTable extends Table
         $validator
             ->scalar('name')
             ->maxLength('name', 256)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name');
+            ->allowEmptyString('name');
 
         return $validator;
     }
