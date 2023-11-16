@@ -126,8 +126,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 'pricing',
                 'contact',
                 'getrate',
-                'add'
+                // 'add',
+                // 'validate'
             ];
+         //   debug("Action is ". $request->getParam('action'));
             $actionToCheck = $request->getParam('action');
             if (in_array($actionToCheck, $allowedActions)) {
                 return true;

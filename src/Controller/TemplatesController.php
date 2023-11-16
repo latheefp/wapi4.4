@@ -26,10 +26,14 @@ class TemplatesController extends AppController {
         return true;
     }
 
-    public function beforeFilter(EventInterface $event): void {
+    public function beforeFilter(EventInterface $event): void
+    {
         parent::beforeFilter($event);
-//        $this->Security->setConfig('unlockedActions', ['getdata', 'edit']);
+        //       public function beforeFilter(EventInterface $event): void {
+        parent::beforeFilter($event);
+        $this->FormProtection->setConfig('unlockedActions', [ 'gettemplates']);
     }
+
 
     function refreshtemplates() {
         //  debug($this->Auth->user('id'))

@@ -42,140 +42,8 @@ class ApisController extends AppController {
         $this->Authentication->allowUnauthenticated(['webhook', 'webhook1', 'sendschedule', 'uploadfile', 'sendmsg']);
     }
 
-    function webhookold() {
-        //    $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
-        //  $this->writelog($ACCESSTOKENVALUE, "Access token");
-        //   $API_VERSION = $this->_getAccountSettings('API_VERSION');
-        $this->writelog(array(['someone hit me']), "hit");
-        $this->viewBuilder()->setLayout('ajax');
-        $query = $this->request->getQueryParams();
 
-        if (!empty($query)) {
-            $this->writelog($query, "getQueryParams Webhook");
-            //  $this->writelog($query, "getQueryParams");
-            $hub_mode = $query['hub_mode'];
-            $hub_challenge = $query['hub_challenge'];
-            $hub_verify_token = $query['hub_verify_token'];
-            $this->writelog($this->request->getQueryParams(), "getQueryParams");
 
-            if ($hub_verify_token === 'latheefp') {
-                $this->writelog($hub_challenge, "hub challenge");
-                # echo $hub_challenge;
-
-                return $this->response->withType("text/plain")->withStringBody(json_encode((int) $hub_challenge));
-            }
-        }
-
-        $dataarray = [];
-        $input = json_decode(file_get_contents('php://input'), true);
-        $this->writelog($input, "Post Data");
-
-        $dataarray['hookid'] = $input['entry'][0]['id'];
-        $dataarray['messaging_product'] = $input['entry'][0]['changes'][0]['value']['messaging_product'];
-        $phone_number_id = $input['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
-        $FBSettings = $this->_getFBsettings(['phone_number_id' => $phone_number_id]);
-        $dataarray['account_id'] = $FBSettings['account_id'];
-        $this->writelog($FBSettings, "FB settings");
-        $display_phone_number = $input['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'];
-        $dataarray['display_phone_number'] = $display_phone_number;
-        $dataarray['phonenumberid'] = $phone_number_id;
-        if (isset($input['entry'][0]['changes'][0]['value']['messages'])) { //type is message
-            $message = $input['entry'][0]['changes'][0]['value']['messages'][0];
-            $dataarray['recievearray'] = file_get_contents('php://input');
-            $messageid = $message['id'];
-            $this->writelog($messageid, "Picked up by message");
-            $dataarray['messageid'] = $messageid;
-            $dataarray['message_format_type'] = $message['type'];
-            if (isset($dataarray['message_context'])) {
-                $dataarray['message_context'] = $message_context;
-            }
-            $msgtype = $dataarray['message_format_type'];
-
-            switch ($msgtype) {
-                case "text":
-                    $dataarray['message_txt_body'] = $message['text']['body'];
-                    break;
-                case "button":
-                    $dataarray['button_payload'] = $message['button']['payload'];
-                    $dataarray['button_text'] = $message['button']['text'];
-                    break;
-                case "document":
-                    break;
-                case "sticker":
-                    break;
-                case "unknown":
-                    break;
-                case "contacts":
-                    break;
-                case "video":
-                    break;
-                case "image":
-                    break;
-                case "interactive":
-                    $this->_processInteractive(file_get_contents('php://input'), $FBSettings);
-                    $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
-                    break;
-            }
-            $dataarray['delivered_time'] = date("Y-m-d h:i:s", time());
-            $dataarray['type'] = "receive";
-            $this->writelog($message, "message");
-            $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
-            $this->writelog($sender, "is the sender");
-            $dataarray['message_timestamp'] = $this->_formate_date($input['entry'][0]['changes'][0]['value']['messages'][0]['timestamp']);
-            $dataarray['contacts_profile_name'] = $input['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name'];
-            $dataarray['contact_waid'] = $sender;
-            $newmsg = $this->_checktimeout($dataarray['contact_waid']); //dont move this function from here , it should be 
-            if (isset($input['entry'][0]['changes'][0]['value']['messages'][0]['context'])) {  //reply of existing msg
-                $dataarray['message_context'] = "reply";
-                $dataarray['message_contextId'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['id'];
-                $dataarray['message_context_rom'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['from'];
-                $this->writelog($dataarray, "Save data for new Reply message");
-                $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
-            } else { //new msg
-                $dataarray['message_context'] = "new";
-                $this->writelog($dataarray, "Save New Massage in streams");
-                $this->_savedata($dataarray, $FBSettings); //save data before sending welcome msg.
-
-                if (($newmsg) && ($msgtype != "interactive")) {  // new message and not reply for interactive msg
-                    $this->writelog($msgtype, "Sending Interactive Menu to " . $dataarray['contact_waid']);
-                    $data = [
-                        "mobile_number" => $dataarray['contact_waid'],
-                        "schedule_name" => "welcomemsg_grand"
-                    ];
-                    //  debug($FBSettings);
-                    $notification_numbers = (explode(',', $FBSettings['interactive_notification_numbers']));
-                    $notification_numbers[] = $dataarray['contact_waid'];
-                    $this->writelog($notification_numbers, "Iteractive Menu notification array");
-                    foreach ($notification_numbers as $key => $contact_number) {
-                        if (!empty($contact_number)) {
-                            $this->writelog($contact_number, "Sending Interactive Menu to $contact_number for customer id: " . $dataarray['contact_waid']);
-                            if (!empty($FBSettings['interactive_menu_function'])) {
-                                $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
-                                $interactive_menu_function = $FBSettings['interactive_menu_function'];
-                                $this->$interactive_menu_function($dataarray['contact_waid'], $contact_number, $FBSettings);
-                            }
-                            //can add welcome message function here. 
-                        }
-                    }
-                } else {
-                    $this->writelog("Skipping welcome message time out is not yet happen after last message or Intrective message");
-                }
-            }
-            $result = array("success" => true);
-            return $this->response->withType("application/json")->withStringBody(json_encode($result));
-        } elseif (isset($input['entry'][0]['changes'][0]['value']['statuses'])) {  //type ie status update.
-            //    $status = $input['entry'][0]['changes'][0]['value']['statuses'][0];
-            $status = $input['entry'][0]['changes'][0]['value']['statuses'];
-            $this->writelog($status, "Picked up by Status update");
-
-            $this->_update_status($status);
-            $this->writelog('Status update', "Message Type");
-        } else {
-            $this->writelog($input, "Posted data");
-        }
-    }
-
-//    public
 
     function webhook() {
         //    $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
@@ -221,347 +89,7 @@ class ApisController extends AppController {
         }
     }
 
-    // function msg_process($stream_id) {
-    //     switch ($msgtype) {
-    //         case "text":
-    //             $dataarray['message_txt_body'] = $message['text']['body'];
-    //             break;
-    //         case "button":
-    //             $dataarray['button_payload'] = $message['button']['payload'];
-    //             $dataarray['button_text'] = $message['button']['text'];
-    //             break;
-    //         case "document":
-    //             break;
-    //         case "sticker":
-    //             break;
-    //         case "unknown":
-    //             break;
-    //         case "contacts":
-    //             break;
-    //         case "video":
-    //             break;
-    //         case "image":
-    //             break;
-    //         case "interactive":
-    //             $this->_processInteractive(file_get_contents('php://input'), $FBSettings);
-    //             $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
-    //             break;
-    //     }
-    // }
-
-//    function _sendInteractiveMenu($customer_number, $contactToSend, $FBSettings) {
-//        //send hte menu to customer Mobile
-//        //  $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
-//        $curl = curl_init();
-//
-//        $jsonlist = '{
-//                "to": "' . $contactToSend . '",
-//                "messaging_product": "whatsapp",
-//                "recipient_type": "individual",
-//                "type": "interactive",
-//                "interactive": {
-//                    "type": "list",
-//                    "header": {
-//                        "type": "text",
-//                        "text": "How can we Help you "
-//                    },
-//                    "body": {
-//                        "text": "Please select service from Menu. Ref:' . $customer_number . '"
-//                    },
-//                  
-//                    "action": {
-//                        "button": "Main Menu",
-//                        "sections": [
-//                            {
-//                                "title": "Service",
-//                                "rows": [
-//                                    {
-//                                        "id": "mobile=' . $customer_number . '&action=service",
-//                                        "title": "Grand service",
-//                                        "description": "Grand service request"
-//                                    }
-//                                ]
-//                            },
-//                            {
-//                                "title": "Sales",
-//                                "rows": [
-//                                    {
-//                                       "id": "mobile=' . $customer_number . '&action=sales",
-//                                        "title": "Grand Sale",
-//                                        "description": "Sales, Exchange, 0% Installment&Spare parts",
-//                                    }
-//                                ]
-//                            },
-//                             {
-//                                "title": "Free Points",
-//                                "rows": [
-//                                    {
-//                                       "id": "mobile=' . $customer_number . '&action=points",
-//                                        "title": "Grand Free point",
-//                                        "description": "See your free grand points to purchase from us",
-//                                    }
-//                                ]
-//                            },
-//                            {
-//                                "title": "Quotation",
-//                                "rows": [
-//                                    {
-//                                       "id": "mobile=' . $customer_number . '&action=quotation",
-//                                        "title": "Quotation",
-//                                        "description": "Get a quation call from sales team",
-//                                    }
-//                                ]
-//                            },
-//                            {
-//                                "title": "Download Invoice",
-//                                "rows": [
-//                                    {
-//                                       "id": "mobile=' . $customer_number . '&action=invoice",
-//                                        "title": "Download Invoice",
-//                                        "description": "Selet your product to invoince",
-//                                    }
-//                                ]
-//                            },
-//                            {
-//                                "title": "Callback/Enquiry",
-//                                "rows": [
-//                                    {
-//                                       "id": "mobile=' . $customer_number . '&action=callback",
-//                                        "title": "Call back or Enquiry",
-//                                        "description": "We will call you back for more details",
-//                                    }
-//                                ]
-//                            }
-//                        ]
-//                    }
-//                }
-//            }';
-//
-//        curl_setopt_array($curl, array(
-//            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $FBSettings['phone_number_id'] . '/messages',
-//            CURLOPT_RETURNTRANSFER => true,
-//            CURLOPT_ENCODING => '',
-//            CURLOPT_MAXREDIRS => 10,
-//            CURLOPT_TIMEOUT => 0,
-//            CURLOPT_FOLLOWLOCATION => true,
-//            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//            CURLOPT_CUSTOMREQUEST => 'POST',
-//            CURLOPT_POSTFIELDS => $jsonlist,
-//            CURLOPT_HTTPHEADER => array(
-//                'Content-Type: application/json',
-//                'Authorization: Bearer ' . $FBSettings['ACCESSTOKENVALUE']
-//            ),
-//        ));
-//
-//        $jsonresponse = curl_exec($curl);
-//        $this->writeinteractive($jsonresponse, "Response from initial menu");
-//        curl_close($curl);
-//
-//        $response = json_decode($jsonresponse, true);
-//
-//        $table = $this->getTableLocator()->get('Streams');
-//        $row = $table->newEmptyEntity();
-//
-//        $row->contact_stream_id = $this->getWastreamsContactId($contactToSend, $FBSettings);
-//        $row->account_id = $FBSettings['account_id'];
-//
-//        if (isset($response['messages'][0]['id'])) {
-//            $row->messageid = $response['messages'][0]['id'];
-//            $row->type = "ISend";
-//            $row->has_wa = true;
-//            $row->success = true;
-//            $row->result = $jsonresponse;
-//            $row->sendarray = $jsonlist;
-//        } else {
-//            $this->writelog($response, "Response error");
-//            $row->has_wa = false;
-//            $row->type = "ISend";
-//            $row->result = $jsonresponse;
-//            $row->success = false;
-//            $row->sendarray = $jsonlist;
-//        }
-//        if ($table->save($row)) {
-//            $this->writeinteractive($row, "updated Stream table");
-//        } else {
-//            $this->writeinteractive($record->getErrors(), "Failed to update Stream table");
-//        }
-//    }
-//    function _checktimeout($contact = null) {
-//        $this->writelog($contact, "Checking timout for  $contact");
-//        $mobile = $this->getTableLocator()->get('ContactStreams')->find()->where(['contact_number' => $contact])->toArray();
-//        if (!empty($mobile)) {
-//            $CHAT_TIMEOUT = $this->_getsettings('CHAT_TIMEOUT');
-//            $query = $this->getTableLocator()->get('Streams')->find();
-//            $query->where([
-//                        'Streams.created >=' => date('Y-m-d H:i:s', strtotime('-' . $CHAT_TIMEOUT . ' seconds')),
-//                        'contact_stream_id' => $mobile[0]['id'],
-//                            // 'Streams.created' => "send"
-//                    ])
-//                    ->first();
-//
-//            $result = $query->toArray();
-//            // $this->writelog(sql($query), "Check timeout query on $contact");
-//            //   debug(sql($query));
-//            if (empty($result)) {
-//                // debug("Sending message");
-//                $this->writelog($contact, "new message will be replied $contact");
-//                return true;
-//            } else {
-//                //   debug($result);
-//                //  debug("not Sending message");
-//                $this->writelog($contact, "new message not be replied to $contact");
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-//    function _update_status($statuses) {
-//        foreach ($statuses as $key => $status) {
-//            $this->writelog($status, "Updating status $key");
-//            $query = $this->getTableLocator()->get('Streams')->find();
-//            $query->where([
-//                'OR' => ['replyid' => $status['id'], 'messageid' => $status['id']]
-//            ]);
-//            $result = $query->toArray();
-//            $this->writelog($result, "Reply ID match in Streams table");
-//            $id = $result[0]['id'];
-//            $this->writelog($result, "is  the result of searching reply ID:" . $status['id']);
-//            $Table = $this->getTableLocator()->get('Streams');
-//
-//            if (isset($id)) {
-//                $editrow = $Table->get($id);
-//                switch ($status['status']) {
-//                    case "delivered":
-//                        $editrow->delivered_time = $this->_formate_date($status['timestamp']);
-//                        break;
-//                    case "read":
-//                        $editrow->read_time = $this->_formate_date($status['timestamp']);
-//                        break;
-//                    case "sent":
-//                        $editrow->sent_time = $this->_formate_date($status['timestamp']);
-//                        break;
-//                    case "failed":
-//                        $editrow->sent_time = $this->_formate_date($status['timestamp']);
-//                        $editrow->success = 0;
-//                        $editrow->errors = json_encode($status['errors']);
-//                        break;
-//                    default:
-//                        $this->writelog(($status['status']), "Wrong status");
-//                        break;
-//                }
-//                if (isset($status['pricing'])) {
-//                    $this->writelog($status['pricing'], "UpdatingPricing");
-//                    $editrow->billable = $status['pricing']['billable'];
-//                    $editrow->pricing_model = $status['pricing']['pricing_model'];
-//                    $editrow->category = $status['pricing']['category'];
-//                }
-//                if (isset($status['conversation'])) {
-//                    $editrow->conversationid = $status['conversation']['id'];
-//                    $editrow->conversation_expiration_timestamp = $this->_formate_date($status['conversation']['expiration_timestamp']);
-//                    $editrow->conversation_origin_type = $status['conversation']['origin']['type'];
-//                }
-//
-//                $existing_update = $editrow->tmp_upate_json;
-//                $editrow->tmp_upate_json = $existing_update . ",\n" . json_encode($status);
-//
-//                if ($Table->save($editrow)) {
-//                    $this->writelog($editrow, "Save Success");
-//                } else {
-//                    $this->writelog($editrow, "Save Failed");
-//                }
-//
-//                if (isset($status['conversation'])) {
-//                    $ratingquery = $this->getTableLocator()->get('Ratings')->find();
-//                    $ratingquery->where([
-//                                ['conversation' => $status['conversation']['id']]
-//                            ])
-//                            ->first();
-//                    //Billing is needed only for Uniq conversation IDS. 
-//                    if ($ratingquery->isEmpty()) {
-//                        debug("Rating " . $status['conversation']['id']);
-//                        $this->_rateMe($status);
-//                    } else {
-//                        // debug($ratingquery);
-//
-//                        if (!isset($updated[$status['conversation']['id']])) {
-//                            debug("Already Rated updating all fields of " . $status['conversation']['id']);
-//                            $streamsTable = $this->getTableLocator()->get('Streams');
-//                            $streamsTable->updateAll(
-//                                    ['rated' => true],
-//                                    ['conversationid' => $status['conversation']['id']]
-//                            );
-//                            $updated[$status['conversation']['id']] = true;
-//                            // debug ("Updated all rated.");
-//                            debug($updated);
-//                        } else {
-//                            debug("Already updated ");
-//                        }
-//                    }
-//                }
-//            } else {
-//                $this->writelog($id, "Got null ID for search " . $status['id']);
-//            }
-//        }
-//    }
-//    function readmsg($MESSAGE_ID, $FBSettings) { //Notify FB about message is read. 
-//        $curl = curl_init();
-//        $this->writelog($MESSAGE_ID, "Message ID");
-//        $POSTFIELDS = '{
-//          "messaging_product": "whatsapp",
-//          "status": "read",
-//          "message_id": "' . $MESSAGE_ID . '"
-//        }';
-//        $this->writelog($POSTFIELDS, "POSTFIELDS");
-//        curl_setopt_array($curl, array(
-//            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
-//            CURLOPT_RETURNTRANSFER => true,
-//            CURLOPT_ENCODING => '',
-//            CURLOPT_MAXREDIRS => 10,
-//            CURLOPT_TIMEOUT => 0,
-//            CURLOPT_FOLLOWLOCATION => true,
-//            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//            CURLOPT_CUSTOMREQUEST => 'POST',
-//            CURLOPT_POSTFIELDS => $POSTFIELDS,
-//            CURLOPT_HTTPHEADER => array(
-//                'Content-Type: application/json',
-//                'Authorization: Bearer ' . $FBSettings['ACCESSTOKENVALUE']
-//            ),
-//        ));
-//        $response = curl_exec($curl);
-//        curl_close($curl);
-//        $this->writelog($response, "Read Response");
-//    }
-//    function _savedata($data = array(), $FBSettings) {
-//        # $this->writelog($data, "Data to be saved");
-//        if (isset($data['contact_waid'])) {
-//            $data['contact_stream_id'] = $this->getWastreamsContactId($data['contact_waid'], $FBSettings);
-//        }
-//        if (isset($data['contacts_profile_name'])) {
-//            $this->updateProfileWastreamsContact($data['contact_waid'], $data['contacts_profile_name'], $data);
-//        }
-//        $Table = $this->getTableLocator()->get('Streams');
-//        $record = $Table->newEntity($data);
-//        if ($record->getErrors()) {
-//            $result['status'] = "failed";
-//            $result['msg'] = "Validation errors";
-//            $this->set('result', $result);
-//            $this->writelog($record->getErrors(), "Error");
-//        }
-//
-//        if ($Table->save($record)) {
-//            $result['status'] = "success";
-//            $result['msg'] = "Data has been saved";
-//            $result['id'] = $record->id;
-//        } else {
-//            $result['status'] = "failed";
-//            $result['msg'] = "Not able to save the streams";
-//            $this->writelog($record->getErrors(), "Stream save Failed due to below error");
-//        }
-//
-//        $this->writelog($result, "Save status");
-//        return $result;
-//    }
-
+  
     function _formate_date($ts) {
         //  $this->writelog($ts, "coverting");
         if (isset($ts)) {
@@ -624,40 +152,9 @@ class ApisController extends AppController {
         return $msg;
     }
 
-    function sendscheduleold() {
-        // debug("Send Schdule");
-        $this->viewBuilder()->setLayout('ajax');
-        $this->writelog("Whatsapp Schedule function hit", null);
-        $data = $this->request->getData();
-        ;
-        if ($this->request->is('post')) {
+    
 
-            $sendQ = $this->getTableLocator()->get('SendQueues');
-            $sendQrow = $sendQ->newEmptyEntity();
-            $sendQrow->form_data = json_encode($data);
-            $sendQrow->status = "queued";
-            $sendQ->save($sendQrow);
-            
-            $this->writelog($data, "The is post data");
-            $data = $this->_getFBsettings($data);
-            if ($data['status']['code'] == 200) {
-                $this->writelog($data['status']['code'], "Api Validated");
-                $data['user_id'] = null;
-
-                //passing the post data to real send funtion.
-                $result = $this->_send_schedule($data);
-                $this->set('result', $result);
-            } else {
-
-                $this->set('result', $data['status']);
-            }
-        } else {
-            $result['status'] = "failed";
-            $result['message'] = "Wrong request type";
-            $this->set($result, $result);
-            $this->writelog($data, "Not Post data");
-        }
-    }
+    
 
     function sendschedule() {
         // debug("Send Schdule");
@@ -667,10 +164,10 @@ class ApisController extends AppController {
         ;
         if ($this->request->is('post')) {
             $this->writelog($data, "The is post data");
-            $data = $this->_getFBsettings($data);
-            if ($data['status']['code'] == 200) {
-                $this->writelog($data['status']['code'], "Api Validated");
-                $data['user_id'] = null;
+            $FBsettings = $this->_getFBsettings($data);
+            if ($FBsettings['status']['code'] == 200) {
+                $this->writelog($FBsettings['status']['code'], "Api Validated");
+              //  $data['user_id'] = null;
                 //passing the post data to real send funtion.
                 $sendQ = $this->getTableLocator()->get('SendQueues');
                 $sendQrow = $sendQ->newEmptyEntity();
@@ -679,14 +176,10 @@ class ApisController extends AppController {
                 $sendQ->save($sendQrow);
 
                 http_response_code(200); // Bad Request
-                $response['error'] = 'Message Submitted';
+                $response['Success'] = 'Message Submitted';
                 $this->set('result', $response);
                 return;
 
-
-
-          //      $result = $this->_send_schedule($data);
-            //    $this->set('result', $result);
             } else {
                 http_response_code(404); // Bad Request
                 $response['error'] = 'Wrong API';
@@ -703,6 +196,10 @@ class ApisController extends AppController {
 
         $this->set('response', $return['result']);
     }
+
+
+
+
 
     function _send_schedule($data) {
         //   debug("_Send Schdule");

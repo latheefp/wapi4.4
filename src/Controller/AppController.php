@@ -50,6 +50,7 @@ class AppController extends Controller {
         $this->loadComponent('RequestHandler');
         $this->loadComponent('Flash');
         $this->loadComponent('Authentication.Authentication');
+        $this->loadComponent('FormProtection');
 //        $this->loadComponent('Session');
 
         /*
@@ -948,5 +949,21 @@ class AppController extends Controller {
         } else {
             // User is not authenticated
         }
+    }
+
+    public function getMyAPIKey($uid=null){
+        if(!isset($uid)){
+            $uid = $this->getMyUID();
+        }
+        $table = $this->getTableLocator()->get('ApiKeys');
+        $apiquery = $table->find()
+                ->where(['user_id' => $uid, 'enabled' => true])
+                ->first();
+        if (empty($apiquery)) {
+            return false;
+        }else{
+            return $apiquery->api_key;
+        }
+
     }
 }

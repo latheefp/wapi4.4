@@ -113,6 +113,7 @@ class ProcesssendqCommand extends Command {
                     debug("failed");
                 }
             }
+            sleep(2);
         }
     }
 

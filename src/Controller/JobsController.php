@@ -54,11 +54,7 @@ class JobsController extends AppController {
         $qid = $this->request->getData('qid'); // Assuming this is a POST request
 
 
-     //   print $qid;
-       // return;
-
-
-        $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]);
+        $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]); //This FB settings are just make sure, the paswed API key is valid before processing.
         if ($FBSettings['status']['code'] == 404) {
             $this->response = $this->response->withStatus(401); // Unauthorized
             $this->_update_http_code($qid, '404', $type);
@@ -81,6 +77,20 @@ class JobsController extends AppController {
         // debug($type);s
         switch ($type) {
             case "send":
+
+                $table = TableRegistry::getTableLocator()->get('SendQueues');
+                $sendQrecord=$table->get($qid);
+                $form_data=json_decode($sendQrecord->form_data, true);
+                $FBSettings = $this->_getFBsettings($data = ['api_key' => $form_data['api_key']]);
+                if ($FBSettings['status']['code'] == 404) {
+                    $this->response = $this->response->withStatus(401); // Unauthorized
+                    $this->_update_http_code($qid, '404', $type);
+                    $response['error'] = 'Invalid qid APIKEY';
+                    $this->set('response', $response);
+                    return;
+                }
+
+
                 $return=$this->_send_schedule($qid,$FBSettings);
              
                 if(isset($return['result']['error'])){

@@ -110,6 +110,7 @@ class ProcessrcvqCommand extends Command {
                     debug("failed");
                 }
             }
+            sleep(2);
         }
     }
 

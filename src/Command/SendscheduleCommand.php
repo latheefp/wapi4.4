@@ -14,7 +14,11 @@ use App\Controller\AppController; //(path to your controller).
 /**
  * Sendschedule command.
  */
-class SendscheduleCommand extends Command {
+
+// /var/www/html/bin/cake Sendschedule -i 125 -c 6 
+// /var/www/html/bin/cake Sendschedule -i 126 -c 6,7,19
+
+ class SendscheduleCommand extends Command {
 
     /**
      * Hook method for defining this command's option parser.
@@ -50,10 +54,118 @@ class SendscheduleCommand extends Command {
     }
 
     public function execute(Arguments $args, ConsoleIo $io) {
-        print("running with arg\n");
+        print("running with arg contact IDs => ". $args->getOption('contact_csv')." and  schedule id => ". $args->getOption('schedule_id')."\n");
         $schedule_id = $args->getOption('schedule_id');
-        $this->_updateschedcontacts($schedule_id, $args->getOption('contact_csv'));
-        $this->_sendms($schedule_id);
+        $contact_array=$this->form_contact_array($args->getOption('contact_csv'));
+        debug($contact_array);
+        $this->queue_message($contact_array,$schedule_id);
+    }
+
+    function form_contact_array( $contact_json) {
+        $contact_array=[];
+        $contact_contact_number_table = $this->getTableLocator()->get('ContactsContactNumbers');
+        $contact_id = explode(",", $contact_json);
+        print_r($contact_id);
+        foreach ($contact_id as $ckey => $cval) {
+            $query = $contact_contact_number_table->find()->innerJoinWith('ContactNumbers');
+            $query->where(['contact_id' => $cval])
+                    ->select([
+                        'ContactsContactNumbers.contact_id',
+                        'ContactsContactNumbers.contact_number_id',
+                        'ContactNumbers.mobile_number',
+                        'ContactNumbers.blocked'
+                    ])
+                    ->toArray();
+            foreach ($query as $key => $val) {
+                $blocked = $val->_matchingData['ContactNumbers']['blocked'];
+                if ($blocked == false) {
+                    $contact_array[]=$val->_matchingData['ContactNumbers']['mobile_number'];
+                }
+            }
+        }
+        return array_unique($contact_array);
+    }
+
+
+    function queue_message($contact_array,$schedule_id){
+        $sendarray=[];
+
+        $schedTable = $this->getTableLocator()->get('Schedules');
+        $schedQuery = $schedTable->find()
+                ->where(['Schedules.id' => $schedule_id])
+                ->select(['Campaigns.template_id', 'Schedules.name', 'Schedules.campaign_id', 'Schedules.user_id'])
+                ->innerJoinWith('Campaigns')
+                ->first();
+        debug($schedQuery);      
+        if(empty($schedQuery)){
+            print "Empty Schedule info\n";
+            return false;
+        }  
+
+        $sendarray['api_key']=$this->app->getMyAPIKey($schedQuery->user_id);
+        $sendarray['schedule_name']=$schedQuery->name;
+
+        $template_id = $schedQuery->_matchingData['Campaigns']['template_id'];
+        $campaign_id = $schedQuery->campaign_id;
+        $templatetable = $this->getTableLocator()->get('Templates');
+        $templateQuery = $templatetable->find()
+                ->where(['id' => $template_id])
+                ->first();
+      //  debug($templateQuery);
+
+        $CampaignFormstable = $this->getTableLocator()->get('CampaignForms');
+        $form = $CampaignFormstable->find()
+                    ->where(['campaign_id' => $campaign_id])
+                    ->all();
+        
+
+
+        foreach ($form as $key => $val) {
+            debug($val);
+            $component = [];
+            $param = [];
+            $field_name = $val['field_name'];
+            $keyarray = explode("-", $field_name);
+            if (($keyarray[0] == "file") && ($keyarray[2] == "header")) {  //its an image. 
+                $headerarray['type'] = 'header';
+                $headerarray['parameters'] = [];
+                $component['type'] = $keyarray[2]; //header
+                $param['type'] = $keyarray[3];
+                if (isset($val['filename'])) {
+                    $param[$keyarray[3]]['filename'] = $val['filename'];
+                }
+                $param[$keyarray[3]]['id'] = $val['fbimageid'];
+                $headerarray['parameters'][] = $param;
+                $sendarray['imageid']= $val['fbimageid'];
+            }
+
+            if ($keyarray[0] == "var") {  //parmeters injection. 
+                $param['type'] = "text";
+                $param['text'] = $val['field_value'];
+
+                $bodyarray['parameters'][] = $param;
+            }
+
+            if ($keyarray[0] == "button") {  //parmeters for button variables. 
+                $json = '{"type": "button", "sub_type": "url", "index": "0", "parameters": [{"type": "payload", "payload": "btntwo"}]}';
+                $button_array = json_decode($json, true);
+                $button_array['parameters'][0]['payload'] = $val['field_value'];
+                $sendarray['template']['components'][] = $button_array;
+            }
+        }
+    
+
+
+
+      
+        
+
+
+
+
+      
+        
+
     }
 
     function _sendms($sched_id) {
@@ -65,7 +177,7 @@ class SendscheduleCommand extends Command {
                 ->select(['Campaigns.template_id', 'Schedules.name', 'Schedules.campaign_id', 'Schedules.user_id'])
                 ->innerJoinWith('Campaigns')
                 ->first();
-        //   debug($schedQuery);
+        
         $sched_name = $schedQuery->name;
         $template_id = $schedQuery->_matchingData['Campaigns']['template_id'];
         $campaign_id = $schedQuery->campaign_id;
@@ -85,7 +197,7 @@ class SendscheduleCommand extends Command {
         print_r($fbSettings);
         foreach ($csquery as $key => $val) {
             //   $data['mobile_number'] = $val->contact_waid;
-	    sleep (1);
+	        sleep (1);
             print "Sending to ".+$val->contact_waid;
             $streams_table = $this->getTableLocator()->get('Streams');
             $streamrow = $streams_table->newEmptyEntity();
@@ -112,36 +224,37 @@ class SendscheduleCommand extends Command {
         }
     }
 
-    function _updateschedcontacts($id, $contact_json) {
-        print("$contact_json");
-      //  $contact_id = implode($contact_json, true);
-     //   print_r($contact_id);
-        $table = $this->getTableLocator()->get('ContactsSchedules');
-        $table->deleteAll(['schedule_id' => $id]);
-        $contact_contact_number_table = $this->getTableLocator()->get('ContactsContactNumbers');
-        $contact_id = explode(",", $contact_json);
-        print_r($contact_id);
-        foreach ($contact_id as $ckey => $cval) {
-            $query = $contact_contact_number_table->find()->innerJoinWith('ContactNumbers');
-            $query->where(['contact_id' => $cval])
-                    ->select([
-                        'ContactsContactNumbers.contact_id',
-                        'ContactsContactNumbers.contact_number_id',
-                        'ContactNumbers.mobile_number',
-                        'ContactNumbers.blocked'
-                    ])
-                    ->toArray();
-            foreach ($query as $key => $val) {
-                $blocked = $val->_matchingData['ContactNumbers']['blocked'];
-                if ($blocked == false) {
-                    $row = $table->newEmptyEntity();
-                    $row->schedule_id = $id;
-                    $row->contact_waid = $val->_matchingData['ContactNumbers']['mobile_number'];
-                    print $val->_matchingData['ContactNumbers']['mobile_number']." is added \n";
-                    $table->save($row);
-                }
-            }
-        }
-    }
+    // function _updateschedcontacts($id, $contact_json) {
+    //     print("$contact_json");
+    //   //  $contact_id = implode($contact_json, true);
+    //  //   print_r($contact_id);
+    //     $table = $this->getTableLocator()->get('ContactsSchedules');
+    //     $table->deleteAll(['schedule_id' => $id]);
+    //     $contact_contact_number_table = $this->getTableLocator()->get('ContactsContactNumbers');
+    //     $contact_id = explode(",", $contact_json);
+    //     print_r($contact_id);
+    //     foreach ($contact_id as $ckey => $cval) {
+    //         $query = $contact_contact_number_table->find()->innerJoinWith('ContactNumbers');
+    //         $query->where(['contact_id' => $cval])
+    //                 ->select([
+    //                     'ContactsContactNumbers.contact_id',
+    //                     'ContactsContactNumbers.contact_number_id',
+    //                     'ContactNumbers.mobile_number',
+    //                     'ContactNumbers.blocked'
+    //                 ])
+    //                 ->toArray();
+    //         foreach ($query as $key => $val) {
+    //             $blocked = $val->_matchingData['ContactNumbers']['blocked'];
+    //             if ($blocked == false) {
+    //                 // $row = $table->newEmptyEntity();
+    //                 // $row->schedule_id = $id;
+    //                 // $row->contact_waid = $val->_matchingData['ContactNumbers']['mobile_number'];
+    //                 // print $val->_matchingData['ContactNumbers']['mobile_number']." is added \n";
+    //                 // $table->save($row);
+    //                 print( $val->_matchingData['ContactNumbers']['mobile_number']);
+    //             }
+    //         }
+    //     }
+    // }
 
 }

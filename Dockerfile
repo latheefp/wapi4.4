@@ -20,7 +20,7 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql pcntl
 RUN apt-get update && apt-get install -y  unzip  libicu-dev  libicu-dev iputils-ping libhiredis-dev &&  docker-php-ext-install intl  \
     && rm -rf /var/lib/apt/lists/* 
     
-RUN pecl install redis && docker-php-ext-enable redis;
+#RUN pecl install redis && docker-php-ext-enable redis;
 
 # Install Composer globally
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer

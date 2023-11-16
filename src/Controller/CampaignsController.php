@@ -16,26 +16,26 @@ use Cake\Mailer\Mailer;
 use Cake\Http\ServerRequest;
 use HTTP\Request2;
 
-//use Cake\I18n\I18n;
-//
-//// Set the language to Arabic
-//I18n::setLocale('ara');
-//use PhpOffice\PhpSpreadsheet\IOFactory;
-
-/**
- * Bookmarks Controller
- *
- * @property \App\Model\Table\BookmarksTable $Bookmarks
- */
 class CampaignsController extends AppController {
+
+    public function beforeFilter(EventInterface $event): void {
+        parent::beforeFilter($event);
+        $this->FormProtection->setConfig('unlockedActions', ['add','newcamp','getcampaign','attachments','getschedules','newsched','getstreams']);
+
+    }
 
     var $uses = array('Campaigns');
 
     function viewimage($file_id = null) { //should be replaced by   viewrcvImage() functoin.
-        ////TODO:
-//        $filearray= explode('.',$file_id);
-//      //  debug ($file_id);
-//        $file_id=$filearray[0];
+        if((!isset($file_id))&&(empty($file_id))) {
+            $result['status']="failed";
+            $result['msg']="Missing image ID";
+            return $result;
+        }
+
+
+
+
         $this->viewBuilder()->setLayout('ajax');
         $file = tmpfile();
         $file_path = stream_get_meta_data($file)['uri'];
@@ -228,14 +228,9 @@ class CampaignsController extends AppController {
         return $response;
     }
 
-    public function beforeFilter(EventInterface $event): void {
-        parent::beforeFilter($event);
-//        $this->Security->setConfig('unlockedActions', ['getdata', 'edit']);
-    }
 
-//    function new() {
-//        
-//    }
+
+
 
     function index() {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
@@ -256,7 +251,7 @@ class CampaignsController extends AppController {
             $row = $table->newEmptyEntity();
             $row->start_date = $data['start_date'];
             $row->end_date = $data['end_date'];
-            $row->user_id = $this->Auth->user('id');
+            $row->user_id = $this->getMyUID();
             $row->template_id = $data['template_id'];
             $row->campaign_name = $data['campaign_name'];
             if ($row->getErrors()) {
@@ -497,7 +492,11 @@ class CampaignsController extends AppController {
                 $row->language = $keyarray[1];
 
                 if ($table->save($row)) {
-                    $this->_uploadtofb($row->id, $val['tmp_name']);
+                    if($this->_uploadtofb($row->id, $val['tmp_name'])){
+                        print "Upload success";
+                    }else{
+                        print "Upload failed";
+                    }
                 } else {
                     print "File Save failed\n";
                     $error = $row->getErrors();
@@ -544,9 +543,9 @@ class CampaignsController extends AppController {
     }
 
     function _uploadtofb($id, $path) {
-
+       // debug($data);
         $session = $this->request->getSession();
-        $data['account_id'] = $session->read('Auth.User.account_id');
+        $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
         //     debug($id);
         $table = $this->getTableLocator()->get('CampaignForms');
@@ -577,17 +576,30 @@ class CampaignsController extends AppController {
 
         curl_close($curl);
         $resparray = (json_decode($response, TRUE));
-        //       debug($resparray);
-        $fbimageid = $resparray['id'];
-        $row = $table->get($id);
-        $row->fbimageid = $fbimageid;
-        $table->save($row);
+    //    debug($resparray);
+        if (isset($resparray['id'])) {
+            $fbimageid = $resparray['id'];
+            $row = $table->get($id);
+            $row->fbimageid = $fbimageid;
+            if($table->save($row)){
+                return true;
+
+            }else{
+                return false;
+            }
+            
+        }else{
+            return false;
+        }
+       
     }
 
     function schedules() {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('schedule_views'));
         $this->set('titleforlayout', "Schedules");
+        $this->set('account_id',$this->getMyAccountID());
+        
     }
 
     public function getschedules() {
@@ -643,7 +655,7 @@ class CampaignsController extends AppController {
             $data = $this->request->getData();
             //     debug ($data);
             $row = $table->newEmptyEntity();
-            $row->user_id = $this->Auth->user('id');
+            $row->user_id = $this->getMyUID();
             $row->name = $data['name'];
             $row->campaign_id = $data['campaign_id'];
             $row->account_id =$this->getMyAccountID();

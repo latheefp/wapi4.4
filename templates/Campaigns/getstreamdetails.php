@@ -57,7 +57,7 @@
                 <tbody>
                     <tr><td><pre>
                                 <?php
-                                if(isset($data->recievearray)){
+                                if (isset($data->receiveArray) && !empty($data->receiveArray)) {
                                    // debug($data->recievearray);
                                     $decoded_object = json_decode($data->recievearray, true);
                                     $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
@@ -78,7 +78,7 @@
                 <tbody>
                     <tr><td><pre>
                                 <?php
-                                 if(isset($data->tmp_upate_json)){
+                                  if (isset($data->tmp_upate_json) && !empty($data->tmp_upate_json)) {
                                     $json = trim($data->tmp_upate_json, ',');
                                     $jsonArray = explode("\n", $json);
                                     foreach ($jsonArray as $jkey => $jval) {
@@ -104,7 +104,7 @@
             <tbody>
                 <tr><td><pre>
                             <?php
-                            if(isset($data->sendarray)){
+                             if (isset($data->sendarray) && !empty($data->sendarray)) {
                                 $decoded_object = json_decode($data->sendarray, true);
                                 $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
                                 echo ($beautified_json_string);
@@ -120,7 +120,7 @@
             <tbody>
                 <tr><td><pre>
                             <?php
-                             if(isset($data->result)){
+                              if (isset($data->result) && !empty($data->result)) {
                                 $decoded_object = json_decode($data->result, true);
                                 $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
                                 echo ($beautified_json_string);
@@ -136,7 +136,7 @@
             <tbody>
                 <tr><td><pre>
                             <?php
-                             if(isset($data->postdata)){
+                              if (isset($data->postdata) && !empty($data->postdata)) {
                                 $decoded_object = json_decode($data->postdata, true);
                                 $beautified_json_string = json_encode($decoded_object, JSON_PRETTY_PRINT);
                                 echo ($beautified_json_string);
@@ -156,11 +156,13 @@
             <tbody>
                 <tr><td><pre>
                             <?php
-                            $rcvData['json'] = $data->recievearray;
-                            $rcvData['id']=$data->id;
-                            $rcvData['FBsettings'] = $FBsettings;
-                    //        debug($rcvData);
-                            print($this->RcvDataformat->format($rcvData));
+                            if (isset($data->recievearray) && !empty($data->recievearray)) {
+                                $rcvData['json'] = $data->recievearray;
+                                $rcvData['id']=$data->id;
+                                $rcvData['FBsettings'] = $FBsettings;
+                        //        debug($rcvData);
+                                print($this->RcvDataformat->format($rcvData));
+                            }
                             ?>
                         </pre>
                     </td></tr>

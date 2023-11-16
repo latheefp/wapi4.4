@@ -30,7 +30,7 @@ class AjaxesController extends AppController {
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
         $this->Authentication->allowUnauthenticated(['getrate']);
-        $this->FormProtection->setConfig('unlockedActions', ['getrate']);
+        $this->FormProtection->setConfig('unlockedActions', ['getrate','validate']);
     }
 
     public function isAuthorized($user) {
