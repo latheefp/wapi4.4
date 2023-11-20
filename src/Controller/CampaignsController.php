@@ -20,7 +20,7 @@ class CampaignsController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
-        $this->FormProtection->setConfig('unlockedActions', ['add','newcamp','getcampaign','attachments','getschedules','newsched','getstreams']);
+        $this->FormProtection->setConfig('unlockedActions', ['add','newcamp','getcampaign','attachments','getschedules','newsched','getstreams','updatecomment']);
 
     }
 

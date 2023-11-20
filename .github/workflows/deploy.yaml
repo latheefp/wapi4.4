@@ -22,9 +22,10 @@ jobs:
       env:
         IMAGE_TAG: latest  # Change this to your desired tag
       run: |
-       # docker build -t your-registry/your-image-name:$IMAGE_TAG .
-        docker build -t registry.egrand.in/wapi:$IMAGE_TAG .
-        docker push registry.egrand.in/wapi:$IMAGE_TAG
+        docker build . -t latheefp/wapi:latest
+        docker login -u latheefp -p Chimmu@123
+        docker push latheefp/wapi:latest
+
 
     - name: Update Kubernetes deployment
       env:
