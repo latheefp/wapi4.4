@@ -44,6 +44,7 @@ jobs:
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
       run: |
         echo "$KUBE_CONFIG_DATA" | base64 -d > kubeconfig.yaml
+        kubectl config get-contexts  # Lists available contexts
         kubectl config use-context egrand
         kubectl set image -n  wapi  deployment/wapi wapi=latheefp/wapi:$IMAGE_TAG
         kubectl -n wapi rollout restart deployment/wapi
