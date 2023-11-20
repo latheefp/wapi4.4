@@ -15,22 +15,35 @@ jobs:
 
     # - name: Login to Docker Hub
     #   run: echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      #  env:
+      #    DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+         
+
+    # - name: Build and push Docker image
     #   env:
-    #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     IMAGE_TAG: latest  # Change this to your desired tag
+    #   run: |
+    #     docker build . -t latheefp/wapi:latest
+    #     docker login -u latheefp -p Chimmu@123
+    #     docker push latheefp/wapi:latest
 
     - name: Build and push Docker image
       env:
         IMAGE_TAG: latest  # Change this to your desired tag
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
       run: |
         docker build . -t latheefp/wapi:latest
-        docker login -u latheefp -p Chimmu@123
+        echo "$DOCKERHUB_PASSWORD" | base64 -d | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
         docker push latheefp/wapi:latest
 
 
     - name: Update Kubernetes deployment
       env:
+        IMAGE_TAG: latest  # Change this to your desired tag
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
       run: |
         echo "$KUBE_CONFIG_DATA" | base64 -d > kubeconfig.yaml
-        kubectl config use-context your-cluster-context
-        kubectl set image deployment/your-deployment-name your-container-name=your-registry/your-image-name:$IMAGE_TAG
+        kubectl config use-context egrand
+        kubectl set image -n  wapi  deployment/wapi wapi=latheefp/wapi:$IMAGE_TAG
+        kubectl -n wapi rollout restart deployment/wapi
