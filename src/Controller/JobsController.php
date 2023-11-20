@@ -33,18 +33,16 @@ class JobsController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
+        $formaction = $this->request->getParam('action');
 
-        $allowedActions = ['runjob']; // List of allowed actions
+        $this->FormProtection->setConfig('unlockedActions', array(
+            $formaction
+        ));
 
-        if (in_array($this->request->getParam('action'), $allowedActions)) {
-//            $this->FormProtection->setConfig('validate', false);
-        }
+
         $this->Authentication->allowUnauthenticated(['runjob']);
     }
 
-//    function runjob() {
-//        
-//    }
 
     public function runjob() {
         $return=array();
@@ -52,6 +50,7 @@ class JobsController extends AppController {
         $apiKey = $this->request->getHeaderLine('X-Api-Key');
         $type = $this->request->getData('type'); 
         $qid = $this->request->getData('qid'); // Assuming this is a POST request
+     //   debug($type);
 
 
         $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]); //This FB settings are just make sure, the paswed API key is valid before processing.
@@ -624,7 +623,7 @@ class JobsController extends AppController {
         return true;
     }
 
-    function _savedata($data = array(), $FBSettings) {
+    function _savedata($data, $FBSettings) {
         # $this->writelog($data, "Data to be saved");
         if (isset($data['contact_waid'])) {
             $data['contact_stream_id'] = $this->getWastreamsContactId($data['contact_waid'], $FBSettings);
@@ -942,4 +941,35 @@ class JobsController extends AppController {
             $this->set('result', $status);
         }
     }
+
+
+    // function sendtest(){
+
+
+    //     $curl = curl_init();
+
+    //     curl_setopt_array($curl, array(
+    //         CURLOPT_URL => 'http://wa.egrand.in/jobs/runjob',
+    //         CURLOPT_RETURNTRANSFER => true,
+    //         CURLOPT_ENCODING => '',
+    //         CURLOPT_MAXREDIRS => 10,
+    //         CURLOPT_TIMEOUT => 0,
+    //         CURLOPT_FOLLOWLOCATION => true,
+    //         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //         CURLOPT_CUSTOMREQUEST => 'POST',
+    //         CURLOPT_POSTFIELDS => array('qid' => '2456', 'type' => 'send'),
+    //         CURLOPT_HTTPHEADER => array(
+    //             'X-Api-Key: sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh',
+    //             'Cookie: PHPSESSID=882c3c44ec60eeae937d20bc181e879a'
+    //         ),
+    //     ));
+
+    //     $response = curl_exec($curl);
+
+    //     curl_close($curl);
+    //     echo $response;
+
+    // }
+
+
 }

@@ -178,10 +178,10 @@ class AppController extends Controller {
         return $result;
     }
 
-//    public function beforeFilter(EventInterface $event) {
+//     public function beforeFilter(EventInterface $event) {
 //        parent::beforeFilter($event);
 //        $this->Security->setConfig('validatePost', false);
-////   $this->Auth->allow(['login', 'logout','forgetpass','resetpass','test','pubpasswordsetajax']);
+// //   $this->Auth->allow(['login', 'logout','forgetpass','resetpass','test','pubpasswordsetajax']);
 //    }
 
     function gen_rand_string($length = 10) {
@@ -951,13 +951,13 @@ class AppController extends Controller {
         }
     }
 
-    public function getMyAPIKey($uid=null){
-        if(!isset($uid)){
-            $uid = $this->getMyUID();
+    public function getMyAPIKey($account_id=null){
+        if(!isset($account_id)){
+            $uid = $this->getMyAccountID();
         }
         $table = $this->getTableLocator()->get('ApiKeys');
         $apiquery = $table->find()
-                ->where(['user_id' => $uid, 'enabled' => true])
+                ->where(['account_id' => $account_id, 'enabled' => true])
                 ->first();
         if (empty($apiquery)) {
             return false;

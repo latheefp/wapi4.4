@@ -386,12 +386,6 @@ class CampaignsController extends AppController {
             //delete any existing entry in form before saving. 
             $conditions = ['Campaign_id' => $id];
             $deleteresult = $table->deleteAll($conditions);
-            //         debug($deleteresult);
-//            if ($result) {
-//                echo 'Deletion successful.';
-//            } else {
-//                echo 'Deletion failed.';
-//            }
             foreach ($files as $key => $val) {
                 // 
                 $table->deleteAll(['field_name' => $key, 'campaign_id' => $id]);
@@ -423,8 +417,11 @@ class CampaignsController extends AppController {
                 }
             }
             if (!empty($data)) {
+
+              //  debug($data);
                 foreach ($data as $key => $val) {
                     $keyarray = explode("-", $key);
+                 //   debug($keyarray);
                     $row = $table->newEmptyEntity();
                     $row->campaign_id = $id;
                     $row->field_type = 'variable';
@@ -442,23 +439,23 @@ class CampaignsController extends AppController {
             }
             $this->redirect('/campaigns/');
         }
-        $table = $this->getTableLocator()->get('Campaigns');
-        $camp = $table->findById($id)->firstOrFail();
+        $tableCampaigns = $this->getTableLocator()->get('Campaigns');
+        $camp = $tableCampaigns->findById($id)->firstOrFail();
         $template_id = $camp->template_id;
-        $table = $this->getTableLocator()->get('Templates');
+        $tableTemplates = $this->getTableLocator()->get('Templates');
         $this->set('camp', $camp);
 
-        $query = $table->query()
+        $tableTemplatesquery = $tableTemplates->query()
                 ->where(['id' => $template_id])
                 ->first();
 
-        $this->set('data', $query->toArray());
-        $table = $this->getTableLocator()->get('CampaignForms');
-        $query = $table->query()
+        $this->set('data', $tableTemplatesquery->toArray());
+        $tableCampaignForms = $this->getTableLocator()->get('CampaignForms');
+        $queryCampaignForms = $tableCampaignForms->query()
                 ->find('all')
                 ->where(['campaign_id' => $id]);
 
-        $this->set('formdata', $query->toArray());
+        $this->set('formdata', $queryCampaignForms->toArray());
     }
 
     function attachment($id = null) {

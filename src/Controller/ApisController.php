@@ -32,13 +32,12 @@ class ApisController extends AppController {
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
 
-        $allowedActions = ['webhook', 'sendschedule']; // List of allowed actions
+        $formaction = $this->request->getParam('action');
 
-        if (in_array($this->request->getParam('action'), $allowedActions)) {
-//            $this->FormProtection->setConfig('validate', false);
-        }
+        $this->FormProtection->setConfig('unlockedActions', array(
+            $formaction
+        ));
 
-//        $this->FormProtection->setConfig('unlockedActions', ['sendschedule']);
         $this->Authentication->allowUnauthenticated(['webhook', 'webhook1', 'sendschedule', 'uploadfile', 'sendmsg']);
     }
 
