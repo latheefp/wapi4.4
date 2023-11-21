@@ -20,8 +20,7 @@ class CampaignsController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
-        $this->FormProtection->setConfig('unlockedActions', ['add','newcamp','getcampaign','attachments','getschedules','newsched','getstreams','updatecomment']);
-
+        $this->FormProtection->setConfig('unlockedActions', ['add','newcamp','getcampaign','attachments','getschedules','newsched','getstreams','updatecomment','sendshedule']);
     }
 
     var $uses = array('Campaigns');
@@ -650,7 +649,7 @@ class CampaignsController extends AppController {
 
         if ($this->request->is('post')) {
             $data = $this->request->getData();
-            //     debug ($data);
+        //         debug ($data);
             $row = $table->newEmptyEntity();
             $row->user_id = $this->getMyUID();
             $row->name = $data['name'];
@@ -665,18 +664,9 @@ class CampaignsController extends AppController {
                 if ($table->save($row)) {
                     $id = $row->id;
                     $result['status'] = "success";
-
-                    //    $this->_updateschedcontacts($id, $data['contact_id']); //send to background.
-                    //  $contact_json= json_encode($data['contact_id']);
                     $contact_csv = implode(",", $data['contact_id']);
-
-//                    foreach($contact_ids as $id =>$contact){
-//                        
-//                    }
-                    $cmd = ROOT . DS . "bin/cake Sendschedule -i $id -c $contact_csv > /dev/null 2>&1 &";
-                    exec($cmd);
-                    //             debug($cmd);
-                    $result['msg'] = "New campaign " . $data['name'] . " been added with ID $cmd";
+                    $result=$this->sendmsg( $id, $contact_csv);
+                   
                 } else {
                     $result['status'] = "failed";
                     $result['msg'] = "Not able to save the the Contact group";
@@ -687,35 +677,46 @@ class CampaignsController extends AppController {
         $this->set('result', $result);
     }
 
-    function sendmsg($sched_id) {
-        $this->_sendmsg($sched_id);
+
+    function sendmsg($schdule_id, $contact_csv)
+    {
+        $cmd = ROOT . DS . "bin/cake Sendschedule -i $schdule_id -c $contact_csv > /dev/null 2>&1 &";
+        exec($cmd);
+        $result['msg']="New campaign  been added with ID $cmd";
+        $result['status']="success";
+        return $result;
     }
 
-//    function _updateschedcontacts($id, $contact_id) {
-//        $table = $this->getTableLocator()->get('ContactsSchedules');
-//        $table->deleteAll(['schedule_id' => $id]);
-//        $contact_contact_number_table = $this->getTableLocator()->get('ContactsContactNumbers');
-//        foreach ($contact_id as $ckey => $cval) {
-//            $query = $contact_contact_number_table->find()->innerJoinWith('ContactNumbers');
-//            $query->where(['contact_id' => $cval])
-//                    ->select([
-//                        'ContactsContactNumbers.contact_id',
-//                        'ContactsContactNumbers.contact_number_id',
-//                        'ContactNumbers.mobile_number',
-//                        'ContactNumbers.blocked'
-//                    ])
-//                    ->toArray();
-//            foreach ($query as $key => $val) {
-//                $blocked = $val->_matchingData['ContactNumbers']['blocked'];
-//                if ($blocked == false) {
-//                    $row = $table->newEmptyEntity();
-//                    $row->schedule_id = $id;
-//                    $row->contact_waid = $val->_matchingData['ContactNumbers']['mobile_number'];
-//                    $table->save($row);
-//                }
-//            }
-//        }
-//    }
+    function sendmsgnew()
+    {
+        $API_keys = $this->getMyAPIKey();
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'http://localhost/jobs/sendshedule',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array('schedule_id' => '135', 'contacts' => '7'),
+            CURLOPT_HTTPHEADER => array(
+                'X-Api-Key: '.$this->getMyAPIKey()
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        echo $response;
+
+
+
+        debug($API_keys);
+    }
 
     function deletesched($id) {
         $this->viewBuilder()->setLayout('ajax');

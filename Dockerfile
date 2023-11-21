@@ -34,7 +34,11 @@ COPY . /var/www/html
 
 #COPY docker/entrscript /var/www/html/bin
 # COPY docker/entrypoint.sh /var/www/html/bin/entrypoint.sh
-RUN chmod a+x /var/www/html/bin/entrypoint.sh /var/www/html/bin/cake /var/www/html/bin/runsendprocess.pl /var/www/html/bin/runsendprocess.pl /var/www/html/bin/runrcvprocess.pl
+RUN chmod a+x /var/www/html/bin/entrypoint.sh \
+    /var/www/html/bin/cake \
+    /var/www/html/bin/runsendprocess.pl \
+    /var/www/html/bin/runsendprocess.pl \
+    /var/www/html/bin/runrcvprocess.pl
 
 
 # Install dependencies using Composer

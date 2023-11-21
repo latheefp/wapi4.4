@@ -943,33 +943,97 @@ class JobsController extends AppController {
     }
 
 
-    // function sendtest(){
 
 
-    //     $curl = curl_init();
 
-    //     curl_setopt_array($curl, array(
-    //         CURLOPT_URL => 'http://wa.egrand.in/jobs/runjob',
-    //         CURLOPT_RETURNTRANSFER => true,
-    //         CURLOPT_ENCODING => '',
-    //         CURLOPT_MAXREDIRS => 10,
-    //         CURLOPT_TIMEOUT => 0,
-    //         CURLOPT_FOLLOWLOCATION => true,
-    //         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    //         CURLOPT_CUSTOMREQUEST => 'POST',
-    //         CURLOPT_POSTFIELDS => array('qid' => '2456', 'type' => 'send'),
-    //         CURLOPT_HTTPHEADER => array(
-    //             'X-Api-Key: sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh',
-    //             'Cookie: PHPSESSID=882c3c44ec60eeae937d20bc181e879a'
-    //         ),
-    //     ));
 
-    //     $response = curl_exec($curl);
+    //secondary soluton. tryin to make the command work.
 
-    //     curl_close($curl);
-    //     echo $response;
 
-    // }
+    function sendshedule() {
+        // $app = new AppController();
+        //  $app->constructClasses();
+        $schedTable = $this->getTableLocator()->get('Schedules');
+        $schedQuery = $schedTable->find()
+                ->where(['Schedules.id' => $sched_id])
+                ->select(['Campaigns.template_id', 'Schedules.name', 'Schedules.campaign_id', 'Schedules.user_id'])
+                ->innerJoinWith('Campaigns')
+                ->first();
+        //   debug($schedQuery);
+        $sched_name = $schedQuery->name;
+        $template_id = $schedQuery->_matchingData['Campaigns']['template_id'];
+        $campaign_id = $schedQuery->campaign_id;
+        $templatetable = $this->getTableLocator()->get('Templates');
+        $templateQuery = $templatetable->find()
+                ->where(['id' => $template_id])
+                ->first();
+
+        // debug($schedquery);
+
+        $table = $this->getTableLocator()->get('ContactsSchedules');
+        $csquery = $table->find();
+        $csquery->where(['schedule_id' => $sched_id])
+                ->all();
+
+        $fbSettings = $data = $this->app->_getFBsettings(array('user_id' => $schedQuery->user_id));
+        print_r($fbSettings);
+        foreach ($csquery as $key => $val) {
+            //   $data['mobile_number'] = $val->contact_waid;
+	    sleep (1);
+            print "Sending to ".+$val->contact_waid;
+            $streams_table = $this->getTableLocator()->get('Streams');
+            $streamrow = $streams_table->newEmptyEntity();
+            $streamrow->schedule_id = $sched_id;
+            $streamrow->contact_stream_id = $this->app->getWastreamsContactId($val->contact_waid, $fbSettings);
+            $streamrow->initiator = "Web";
+            $streamrow->type = "send";
+            $streamrow->account_id = $fbSettings['account_id'];
+            $streams_table->save($streamrow);
+            $contact = $streams_table->get($streamrow->id);
+            $table = $this->getTableLocator()->get('CampaignForms');
+            $form = $table->find()
+                    ->where(['campaign_id' => $campaign_id])
+                    ->all();
+
+            //     print_r($fbSettings);
+//            debug($templateQuery);
+//            print_r($contact);
+//            print_r($form);
+//            print_r($templateQuery);
+              $result= $this->app->_despatch_msg($contact, $form, $templateQuery,$fbSettings);
+              print_r($result);
+                debug($result);
+        }
+
+
+        function create_contact_array($contact_csv)
+    {
+        $contact_array = [];
+        $contact_contact_number_table = $this->getTableLocator()->get('ContactsContactNumbers');
+        $contact_id = explode(",", $contact_csv);
+        print_r($contact_id);
+        foreach ($contact_id as $ckey => $cval) {
+            $query = $contact_contact_number_table->find()->innerJoinWith('ContactNumbers');
+            $query->where(['contact_id' => $cval])
+                ->select([
+                    'ContactsContactNumbers.contact_id',
+                    'ContactsContactNumbers.contact_number_id',
+                    'ContactNumbers.mobile_number',
+                    'ContactNumbers.blocked'
+                ])
+                ->toArray();
+            foreach ($query as $key => $val) {
+                $blocked = $val->_matchingData['ContactNumbers']['blocked'];
+                if ($blocked == false) {
+                    $contact_array[] = $val->_matchingData['ContactNumbers']['mobile_number'];
+                }
+            }
+        }
+        return array_unique($contact_array);
+    }
+
+
+
 
 
 }

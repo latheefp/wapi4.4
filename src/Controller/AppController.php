@@ -953,7 +953,7 @@ class AppController extends Controller {
 
     public function getMyAPIKey($account_id=null){
         if(!isset($account_id)){
-            $uid = $this->getMyAccountID();
+            $account_id = $this->getMyAccountID();
         }
         $table = $this->getTableLocator()->get('ApiKeys');
         $apiquery = $table->find()
