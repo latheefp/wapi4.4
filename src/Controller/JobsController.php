@@ -162,14 +162,19 @@ class JobsController extends AppController {
         // $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
         $data = json_decode($record->form_data,true);
+        if(!isset($data['mobile_number'])){
+            $return['result']['error']="No mobile number provided";
+            return $return;
+        }
+        if (strlen($data['mobile_number']) >= 10 && is_numeric($data['mobile_number'])) {
+           // echo "Valid mobile number!";
+        } else {
+            $return['result']['error']="Invalid mobile number";
+            return $return;
+        }
+
+
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
-        //checking schdule name.
-        //   debug($data);
-        //Temporary hack to overwrite mobile number
-      //  $data['mobile_number'] = '966547237272' ;
-        //Checking shedule name exists or not. 
-
-
         $schedTable = $this->getTableLocator()->get('Schedules');
         $schedQuery = $schedTable->find()
             ->where(['Schedules.name' => $data['schedule_name']])
@@ -180,9 +185,6 @@ class JobsController extends AppController {
         if (empty($schedQuery)) {
             $return['result']['error']="No matching schedule found, ".$data['schedule_name'];
             $this->writelog($schedQuery, "Shedule query result is empty, no matching schedule name");
-            // $result['status']['type'] = "Error";
-            // $result['status']['message'] = "Unknown schedule " . $data['schedule_name'];
-            // $result['status']['code'] = 500;
             return $return;
         } else {
             $this->writelog($schedQuery, "Found schedule " . $data['schedule_name'] . " in table");
@@ -995,15 +997,11 @@ class JobsController extends AppController {
                     ->where(['campaign_id' => $campaign_id])
                     ->all();
 
-            //     print_r($fbSettings);
-//            debug($templateQuery);
-//            print_r($contact);
-//            print_r($form);
-//            print_r($templateQuery);
               $result= $this->app->_despatch_msg($contact, $form, $templateQuery,$fbSettings);
               print_r($result);
                 debug($result);
         }
+    }
 
 
         function create_contact_array($contact_csv)
