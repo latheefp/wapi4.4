@@ -30,11 +30,11 @@ class SelectlistHelper extends Helper {
         }
         $query = $table->find()
                 ->select([$value, $fname])
-                ->where($where)
-                ->toList();
+                ->where($where);
+             //   ->toList();
         
         
-     //   print_r($query);
+    //    print_r($query);
 
         foreach ($query as $key => $val) {
             $id = $val->$value;

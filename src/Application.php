@@ -126,7 +126,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 'pricing',
                 'contact',
                 'getrate',
-                // 'add',
+                'sendcamp'
                 // 'validate'
             ];
          //   debug("Action is ". $request->getParam('action'));

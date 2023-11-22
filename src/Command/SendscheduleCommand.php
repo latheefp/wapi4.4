@@ -62,6 +62,7 @@ class SendscheduleCommand extends Command
         $schedule_id = $args->getOption('schedule_id');
         $contact_array = $this->form_contact_array($args->getOption('contact_csv'));
         //     debug($contact_array);
+        $this->app->writelog($contact_array);
         $this->queue_message($contact_array, $schedule_id);
     }
 
@@ -73,7 +74,7 @@ class SendscheduleCommand extends Command
         print_r($contact_id);
         foreach ($contact_id as $ckey => $cval) {
             $query = $contact_contact_number_table->find()->innerJoinWith('ContactNumbers');
-            $query->where(['contact_id' => $cval])
+            $query->where(['contact_id' => $cval]) 
                 ->select([
                     'ContactsContactNumbers.contact_id',
                     'ContactsContactNumbers.contact_number_id',

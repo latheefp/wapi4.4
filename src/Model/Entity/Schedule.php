@@ -12,11 +12,21 @@ use Cake\ORM\Entity;
  * @property string $name
  * @property int $campaign_id
  * @property int $user_id
+ * @property int $account_id
  * @property \Cake\I18n\FrozenDate|null $created
  * @property string|null $status
+ * @property string|null $contact_csv
+ * @property string $http_response_code
+ * @property int|null $progress
+ * @property int $total_contact
  *
  * @property \App\Model\Entity\Campaign $campaign
  * @property \App\Model\Entity\User $user
+ * @property \App\Model\Entity\Account $account
+ * @property \App\Model\Entity\Schedulestreamsview[] $schedulestreamsviews
+ * @property \App\Model\Entity\StreamView[] $stream_views
+ * @property \App\Model\Entity\Stream[] $streams
+ * @property \App\Model\Entity\Streams-aug-30[] $streams_aug_30
  * @property \App\Model\Entity\Contact[] $contacts
  */
 class Schedule extends Entity
@@ -28,16 +38,26 @@ class Schedule extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'name' => true,
         'campaign_id' => true,
         'user_id' => true,
+        'account_id' => true,
         'created' => true,
         'status' => true,
+        'contact_csv' => true,
+        'http_response_code' => true,
+        'progress' => true,
+        'total_contact' => true,
         'campaign' => true,
         'user' => true,
+        'account' => true,
+        'schedulestreamsviews' => true,
+        'stream_views' => true,
+        'streams' => true,
+        'streams_aug_30' => true,
         'contacts' => true,
     ];
 }

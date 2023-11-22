@@ -25,13 +25,16 @@ use Cake\Cache\Cache;
  *
  * @method \App\Model\Entity\Api[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
  */
-class JobsController extends AppController {
+class JobsController extends AppController
+{
 
-    public function isAuthorized($user) {
+    public function isAuthorized($user)
+    {
         return true;
     }
 
-    public function beforeFilter(EventInterface $event): void {
+    public function beforeFilter(EventInterface $event): void
+    {
         parent::beforeFilter($event);
         $formaction = $this->request->getParam('action');
 
@@ -40,17 +43,18 @@ class JobsController extends AppController {
         ));
 
 
-        $this->Authentication->allowUnauthenticated(['runjob']);
+        $this->Authentication->allowUnauthenticated(['runjob', 'sendcamp']);
     }
 
 
-    public function runjob() {
-        $return=array();
+    public function runjob()
+    {
+        $return = array();
         $this->viewBuilder()->setLayout('ajax');
         $apiKey = $this->request->getHeaderLine('X-Api-Key');
-        $type = $this->request->getData('type'); 
+        $type = $this->request->getData('type');
         $qid = $this->request->getData('qid'); // Assuming this is a POST request
-     //   debug($type);
+        //   debug($type);
 
 
         $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]); //This FB settings are just make sure, the paswed API key is valid before processing.
@@ -61,8 +65,8 @@ class JobsController extends AppController {
             $this->set('response', $response);
             return;
         }
-        
-       
+
+
 
         if (!is_numeric($qid) || empty($qid)) {
             $this->response = $this->response->withStatus(400); // Bad Request
@@ -78,8 +82,8 @@ class JobsController extends AppController {
             case "send":
 
                 $table = TableRegistry::getTableLocator()->get('SendQueues');
-                $sendQrecord=$table->get($qid);
-                $form_data=json_decode($sendQrecord->form_data, true);
+                $sendQrecord = $table->get($qid);
+                $form_data = json_decode($sendQrecord->form_data, true);
                 $FBSettings = $this->_getFBsettings($data = ['api_key' => $form_data['api_key']]);
                 if ($FBSettings['status']['code'] == 404) {
                     $this->response = $this->response->withStatus(401); // Unauthorized
@@ -90,86 +94,95 @@ class JobsController extends AppController {
                 }
 
 
-                $return=$this->_send_schedule($qid,$FBSettings);
-             
-                if(isset($return['result']['error'])){
-                   // debug($return);
+                $return = $this->_send_schedule($qid, $FBSettings);
+
+                if (isset($return['result']['error'])) {
+                    // debug($return);
                     $this->_update_http_code($qid, '403', $type); //forbidden
                     $this->response = $this->response->withStatus(403); // forbidden
                     $response['success'] = 'Failed';
-                }elseif($return['result']['messages'][0]['message_status']=="accepted"){
-                  //  debug($return);
-                  $this->_update_http_code($qid, '200', $type); //success
+                } elseif ($return['result']['messages'][0]['message_status'] == "accepted") {
+                    //  debug($return);
+                    $this->_update_http_code($qid, '200', $type); //success
                     $this->_update_http_code($qid, '200', $type);  //success
-                }else{
+                } else {
                     $this->_update_http_code($qid, '500', $type);   //application erorr
                     $this->_update_http_code($qid, '500', $type); //application erorr
                 }
                 break;
             case "receive":
                 $return = $this->processrcv($qid);
-               // debug($return);
-                if(isset($return['status'])){
-                 //   debug($return);
-                    $return=$this->_update_status($return);
+                // debug($return);
+                if (isset($return['status'])) {
+                    //   debug($return);
+                    $return = $this->_update_status($return);
                     http_response_code(200); // Good Request
-                    $this->_update_http_code($qid, '200',$type);
+                    $this->_update_http_code($qid, '200', $type);
                     $this->set('response', $return);
-                }else{
-                    $this->_update_http_code($qid, '200',$type);
-                   // $return['result']['status'] = 'Success';
+                } else {
+                    $this->_update_http_code($qid, '200', $type);
+                    // $return['result']['status'] = 'Success';
                 }
-                
+
                 break;
         }
-  //      debug($return);
+        //      debug($return);
         $this->set('response', $return['result']);
     }
 
-    function _update_http_code($qid, $code, $type) {
-        if($type=="send"){
-            $table = TableRegistry::getTableLocator()->get('SendQueues');
-            $row = $table->get($qid);
-            $row->http_response_code = $code;
-            $row->processed = 1;
-            $row->status = "processed";
-            $table->save($row);
+    function _update_http_code($qid, $code, $type)
+    {
 
-        }else{ //receive
-            $table = TableRegistry::getTableLocator()->get('RcvQueues');
-            $row = $table->get($qid);
-            $row->http_response_code = $code;
-            $row->processed = 1;
-            $row->status = "processed";
-            $table->save($row);
-
-
+        switch ($type) {
+            case 'send':
+                $table = TableRegistry::getTableLocator()->get('SendQueues');
+                $row = $table->get($qid);
+                $row->http_response_code = $code;
+                $row->processed = 1;
+                $row->status = "processed";
+                $table->save($row);
+                break;
+            case "receive":
+                $table = TableRegistry::getTableLocator()->get('RcvQueues');
+                $row = $table->get($qid);
+                $row->http_response_code = $code;
+                $row->processed = 1;
+                $row->status = "processed";
+                $table->save($row);
+                break;
+            case "camp":
+                $table = TableRegistry::getTableLocator()->get('Schedules');
+                $row = $table->get($qid);
+                $row->http_response_code = $code;
+                //  $row->processed = 1;
+                //   $row->status = "processed";
+                $table->save($row);
         }
-       
     }
 
 
 
 
 
-    function _send_schedule($qid, $FBSettings) {
+    function _send_schedule($qid, $FBSettings)
+    {
         //   debug("_Send Schdule");
         // debug($FBSettings);
-        $return=array();
+        $return = array();
         $Qtable = TableRegistry::getTableLocator()->get('SendQueues');
         $record = $Qtable->get($qid);
-        
+
         // $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
-        $data = json_decode($record->form_data,true);
-        if(!isset($data['mobile_number'])){
-            $return['result']['error']="No mobile number provided";
+        $data = json_decode($record->form_data, true);
+        if (!isset($data['mobile_number'])) {
+            $return['result']['error'] = "No mobile number provided";
             return $return;
         }
         if (strlen($data['mobile_number']) >= 10 && is_numeric($data['mobile_number'])) {
-           // echo "Valid mobile number!";
+            // echo "Valid mobile number!";
         } else {
-            $return['result']['error']="Invalid mobile number";
+            $return['result']['error'] = "Invalid mobile number";
             return $return;
         }
 
@@ -178,18 +191,17 @@ class JobsController extends AppController {
         $schedTable = $this->getTableLocator()->get('Schedules');
         $schedQuery = $schedTable->find()
             ->where(['Schedules.name' => $data['schedule_name']])
-                ->select(['Campaigns.template_id', 'Schedules.campaign_id', 'id'])
-                ->innerJoinWith('Campaigns')
-                ->first();
-        ;
+            ->select(['Campaigns.template_id', 'Schedules.campaign_id', 'id'])
+            ->innerJoinWith('Campaigns')
+            ->first();;
         if (empty($schedQuery)) {
-            $return['result']['error']="No matching schedule found, ".$data['schedule_name'];
+            $return['result']['error'] = "No matching schedule found, " . $data['schedule_name'];
             $this->writelog($schedQuery, "Shedule query result is empty, no matching schedule name");
             return $return;
         } else {
             $this->writelog($schedQuery, "Found schedule " . $data['schedule_name'] . " in table");
             $sched_id = $schedQuery->id;
-        //    debug($schedQuery);
+            //    debug($schedQuery);
             //!!Do the related updates in console as well. 
             $streams_table = $this->getTableLocator()->get('Streams');
             $streamrow = $streams_table->newEmptyEntity();
@@ -199,10 +211,10 @@ class JobsController extends AppController {
             $streamrow->type = "send";
             $streamrow->postdata = json_encode($data);
             $streamrow->account_id = $FBSettings['account_id'];
-            if(!$streams_table->save($streamrow)){
+            if (!$streams_table->save($streamrow)) {
                 debug($streamrow);
                 debug($streamrow->getErrors()); // Print save errors
-                $return['result']['error']="Failed to upate streams";
+                $return['result']['error'] = "Failed to upate streams";
                 return $return;
             }
             $contact = $streams_table->get($streamrow->id);
@@ -211,14 +223,14 @@ class JobsController extends AppController {
             //     debug($template_id);
             $templatetable = $this->getTableLocator()->get('Templates');
             $templateQuery = $templatetable->find()
-                    ->where(['id' => $template_id])
-                    ->first();
+                ->where(['id' => $template_id])
+                ->first();
 
             $campaign_id = $schedQuery->campaign_id;
             $table = $this->getTableLocator()->get('CampaignForms');
             $CampaignForm = $table->find()
-                    ->where(['campaign_id' => $campaign_id])
-                    ->all();
+                ->where(['campaign_id' => $campaign_id])
+                ->all();
 
             $formarray = [];
 
@@ -237,7 +249,7 @@ class JobsController extends AppController {
                         }
                         break;
 
-                    //replace the form vairables from campaign table with whats is submitted by api    
+                        //replace the form vairables from campaign table with whats is submitted by api    
                     case "var":
                         $newvar = $vararray[0] . "-" . $vararray[1];
                         if (isset($data[$newvar])) {
@@ -251,18 +263,19 @@ class JobsController extends AppController {
             if (isset($data['button_var'])) {
                 $formarray[] = array('field_value' => $data['button_var'], 'field_name' => 'button-var');
             }
-            $return['result']=$this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings);
+            $return['result'] = $this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings);
             return $return;
-           // debug($result);
+            // debug($result);
         }
     }
 
 
 
-   
-    public function processrcv($id) {
-       // $this->viewBuilder->setLayout('ajax');
-        $return['result']=[];
+
+    public function processrcv($id)
+    {
+        // $this->viewBuilder->setLayout('ajax');
+        $return['result'] = [];
         // $table = TableRegistry::getTableLocator()->get('RcvQueues');
         //  $io->out('proessing ' . $record->id);
         $Qtable = TableRegistry::getTableLocator()->get('RcvQueues');
@@ -270,10 +283,10 @@ class JobsController extends AppController {
 
         // debug(getenv('LOG'));
         $input = json_decode($record->json, true);
-      //  debug($input);
+        //  debug($input);
 
         $this->writelog($input, "Post Data from Process Job");
-        
+
 
         $dataarray['hookid'] = $input['entry'][0]['id'];
         $dataarray['messaging_product'] = $input['entry'][0]['changes'][0]['value']['messaging_product'];
@@ -283,8 +296,8 @@ class JobsController extends AppController {
             $record->status = $FBSettings['status']['message'];
             $Qtable->save($record);
 
-            $return['result']['status']="failed";
-            $return['result']['message']="No account related to phone_number_id $phone_number_id";
+            $return['result']['status'] = "failed";
+            $return['result']['message'] = "No account related to phone_number_id $phone_number_id";
             return $return;
         }
         //   debug($FBSettings);
@@ -294,10 +307,10 @@ class JobsController extends AppController {
         $dataarray['display_phone_number'] = $display_phone_number;
         $dataarray['phonenumberid'] = $phone_number_id;
         if (isset($input['entry'][0]['changes'][0]['value']['messages'])) { //type is message
-            
+
             $message = $input['entry'][0]['changes'][0]['value']['messages'][0];
             $dataarray['recievearray'] = $record->json;
-           // debug($message);
+            // debug($message);
             $messageid = $message['id'];
             $this->writelog($messageid, "Picked up by message");
             $dataarray['messageid'] = $messageid;
@@ -307,7 +320,7 @@ class JobsController extends AppController {
                 $dataarray['message_context'] = "no idea what is needed here.";
             }
             $msgtype = $dataarray['message_format_type'];
-            $return['result']['msg_type']=$msgtype;
+            $return['result']['msg_type'] = $msgtype;
 
             switch ($msgtype) {
                 case "text":
@@ -344,20 +357,20 @@ class JobsController extends AppController {
             $dataarray['contact_waid'] = $sender;
             $Timeout = $this->_checktimeout($dataarray['contact_waid']); //dont move this function from here , it should be 
             if (isset($input['entry'][0]['changes'][0]['value']['messages'][0]['context'])) {  //reply of existing msg
-                $return['result']['msg_context']="reply";
-                $return['result']['status']="success";
-                $return['result']['message']="Not charged for reply";
+                $return['result']['msg_context'] = "reply";
+                $return['result']['status'] = "success";
+                $return['result']['message'] = "Not charged for reply";
                 $dataarray['message_context'] = "reply";
                 $dataarray['message_contextId'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['id'];
                 $dataarray['message_context_rom'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['from'];
                 $this->writelog($dataarray, "Save data for new Reply message");
-            //    $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
+                //    $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
             } else { //new msg
-                $return['result']['msg_context']="New message received, No need of rating";
-                $return['result']['status']="success";
+                $return['result']['msg_context'] = "New message received, No need of rating";
+                $return['result']['status'] = "success";
                 $dataarray['message_context'] = "new";
                 $this->writelog($dataarray, "Save New Massage in streams");
-             //   $save_status = $this->_savedata($dataarray, $FBSettings); //save data before sending welcome msg.
+                //   $save_status = $this->_savedata($dataarray, $FBSettings); //save data before sending welcome msg.
 
                 if (($Timeout) && ($msgtype != "interactive")) {  // new message and not reply for interactive msg
                     $this->writelog($msgtype, "Sending Interactive Menu to " . $dataarray['contact_waid']);
@@ -386,24 +399,23 @@ class JobsController extends AppController {
             }
             $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
 
-           // $result = array("success" => true);
+            // $result = array("success" => true);
             // return $this->response->withType("application/json")->withStringBody(json_encode($result));
         } elseif (isset($input['entry'][0]['changes'][0]['value']['statuses'])) {  //type ie status update.
             //    $status = $input['entry'][0]['changes'][0]['value']['statuses'][0];
             $status = $input['entry'][0]['changes'][0]['value']['statuses'];
             $this->writelog($status, "Picked up by Status update");
-            $return['status']= $status;
-            
-          
+            $return['status'] = $status;
         } else {
             $this->writelog($input, "Posted data");
         }
 
         return $return;
-        sleep(2);
+        // sleep(2);
     }
 
-    function _processInteractive($input, $FBSettings) {
+    function _processInteractive($input, $FBSettings)
+    {
         $postarray = json_decode($input, true);
         $this->writeinteractive($postarray, "input array ");
         $interactive = $postarray['entry'][0]['changes'][0]['value']['messages'][0]['interactive'];
@@ -432,30 +444,28 @@ class JobsController extends AppController {
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
                 'APIKEY: ' . $APIKEY,
-            //  'Cookie: CAKEPHP=rn8u792v5kqp6n3lic5m43ejvc'
+                //  'Cookie: CAKEPHP=rn8u792v5kqp6n3lic5m43ejvc'
             ),
         ));
 
         $response = curl_exec($curl);
-//        print($response);
+        //        print($response);
         $this->writeinteractive($response, "Response json from Grand");
         $responsearray = json_decode($response, true);
-     //   debug($responsearray);
+        //   debug($responsearray);
         $this->writeinteractive($responsearray, "Response Array from Grand");
         //  $notification_numbers=$this->_getAccountSettings('interactive_notification_numbers');
         curl_close($curl);
         $notification_numbers = (explode(',', $FBSettings['interactive_notification_numbers']));
         $notification_numbers[] = $wa_id;
-        if(!empty($responsearray)){
+        if (!empty($responsearray)) {
             foreach ($notification_numbers as $key => $contact_number) {
                 $this->_sendIntToCustomer($responsearray, $contact_number, $FBSettings);
             }
-        }else{
+        } else {
             $this->writeinteractive($response, "Failed to send response array as its empty");
             $this->writelog($response, "Failed to send response array as its empty");
         }
-
-        
     }
 
     // function writeinteractive($data, $type) {
@@ -471,7 +481,8 @@ class JobsController extends AppController {
     //     fclose($handle);
     // }
 
-    function _sendIntToCustomer($list, $wa_id, $FBSettings) {
+    function _sendIntToCustomer($list, $wa_id, $FBSettings)
+    {
         $frame = '{
                 "to": "' . $wa_id . '",
                 "messaging_product": "whatsapp",
@@ -554,7 +565,8 @@ class JobsController extends AppController {
         }
     }
 
-    function readmsg($MESSAGE_ID, $FBSettings) { //Notify FB about message is read. 
+    function readmsg($MESSAGE_ID, $FBSettings)
+    { //Notify FB about message is read. 
         $curl = curl_init();
         $this->writelog($MESSAGE_ID, "Message ID");
         $POSTFIELDS = '{
@@ -583,7 +595,8 @@ class JobsController extends AppController {
         $this->writelog($response, "Read Response");
     }
 
-    function _formate_date($ts) {
+    function _formate_date($ts)
+    {
         //  $this->writelog($ts, "coverting");
         if (isset($ts)) {
             $ts = (int) $ts;
@@ -595,18 +608,19 @@ class JobsController extends AppController {
         }
     }
 
-    function _checktimeout($contact = null) {
+    function _checktimeout($contact = null)
+    {
         $this->writelog($contact, "Checking timout for  $contact");
         $mobile = $this->getTableLocator()->get('ContactStreams')->find()->where(['contact_number' => $contact])->toArray();
         if (!empty($mobile)) {
             $CHAT_TIMEOUT = $this->_getsettings('CHAT_TIMEOUT');
             $query = $this->getTableLocator()->get('Streams')->find();
             $query->where([
-                        'Streams.created >=' => date('Y-m-d H:i:s', strtotime('-' . $CHAT_TIMEOUT . ' seconds')),
-                        'contact_stream_id' => $mobile[0]['id'],
-                            // 'Streams.created' => "send"
-                    ])
-                    ->first();
+                'Streams.created >=' => date('Y-m-d H:i:s', strtotime('-' . $CHAT_TIMEOUT . ' seconds')),
+                'contact_stream_id' => $mobile[0]['id'],
+                // 'Streams.created' => "send"
+            ])
+                ->first();
 
             $result = $query->toArray();
             // $this->writelog(sql($query), "Check timeout query on $contact");
@@ -625,7 +639,8 @@ class JobsController extends AppController {
         return true;
     }
 
-    function _savedata($data, $FBSettings) {
+    function _savedata($data, $FBSettings)
+    {
         # $this->writelog($data, "Data to be saved");
         if (isset($data['contact_waid'])) {
             $data['contact_stream_id'] = $this->getWastreamsContactId($data['contact_waid'], $FBSettings);
@@ -656,8 +671,9 @@ class JobsController extends AppController {
         return $result;
     }
 
-    function _update_status($return) {
-        $statuses=$return['status'];
+    function _update_status($return)
+    {
+        $statuses = $return['status'];
 
         $this->writelog($statuses, "Updating status");
         foreach ($statuses as $key => $status) {
@@ -666,11 +682,11 @@ class JobsController extends AppController {
             $query->where([
                 'OR' => ['replyid' => $status['id'], 'messageid' => $status['id']]
             ]);
-           
+
             $result = $query->toArray();
 
             //checking any matching with existing 
-            if ((!empty($result))&&(isset($result[0]['id']))) {
+            if ((!empty($result)) && (isset($result[0]['id']))) {
                 $this->writelog($result, "Reply ID match in Streams table");
                 $id = $result[0]['id'];
                 $this->writelog($result, "is  the result of searching reply ID:" . $status['id']);
@@ -703,7 +719,7 @@ class JobsController extends AppController {
                     $editrow->billable = $status['pricing']['billable'];
                     $editrow->pricing_model = $status['pricing']['pricing_model'];
                     $editrow->category = $status['pricing']['category'];
-                }else{
+                } else {
                     $return['result']['pricing'] = false;
                 }
                 if (isset($status['conversation'])) {
@@ -713,7 +729,7 @@ class JobsController extends AppController {
                     }
                     $editrow->conversation_origin_type = $status['conversation']['origin']['type'];
                     $return['result']['message'] = "Updated Coversation info.";
-                }else{
+                } else {
                     $return['result']['message'] = "No conversation info found in message to process rating";
                 }
 
@@ -725,11 +741,11 @@ class JobsController extends AppController {
 
                 if ($Table->save($editrow)) {
                     $this->writelog($editrow, "Save Success");
-                    $return['result']['message'] = $return['result']['message']. "  Data Saved in Streams";
-                    $return['result']['status']="success";
+                    $return['result']['message'] = $return['result']['message'] . "  Data Saved in Streams";
+                    $return['result']['status'] = "success";
                 } else {
-                    $return['result']['message'] = $return['result']['message']. "  Failed to save in stream";
-                    $return['result']['status']="failed";
+                    $return['result']['message'] = $return['result']['message'] . "  Failed to save in stream";
+                    $return['result']['status'] = "failed";
                     $this->writelog($editrow, "Save Failed");
                 }
 
@@ -743,36 +759,37 @@ class JobsController extends AppController {
                     $ratingResults = $ratingquery->all();
                     //Billing is needed only for Uniq conversation IDS. 
                     if ($ratingResults->isEmpty()) {
-                        $return=$this->_rateMe($status);
+                        $return = $this->_rateMe($status);
                         // $return['result']['rating'] = "new";
                     } else {
-                        $return['result']['rating'] = "existing rating ".$status['conversation']['id'];
+                        $return['result']['rating'] = "existing rating " . $status['conversation']['id'];
                         // debug($ratingquery);
 
                         if (!isset($updated[$status['conversation']['id']])) {
                             // debug("Already Rated updating all fields of " . $status['conversation']['id']);
                             $streamsTable = $this->getTableLocator()->get('Streams');
                             $streamsTable->updateAll(
-                                    ['rated' => true],
-                                    ['conversationid' => $status['conversation']['id']]
+                                ['rated' => true],
+                                ['conversationid' => $status['conversation']['id']]
                             );
                             $updated[$status['conversation']['id']] = true;
                             // debug ("Updated all rated.");
                             //    debug($updated);
                         } else {
-                         //   debug("Already updated ");
+                            //   debug("Already updated ");
                         }
                     }
                 }
             } else {
-                $this->writelog($result, "No matching record in stream table for message or reply id ". $status['id']);
+                $this->writelog($result, "No matching record in stream table for message or reply id " . $status['id']);
             }
         }
 
         return $return;
     }
 
-    function _sendInteractiveMenu($customer_number, $contactToSend, $FBSettings) {
+    function _sendInteractiveMenu($customer_number, $contactToSend, $FBSettings)
+    {
         //send hte menu to customer Mobile
         //  $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
         $curl = curl_init();
@@ -911,7 +928,8 @@ class JobsController extends AppController {
     }
 
 
-    function _welcomemsg($customer_number, $contactToSend, $FBSettings) {
+    function _welcomemsg($customer_number, $contactToSend, $FBSettings)
+    {
         // $FBSettings = $this->_getFBsettings($data);
         $data['message'] = "Thank you for Contacting us, for support, please call us.";
         if ($FBSettings['status']['code'] !== 200) {
@@ -921,7 +939,7 @@ class JobsController extends AppController {
             //  $contactStream = $this->getTableLocator()->get('ContactStreams')->get($data['mobilenumberId']);
             $streams_table = $this->getTableLocator()->get('Streams');
             $streamrow = $streams_table->newEmptyEntity();
-//            $streamrow->schedule_id = $sched_id;
+            //            $streamrow->schedule_id = $sched_id;
             //  $streamrow->contact_stream_id = $data['mobilenumberId'];
             $streamrow->contact_stream_id = $this->getWastreamsContactId($contactToSend, $FBSettings);
             $streamrow->initiator = "welcome";
@@ -930,7 +948,7 @@ class JobsController extends AppController {
             $streamrow->account_id = $FBSettings['account_id'];
             $streams_table->save($streamrow);
             $contact = $streams_table->get($streamrow->id);
-            $form=null;
+            $form = null;
             $result = $this->_despatch_msg($contact, $data, $form, $FBSettings, "text");
             //debug($result);
             if (isset($result['messages'][0]['id'])) {
@@ -949,63 +967,139 @@ class JobsController extends AppController {
 
 
 
-    //secondary soluton. tryin to make the command work.
+    //!Schdule comapgain related code starts from here. 
+    function sendcamp()
+    {
 
 
-    function sendshedule() {
-        // $app = new AppController();
-        //  $app->constructClasses();
+        //validate apis
+
+        $return = array();
+        $this->viewBuilder()->setLayout('ajax');
+        $apiKey = $this->request->getHeaderLine('X-Api-Key');
+        $sched_id = $this->request->getData('sched_id'); // Assuming this is a POST request
+        $type = "camp";
+        //   debug($type);
+
+
+        $FBSettings = $this->_getFBsettings($data = ['api_key' => $apiKey]); //This FB settings are just make sure, the paswed API key is valid before processing.
+        if ($FBSettings['status']['code'] == 404) {
+            $this->response = $this->response->withStatus(401); // Unauthorized
+            $this->_update_http_code($sched_id, '404', $type);
+            $response['error'] = 'Invalid qid APIKEY';
+            $this->set('response', $response);
+            return;
+        }
+
+
+
+        if (!is_numeric($sched_id)) {
+            $this->response = $this->response->withStatus(400); // Bad Request
+            $this->_update_http_code($sched_id, '400', $type);
+            http_response_code(400); // Bad Request
+            $response['error'] = 'Invalid Schedule ID  ' . $sched_id;
+            $this->set('response', $response);
+            return;
+        }
+        $return = $this->queue_message($sched_id);
+
+        if (isset($return['result']['error'])) {
+            // debug($return);
+            $this->_update_http_code($qid, '403', $type); //forbidden
+            $this->response = $this->response->withStatus(403); // forbidden
+            $response['success'] = 'Failed';
+        } else {
+            $return['message'] = "The message has been scheduled";
+        }
+
+        $this->set('response', $return);
+    }
+
+    function queue_message($schedule_id)
+    {
+        $sendarray = [];
+
         $schedTable = $this->getTableLocator()->get('Schedules');
         $schedQuery = $schedTable->find()
-                ->where(['Schedules.id' => $sched_id])
-                ->select(['Campaigns.template_id', 'Schedules.name', 'Schedules.campaign_id', 'Schedules.user_id'])
-                ->innerJoinWith('Campaigns')
-                ->first();
+            ->where(['Schedules.id' => $schedule_id])
+            ->select(['Campaigns.template_id', 'Schedules.name', 'Schedules.campaign_id', 'Schedules.user_id', 'Schedules.account_id', 'Schedules.contact_csv'])
+            ->innerJoinWith('Campaigns')
+            ->first();
+        //    debug($schedQuery);      
+        if (empty($schedQuery)) {
+            print "Empty Schedule info\n";
+            return false;
+        }
+
         //   debug($schedQuery);
-        $sched_name = $schedQuery->name;
+
+
+        $contact_array = $this->create_contact_array($schedQuery->contact_csv);
+
+        $record = $schedTable->get($schedule_id);
+        $record->total_contact = count($contact_array);
+        $schedTable->save($record);
+
+        //debug($schedQuery->account_id);
+
+        $sendarray['api_key'] = $this->getMyAPIKey($schedQuery->account_id);
+        $sendarray['schedule_name'] = $schedQuery->name;
+
         $template_id = $schedQuery->_matchingData['Campaigns']['template_id'];
         $campaign_id = $schedQuery->campaign_id;
         $templatetable = $this->getTableLocator()->get('Templates');
         $templateQuery = $templatetable->find()
-                ->where(['id' => $template_id])
-                ->first();
+            ->where(['id' => $template_id])
+            ->first();
+        //  debug($templateQuery);
 
-        // debug($schedquery);
+        $CampaignFormstable = $this->getTableLocator()->get('CampaignForms');
+        $form = $CampaignFormstable->find()
+            ->where(['campaign_id' => $campaign_id])
+            ->all();
 
-        $table = $this->getTableLocator()->get('ContactsSchedules');
-        $csquery = $table->find();
-        $csquery->where(['schedule_id' => $sched_id])
-                ->all();
 
-        $fbSettings = $data = $this->app->_getFBsettings(array('user_id' => $schedQuery->user_id));
-        print_r($fbSettings);
-        foreach ($csquery as $key => $val) {
-            //   $data['mobile_number'] = $val->contact_waid;
-	    sleep (1);
-            print "Sending to ".+$val->contact_waid;
-            $streams_table = $this->getTableLocator()->get('Streams');
-            $streamrow = $streams_table->newEmptyEntity();
-            $streamrow->schedule_id = $sched_id;
-            $streamrow->contact_stream_id = $this->app->getWastreamsContactId($val->contact_waid, $fbSettings);
-            $streamrow->initiator = "Web";
-            $streamrow->type = "send";
-            $streamrow->account_id = $fbSettings['account_id'];
-            $streams_table->save($streamrow);
-            $contact = $streams_table->get($streamrow->id);
-            $table = $this->getTableLocator()->get('CampaignForms');
-            $form = $table->find()
-                    ->where(['campaign_id' => $campaign_id])
-                    ->all();
 
-              $result= $this->app->_despatch_msg($contact, $form, $templateQuery,$fbSettings);
-              print_r($result);
-                debug($result);
+        foreach ($form as $key => $val) {
+            //     debug($val);
+            $component = [];
+            $param = [];
+            $field_name = $val['field_name'];
+            $keyarray = explode("-", $field_name);
+            //   debug($keyarray);
+            if (($keyarray[0] == "file") && ($keyarray[2] == "header")) {  //its an image. 
+                if (isset($val['filename'])) {
+                    $sendarray['filename'] = $val['filename'];
+                }
+                $sendarray['imageid'] = $val['fbimageid'];
+            }
+
+            if ($keyarray[0] == "var") {  //parmeters injection. 
+                $sendarray['var-' . $keyarray[1]] = $val['field_value'];
+            }
+
+            if ($keyarray[0] == "button") {  //parmeters for button variables. 
+                $sendarray['button_var'] = $val['field_value'];
+            }
+        }
+        foreach ($contact_array as $contact_id => $contact_number) {
+            $sendarray['mobile_number'] = $contact_number;
+            //  debug($sendarray);
+            $json = json_encode($sendarray);
+            $sendTable = $this->getTableLocator()->get('SendQueues');
+            $newsendQ = $sendTable->newEmptyEntity();
+            $newsendQ->form_data = $json;
+            $newsendQ->type = "camp";
+            $newsendQ->status = "queued";
+            $sendTable->save($newsendQ);
         }
     }
 
 
-        function create_contact_array($contact_csv)
+
+    function create_contact_array($contact_csv)
     {
+        //  debug($contact_csv);
         $contact_array = [];
         $contact_contact_number_table = $this->getTableLocator()->get('ContactsContactNumbers');
         $contact_id = explode(",", $contact_csv);
@@ -1029,9 +1123,4 @@ class JobsController extends AppController {
         }
         return array_unique($contact_array);
     }
-
-
-
-
-
 }

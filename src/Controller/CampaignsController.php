@@ -642,19 +642,21 @@ class CampaignsController extends AppController {
         return $query;
     }
 
-    function newsched() {
+    function newsched()
+    {
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('Schedules');
         $result = [];
 
         if ($this->request->is('post')) {
             $data = $this->request->getData();
-        //         debug ($data);
+            //         debug ($data);
             $row = $table->newEmptyEntity();
             $row->user_id = $this->getMyUID();
             $row->name = $data['name'];
             $row->campaign_id = $data['campaign_id'];
-            $row->account_id =$this->getMyAccountID();
+            $row->account_id = $this->getMyAccountID();
+            $row->contact_csv = implode(",", $data['contact_id']);
             $row->status = "Loaded";
             if ($row->getErrors()) {
                 $result['status'] = "failed";
@@ -665,8 +667,14 @@ class CampaignsController extends AppController {
                     $id = $row->id;
                     $result['status'] = "success";
                     $contact_csv = implode(",", $data['contact_id']);
-                    $result=$this->sendmsg( $id, $contact_csv);
-                   
+                    //  $result=$this->sendmsg( $id);  //contact_csv not needed. added in DB
+                    $apikey = $this->getMyAPIKey($this->getMyAccountID());
+                    $cmd = ROOT . '/bin/runschedule.pl  -i ' . $id . ' -k ' . $apikey . ' >' . ROOT . '/logs/process.log 2>&1 &';
+
+                 //    debug($cmd);
+                     exec($cmd);
+                 //   system($cmd, $return_var);
+                  //  debug($return_var);
                 } else {
                     $result['status'] = "failed";
                     $result['msg'] = "Not able to save the the Contact group";
@@ -678,13 +686,49 @@ class CampaignsController extends AppController {
     }
 
 
-    function sendmsg($schdule_id, $contact_csv)
-    {
-        $cmd = ROOT . DS . "bin/cake Sendschedule -i $schdule_id -c $contact_csv > /dev/null 2>&1 &";
+    // function sendmsg($schdule_id)
+    // {
+
+    //     $apikey=$this->getMyAPIKey($this->getMyAccountID());
+
+    //     $curl = curl_init();
+
+    //     curl_setopt_array($curl, array(
+    //         CURLOPT_URL => 'http://localhost/jobs/sendcamp',
+    //         CURLOPT_RETURNTRANSFER => true,
+    //         CURLOPT_ENCODING => '',
+    //         CURLOPT_MAXREDIRS => 10,
+    //         CURLOPT_TIMEOUT => 0,
+    //         CURLOPT_FOLLOWLOCATION => true,
+    //         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //         CURLOPT_CUSTOMREQUEST => 'POST',
+    //         CURLOPT_POSTFIELDS => array('sched_id' => $schdule_id),
+    //         CURLOPT_HTTPHEADER => array(
+    //             'X-Api-Key: '. $apikey
+    //         ),
+    //     ));
+
+    //     $response = curl_exec($curl);
+
+    //     curl_close($curl);
+    //     echo $response;
+    // }
+
+
+
+
+
+
+
+    function test(){
+        $this->viewBuilder()->setLayout('ajax');
+        $cmd="/var/www/html/bin/runschedule.pl  -i 179 -k sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh >/var/www/html/logs/process.log 2>&1 &";
+        debug($cmd);
         exec($cmd);
-        $result['msg']="New campaign  been added with ID $cmd";
-        $result['status']="success";
-        return $result;
+
+        system('/var/www/html/bin/runschedule.pl  -i 179 -k sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh >/var/www/html/logs/process.log 2>&1 &', $return_var);
+        debug($return_var);
+        
     }
 
     function sendmsgnew()
@@ -831,10 +875,7 @@ class CampaignsController extends AppController {
         return $query;
     }
 
-    function test() {
-        
-    }
-
+  
     function streams() {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('stream_views'));
