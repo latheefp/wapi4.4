@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Controller\AppController;
 use Cake\ORM\TableRegistry;
 use Cake\Http\Response;
+use Cake\Event\EventInterface;
 
 //use Cake\Http\ResponseFactory;
 
@@ -14,6 +15,15 @@ use Cake\Http\Response;
  * @property \App\Model\Table\ArticlesTable $Articles
  */
 class SettingsController extends AppController {
+
+    public function beforeFilter(EventInterface $event): void {
+        parent::beforeFilter($event);
+        $this->FormProtection->setConfig('unlockedActions', [
+            'getapis'            
+        ]);
+    }
+
+
 
     function listgroups() {
         //TODO:implement permissions.

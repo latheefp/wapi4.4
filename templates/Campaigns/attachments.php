@@ -1,5 +1,5 @@
 <?php
-//debug(json_decode($data['template_details']));
+debug(json_decode($data['template_details']));
 $formarray = [];
 foreach ($formdata as $key => $val) {
     $formarray[$val['field_name']] = $val;
@@ -196,9 +196,9 @@ $varcount = 1;
                                     case "BUTTONS":
                                         //if button has a example member, which means, there a variable.
                                         foreach ($val['buttons'] as $bkey => $bval) {
-                                            //   debug($bval);
+                                  //             debug($bkey);
                                             if (isset($bval['example'])) {
-                                                $var="button-0-" . $lang;
+                                                $var="button-$bkey-" . $lang;
                                                 if (isset($formarray[$var])) {
                                                     $cvar = $formarray[$var]['field_value'];
                                                 } else {
@@ -207,7 +207,7 @@ $varcount = 1;
                                             ?>
                                                 <div class="form-group col-sm-6">
                                                     <label>Button Variable of <?= $lang ?>:</label>
-                                                    <input type="text" class="form-control input-group-lg whatsappvar" name="<?= "button-0-" . $lang ?>" value=" <?= $cvar ?>" required="" placeholder="Button Variable">
+                                                    <input type="text" class="form-control input-group-lg whatsappvar" name="<?= "button-$bkey-$lang" ?>" value=" <?= $cvar ?>" required="" placeholder="Button Variable">
                                                 </div>
                 <?php
                                             }

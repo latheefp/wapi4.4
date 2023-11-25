@@ -675,6 +675,7 @@ class CampaignsController extends AppController {
                      exec($cmd);
                  //   system($cmd, $return_var);
                   //  debug($return_var);
+                  $result['msg'] = "Scheduleling is success";
                 } else {
                     $result['status'] = "failed";
                     $result['msg'] = "Not able to save the the Contact group";
@@ -722,13 +723,7 @@ class CampaignsController extends AppController {
 
     function test(){
         $this->viewBuilder()->setLayout('ajax');
-        $cmd="/var/www/html/bin/runschedule.pl  -i 179 -k sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh >/var/www/html/logs/process.log 2>&1 &";
-        debug($cmd);
-        exec($cmd);
-
-        system('/var/www/html/bin/runschedule.pl  -i 179 -k sm4UFJUHdHi8HXlrqQx2uqUbek4w6ZdlcGmS0enGTFI0pAbIV6EFk6QwtghSOlRh >/var/www/html/logs/process.log 2>&1 &', $return_var);
-        debug($return_var);
-        
+        debug($this->getMyAccountID());
     }
 
     function sendmsgnew()
@@ -887,7 +882,7 @@ class CampaignsController extends AppController {
         $base_table = "stream_views";
         $this->viewBuilder()->setLayout('ajax');
         $query = $this->_set_stream_query($this->request->getData(), $model, $base_table);
-        // debug($query);
+    //     debug($query);
         $data = $this->paginate = $query;
         $this->set('data', $this->paginate($model));
         $this->set('fieldsType', $this->_fieldtypes($base_table));

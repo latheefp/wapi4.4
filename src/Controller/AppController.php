@@ -32,8 +32,9 @@ use Cake\Datasource\ConnectionManager;
  *
  * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
  */
-class AppController extends Controller {
-//    public $components = ['Session'];
+class AppController extends Controller
+{
+    //    public $components = ['Session'];
 
     /**
      * Initialization hook method.
@@ -44,14 +45,15 @@ class AppController extends Controller {
      *
      * @return void
      */
-    public function initialize(): void {
+    public function initialize(): void
+    {
         parent::initialize();
 
         $this->loadComponent('RequestHandler');
         $this->loadComponent('Flash');
         $this->loadComponent('Authentication.Authentication');
         $this->loadComponent('FormProtection');
-//        $this->loadComponent('Session');
+        //        $this->loadComponent('Session');
 
         /*
          * Enable the following component for recommended CakePHP form protection settings.
@@ -60,19 +62,20 @@ class AppController extends Controller {
         //$this->loadComponent('FormProtection');
     }
 
-    function _ajaxvalidation1($Table, $data) {
-//  debug("table is $Table");
+    function _ajaxvalidation1($Table, $data)
+    {
+        //  debug("table is $Table");
         $result = [];
         $this->loadModel($Table);
         $newrow = $this->$Table->newEmptyEntity();
         $newrow = $this->$Table->patchEntity($newrow, $data);
         $errors = $newrow->getErrors();
-//        debug ($data);
-//        debug ($errors);
+        //        debug ($data);
+        //        debug ($errors);
         if (empty($errors)) {
             return $errors;
         } else {
-// pr($errors);
+            // pr($errors);
             foreach ($errors as $key => $val) {
                 $error['field'] = $key;
 
@@ -82,26 +85,27 @@ class AppController extends Controller {
                 $result[] = $error;
                 $error = array();
             }
-//    debug ($result);
+            //    debug ($result);
             return $result;
         }
     }
 
-    function _dteditvalidation($Table, $data) {
+    function _dteditvalidation($Table, $data)
+    {
         $result = [];
         $this->loadModel($Table);
         $table = $this->getTableLocator()->get($Table);
-//    debug($data);
+        //    debug($data);
         $action = $data['action'];
         $id = array_key_first($data['data']);
         $data = $data['data'][$id];
         if ($action == "edit") {
             $newrow = $table->findById($id)->firstOrFail();
         } else {
-//         debug("checking for new entity");
+            //         debug("checking for new entity");
             $newrow = $table->newEmptyEntity();
         }
-//   debug ($data);
+        //   debug ($data);
         $newrow = $table->patchEntity($newrow, $data);
         $errors = $newrow->getErrors();
         if (empty($errors)) {
@@ -119,35 +123,37 @@ class AppController extends Controller {
         }
     }
 
-    public function _getsettings($attr = null) {
+    public function _getsettings($attr = null)
+    {
         if (isset($attr)) {
             $query = $this->getTableLocator()->get('Settings')->find();
             $resultsArray = $query
-                    ->where(['params' => $attr])
-                    ->toArray();
+                ->where(['params' => $attr])
+                ->toArray();
             if (!empty($resultsArray)) {
                 return ($resultsArray[0]->value);
             }
         }
     }
 
-    public function _checkallowed($action = null, $uid = null) {
+    public function _checkallowed($action = null, $uid = null)
+    {
         if (!isset($uid)) {
             $uid = $this->getRequest()->getSession()->read('Auth.User.id');
-//   debug($this->getRequest()->getSession()->read());
+            //   debug($this->getRequest()->getSession()->read());
         }
         if ($uid == 1) {
             return true;
         }
         $grppermission = $this->getTableLocator()->get('UgroupsPermissions');
         $query = $grppermission->find()
-                ->contain(['Permissions'])
-                ->where(['permstring' => $action])
-                ->contain(['Ugroups.Users' => function ($q) use ($uid) {
-                return $q->where(['Users.id' => $uid]);
-            }
-                ])
-        ;
+            ->contain(['Permissions'])
+            ->where(['permstring' => $action])
+            ->contain([
+                'Ugroups.Users' => function ($q) use ($uid) {
+                    return $q->where(['Users.id' => $uid]);
+                }
+            ]);
         $number = $query->count();
         if ($number == 0) {
             return false;
@@ -156,17 +162,17 @@ class AppController extends Controller {
         }
     }
 
-    function _fieldtypes($table_name = null) {
+    function _fieldtypes($table_name = null)
+    {
         $result = [];
         $flagship = $this->getTableLocator()->get('Flagships');
         $queryarray = $flagship->find()
-                ->where(['tbl_name' => $table_name])
-//->toList()
-                ->order(['Flagships.order_index ASC'])
-        ;
-//  pr($query->execute());        
+            ->where(['tbl_name' => $table_name])
+            //->toList()
+            ->order(['Flagships.order_index ASC']);
+        //  pr($query->execute());        
         foreach ($queryarray as $field => $val) {
-// debug((array)$val);
+            // debug((array)$val);
             $row = [];
             $valarray = json_decode(json_encode($val), true);
             $title = $val->title;
@@ -178,25 +184,29 @@ class AppController extends Controller {
         return $result;
     }
 
-//     public function beforeFilter(EventInterface $event) {
-//        parent::beforeFilter($event);
-//        $this->Security->setConfig('validatePost', false);
-// //   $this->Auth->allow(['login', 'logout','forgetpass','resetpass','test','pubpasswordsetajax']);
-//    }
+    //     public function beforeFilter(EventInterface $event) {
+    //        parent::beforeFilter($event);
+    //        $this->Security->setConfig('validatePost', false);
+    // //   $this->Auth->allow(['login', 'logout','forgetpass','resetpass','test','pubpasswordsetajax']);
+    //    }
 
-    function gen_rand_string($length = 10) {
+    function gen_rand_string($length = 10)
+    {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
         $randomString = '';
-        for ($i = 0;
-                $i < $length;
-                $i++) {
+        for (
+            $i = 0;
+            $i < $length;
+            $i++
+        ) {
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
     }
 
-    public function _check_view_permission($view = null, $uid = null) {
+    public function _check_view_permission($view = null, $uid = null)
+    {
         if (isset($action)) {
             if (!isset($uid)) {
                 $uid = $this->getRequest()->getSession()->read('Auth.User.id');
@@ -207,16 +217,16 @@ class AppController extends Controller {
             if (!isset($uid)) {
                 return false;
             }
-//            $grppermission = TableRegistry::get('GroupsPermissions');
+            //            $grppermission = TableRegistry::get('GroupsPermissions');
             $grppermission = $this->getTableLocator()->get('GroupsPermissions');
             $query = $grppermission->find()
-                    ->contain(['Permissions'])
-                    ->where(['permstring LIKE' => "view_" . $view . "%"])
-                    ->contain(['Groups.Users' => function ($q) use ($uid) {
-                    return $q->where(['Users.id' => $uid]);
-                }
-                    ])
-            ;
+                ->contain(['Permissions'])
+                ->where(['permstring LIKE' => "view_" . $view . "%"])
+                ->contain([
+                    'Groups.Users' => function ($q) use ($uid) {
+                        return $q->where(['Users.id' => $uid]);
+                    }
+                ]);
             $number = $query->count();
             if ($number == 0) {
                 return false;
@@ -229,7 +239,8 @@ class AppController extends Controller {
         return false;
     }
 
-    function validateField($model = null, $field = null, $value = null, $action = "add") {
+    function validateField($model = null, $field = null, $value = null, $action = "add")
+    {
         $tables = $this->getTableLocator()->get($model);
         $table = $tables->newEntity(array($field => $value));
         $result = array();
@@ -243,29 +254,33 @@ class AppController extends Controller {
         return $result;
     }
 
-    function _genrand($length = 10) {
+    function _genrand($length = 10)
+    {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
         $randomString = '';
-        for ($i = 0;
-                $i < $length;
-                $i++) {
+        for (
+            $i = 0;
+            $i < $length;
+            $i++
+        ) {
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
         return $randomString;
     }
 
-    function _despatch_msg($contact, $form, $templateQuery, $FBSettings, $type = "template") {
+    function _despatch_msg($contact, $form, $templateQuery, $FBSettings, $type = "template")
+    {
         //        debug("Despatching");
         //  debug($contact);
 
- //       debug($FBSettings);
+        //       debug($FBSettings);
         switch ($type) {
             case "template":
                 $this->writelog($contact, "Despatching message, Contact");
                 $this->writelog($form, "Despatching message, Form");
                 $this->writelog($templateQuery, "Despatching message, templateQuery");
-//CAP: below is the sample array. we will change the paramers based on form.
+                //CAP: below is the sample array. we will change the paramers based on form.
                 $json_array = '{
                     "messaging_product": "whatsapp",
                     "recipient_type":"individual",
@@ -304,7 +319,9 @@ class AppController extends Controller {
                 $bodyarray = [];
                 $bodyarray['type'] = "body";
                 $bodyarray['parameters'] = [];
+         //       debug($form);
                 foreach ($form as $key => $val) {
+                 //   debug($val);
                     $component = [];
                     $param = [];
                     $field_name = $val['field_name'];
@@ -329,12 +346,16 @@ class AppController extends Controller {
                     }
 
                     if ($keyarray[0] == "button") {  //parmeters for button variables. 
+                 //       debug($keyarray);
+                      //  debug($key);
                         $json = '{"type": "button", "sub_type": "url", "index": "0", "parameters": [{"type": "payload", "payload": "btntwo"}]}';
                         $button_array = json_decode($json, true);
+                        $button_array['index']=$keyarray[1];
+                 //       debug($button_array);
                         $button_array['parameters'][0]['payload'] = $val['field_value'];
-//   debug($button_array);
+                        //   debug($button_array);
                         $sendarray['template']['components'][] = $button_array;
-// $sendarray=
+                        // $sendarray=
                     }
                 }
 
@@ -347,7 +368,7 @@ class AppController extends Controller {
                 }
 
                 $mobile = $this->getTableLocator()->get('ContactStreams')->get($contact->contact_stream_id);
-//     debug($mobile->contact_number);
+                //     debug($mobile->contact_number);
 
                 $sendarray['to'] = $mobile->contact_number;
                 $sendarray['template']['name'] = $templateQuery->name;
@@ -369,16 +390,16 @@ class AppController extends Controller {
                     }';
                 $sendarray = json_decode($json_array, true);
                 $mobile = $this->getTableLocator()->get('ContactStreams')->get($contact->contact_stream_id);
-//     debug($mobile->contact_number);
+                //     debug($mobile->contact_number);
 
                 $sendarray['to'] = $mobile->contact_number;
-///    $sendarray['template']['name'] = $templateQuery->name;
+                ///    $sendarray['template']['name'] = $templateQuery->name;
                 $sendarray['text']['body'] = $form['message'];
 
                 break;
         }
 
-//  debug($sendarray);
+    //    debug($sendarray);
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
@@ -404,8 +425,8 @@ class AppController extends Controller {
 
         $table = $this->getTableLocator()->get('Streams');
         $row = $table->get($contact->id);
-// debug($row);
-//  debug($response);
+        // debug($row);
+        //  debug($response);
         if (isset($response['messages'][0]['id'])) {
             $row->messageid = $response['messages'][0]['id'];
             $row->type = "send";
@@ -425,11 +446,12 @@ class AppController extends Controller {
         return $response;
     }
 
-    function writelog($data, $type = null) {
-//        if (!$this->_getsettings("log_enabled")) {
-//            return false;
-//        }
-     //   print (getenv('LOG'));
+    function writelog($data, $type = null)
+    {
+        //        if (!$this->_getsettings("log_enabled")) {
+        //            return false;
+        //        }
+        //   print (getenv('LOG'));
         if (intval(getenv('LOG')) == false) {
 
             //   debug("No logs");
@@ -437,7 +459,7 @@ class AppController extends Controller {
         }
         // debug("Logs are enabled");
         $file = LOGS . 'GrandWA' . '.log';
-#  $data =json_encode($event)."\n";  
+        #  $data =json_encode($event)."\n";  
         $time = date("Y-m-d H:i:s", time());
         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
         fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
@@ -445,18 +467,19 @@ class AppController extends Controller {
         fclose($handle);
     }
 
-//     function writeinteractive($data, $type ) {
-//         $file = LOGS . 'GrandInt' . '.log';
-// #  $data =json_encode($event)."\n";  
-//         $time = date("Y-m-d H:i:s", time());
-//         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
-//         fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
-//         fwrite($handle, print_r($data, true));
-//         fclose($handle);
-//     }
+    //     function writeinteractive($data, $type ) {
+    //         $file = LOGS . 'GrandInt' . '.log';
+    // #  $data =json_encode($event)."\n";  
+    //         $time = date("Y-m-d H:i:s", time());
+    //         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
+    //         fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
+    //         fwrite($handle, print_r($data, true));
+    //         fclose($handle);
+    //     }
 
-    
-    function writeinteractive($data, $type) {
+
+    function writeinteractive($data, $type)
+    {
         if (intval(getenv('INTERACTIV')) == false) {
             //   debug("No logs");
             return false;
@@ -469,8 +492,9 @@ class AppController extends Controller {
         fclose($handle);
     }
 
-    function getWastreamsContactId($mobile_number, $fbsettings) {
-//   debug("Mobile number in getWastreamsContactId is $contact_waid" );
+    function getWastreamsContactId($mobile_number, $fbsettings)
+    {
+        //   debug("Mobile number in getWastreamsContactId is $contact_waid" );
         $contact_waid = $this->_format_mobile($mobile_number, $fbsettings);
         $contactinfo = $this->getTableLocator()->get('ContactNumbers')->find()->where(['mobile_number' => $contact_waid])->first();
         $contact_stream_table = $this->getTableLocator()->get('ContactStreams');
@@ -494,27 +518,29 @@ class AppController extends Controller {
         }
     }
 
-    function updateProfileWastreamsContact($contact_waid, $profile, $FBSettings) {
+    function updateProfileWastreamsContact($contact_waid, $profile, $FBSettings)
+    {
         $contact_waid = $this->_format_mobile($contact_waid, $FBSettings);
         $table = $this->getTableLocator()->get('ContactStreams');
         $record = $table->find()->where(['contact_number' => $contact_waid])->toArray();
         if (isset($record)) {
             $row = $table->get($record[0]['id']);
-           
+
             $row->profile_name = $profile;
-           // $row->profile_name = "latheef";
-      //      debug($row);
+            // $row->profile_name = "latheef";
+            //      debug($row);
             if ($table->save($row)) {
-//                debug("Saved");
-            }else{
-               debug($row->getError);
+                //                debug("Saved");
+            } else {
+                debug($row->getError);
             }
         } else {
             debug("nothign found");
         }
     }
 
-    function _format_mobile($mobile_number, $FBSettings) {
+    function _format_mobile($mobile_number, $FBSettings)
+    {
         $country_code = $FBSettings['def_isd'];
         $len = strlen((string) $mobile_number);
 
@@ -529,13 +555,14 @@ class AppController extends Controller {
         return $mobile_number;
     }
 
-    public function _getFBsettings($data) {
-//you can either send the uid , api_key, phone_number_id to get fbsettings. 
+    public function _getFBsettings($data)
+    {
+        //you can either send the uid , api_key, phone_number_id to get fbsettings. 
         if (isset($data['api_key'])) {
             $table = $this->getTableLocator()->get('ApiKeys');
             $apiquery = $table->find()
-                    ->where(['api_key' => $data['api_key'], 'enabled' => true])
-                    ->first();
+                ->where(['api_key' => $data['api_key'], 'enabled' => true])
+                ->first();
             if (empty($apiquery)) {
                 $data['status']['type'] = "Error";
                 $data['status']['message'] = "Wrong API Key";
@@ -544,15 +571,15 @@ class AppController extends Controller {
             }
             $acquery = $this->getTableLocator()->get('Accounts')->find();
             $result = $acquery
-                    ->where(['id' => $apiquery->account_id])
-                    ->first();
+                ->where(['id' => $apiquery->account_id])
+                ->first();
         } elseif (isset($data['user_id'])) {
-//debug($data);
+            //debug($data);
             $table = $this->getTableLocator()->get('Users');
             $userquery = $table->find()
-                    ->where(['Users.id' => $data['user_id']])
-                    ->first();
-//  debug($userquery);
+                ->where(['Users.id' => $data['user_id']])
+                ->first();
+            //  debug($userquery);
             if (empty($userquery)) {
                 $data['status']['type'] = "Error";
                 $data['status']['message'] = "Wrong user info";
@@ -561,23 +588,23 @@ class AppController extends Controller {
             }
             $acquery = $this->getTableLocator()->get('Accounts')->find();
             $result = $acquery
-                    ->where(['id' => $userquery->account_id])
-                    ->first();
+                ->where(['id' => $userquery->account_id])
+                ->first();
         } elseif (isset($data['phone_number_id'])) {
-// debug($data);
+            // debug($data);
             $acquery = $this->getTableLocator()->get('Accounts')->find();
             $result = $acquery
-                    ->where(['phone_number_id' => $data['phone_number_id']])
-                    ->first();
+                ->where(['phone_number_id' => $data['phone_number_id']])
+                ->first();
         } elseif (isset($data['account_id'])) {
             $acquery = $this->getTableLocator()->get('Accounts')->find();
             $result = $acquery
-                    ->where(['id' => $data['account_id']])
-                    ->first();
+                ->where(['id' => $data['account_id']])
+                ->first();
         }
 
 
-// ->toArray();
+        // ->toArray();
         if (empty($result)) {
             $data['status']['type'] = "Error";
             $data['status']['message'] = "No related account info found.";
@@ -585,7 +612,7 @@ class AppController extends Controller {
             return $data;
         }
 
-        
+
         $data['WBAID'] = $result->WBAID;
         $data['API_VERSION'] = $result->API_VERSION;
         $data['phone_number_id'] = $result->phone_number_id;
@@ -596,10 +623,10 @@ class AppController extends Controller {
         $data['interactive_notification_numbers'] = $result->interactive_notification_numbers;
         $data['interactive_api_key'] = $result->interactive_api_key;
         if (intval(getenv('SEND_MSG')) == true) {
-         //   debug("Message enabled ". getenv('SEND_MSG'));
+            //   debug("Message enabled ". getenv('SEND_MSG'));
             $data['ACCESSTOKENVALUE'] = $result->ACCESSTOKENVALUE;
         } else {
-          // debug("Message disabled ". getenv('SEND_MSG'));
+            // debug("Message disabled ". getenv('SEND_MSG'));
             $data['ACCESSTOKENVALUE'] =  "Message not enabled, current value is " . intval(getenv('SEND_MSG'));
         }
 
@@ -611,56 +638,58 @@ class AppController extends Controller {
         return $data;
     }
 
-//Billing and Rating section.
+    //Billing and Rating section.
 
 
-    function _rateMe($price_array) {
-        $this->writelog($price_array,"Rating from rateme");
+    function _rateMe($price_array)
+    {
+        $this->writelog($price_array, "Rating from rateme");
         $streamTable = $this->getTableLocator()->get('Streams');
-         //  debug("Message ID is " . $price_array['id']);
+        //  debug("Message ID is " . $price_array['id']);
         $record = $streamTable->find()
-                ->contain('ContactStreams') // Include the related "ContactStreams" records
-                ->where(['messageid' => $price_array['id']])
-                ->first();
+            ->contain('ContactStreams') // Include the related "ContactStreams" records
+            ->where(['messageid' => $price_array['id']])
+            ->first();
 
         if (!$record) {
             // Stop code execution or handle the situation as needed
-            $this->writelog( $price_array['id'],"No record found msg id in Streams");
+            $this->writelog($price_array['id'], "No record found msg id in Streams");
             $this->_notify("No record found msg id " . $price_array['id'], "Warning");
-            $return['result']['status']="warning";
-            $return['result']['message']="No record found msg id " . $price_array['id'];
+            $return['result']['status'] = "warning";
+            $return['result']['message'] = "No record found msg id " . $price_array['id'];
             return $return; // or return; depending on where this code is located
-        }else{
-            $this->writelog( $price_array['id'],"Record Found in streams");
+        } else {
+            $this->writelog($price_array['id'], "Record Found in streams");
         }
 
 
         // debug($record->conversationid);
         $alreadyCosted = $streamTable->find()
-                ->where([
-                    'conversationid' => $record->conversationid,
-                    'rated > ' => false,
-                        //  'delivered_time IS NOT NULL',
-                        //  'delivered_time >=' => date('Y-m-d H:i:s') // Assuming current date and time
-                ])
-                ->all();
+            ->where([
+                'conversationid' => $record->conversationid,
+                'rated > ' => false,
+                //  'delivered_time IS NOT NULL',
+                //  'delivered_time >=' => date('Y-m-d H:i:s') // Assuming current date and time
+            ])
+            ->all();
 
         if ($alreadyCosted->isEmpty()) {
             //Process charging if not already.
             //debug("Charging $record->conversationid");
             $this->writelog($record, "Passing to Charging");
-            $return=$this->_chargeMe($record);
+            $return = $this->_chargeMe($record);
         } else {
             // debug($alreadyCosted);
-           // debug("Already charged $record->conversationid");
+            // debug("Already charged $record->conversationid");
             $this->writelog($record->conversationid, "Already rated Message ID");
-            $return['result']['status']="success";
-            $return['result']['message']="$record->conversationid, Already rated Message ID";
+            $return['result']['status'] = "success";
+            $return['result']['message'] = "$record->conversationid, Already rated Message ID";
         }
         return $return;
     }
 
-    function _chargeMe($record) {
+    function _chargeMe($record)
+    {
         //debug($record);
         $msgType = $record->type;
         $ph = $record->contact_stream->contact_number;
@@ -672,16 +701,16 @@ class AppController extends Controller {
             $this->_notify("Country info is empty for $ph", "critical");
             return;
         } else {
-           // debug($countryinfo->country);
+            // debug($countryinfo->country);
         }
         $msgCategory = $record->category;
         $msgpricing_model = $record->pricing_model;
         $StreamsTable = $this->getTableLocator()->get('Streams');
         $row = $StreamsTable->get($record->id);
- #       debug($msgType);
+        #       debug($msgType);
         switch ($msgType) {
             case "send":
-            //    debug("Message type is send");
+                //    debug("Message type is send");
                 $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
                 $cost['cost'] = round($cost['cost'], 2);
                 $row->cost = $cost['cost'];
@@ -694,9 +723,9 @@ class AppController extends Controller {
                     $rating->stream_id = $record->id;
                     $rating->old_balance = $result['old_balance']['current_balance'];
                     $rating->new_balance = $result['new_balance']['current_balance'];
-                    $return['result']['charginginfo']['old_balance']=$result['old_balance']['current_balance'];
-                    $return['result']['charginginfo']['new_balance']=$result['new_balance']['current_balance'];
-                    $return['result']['charginginfo']['Country']=$countryinfo->country;
+                    $return['result']['charginginfo']['old_balance'] = $result['old_balance']['current_balance'];
+                    $return['result']['charginginfo']['new_balance'] = $result['new_balance']['current_balance'];
+                    $return['result']['charginginfo']['Country'] = $countryinfo->country;
                     $rating->cost = $cost['cost'];
                     $rating->conversation = $record->conversationid;
                     $rating->country = $countryinfo->country;
@@ -706,46 +735,46 @@ class AppController extends Controller {
                     $rating->fb_cost = $cost['fb_cost'];
                     $rating->rate_with_tax = $cost['rate_with_tax'];
                     if (!$RatingTable->save($rating)) {
-                          debug($rating->getError);
+                        debug($rating->getError);
                         $this->_notify(json_encode($rating->getError), "critical");
-                        $return['result']['message']="Charging failed for message type   $msgType with ". $cost['rate_with_tax'];
-                        $return['result']['status']="failed";
-                        
+                        $return['result']['message'] = "Charging failed for message type   $msgType with " . $cost['rate_with_tax'];
+                        $return['result']['status'] = "failed";
                     } else {
                         $streamsTable = $this->getTableLocator()->get('Streams');
                         $streamsTable->updateAll(
-                                ['rated' => true],
-                                ['conversationid' => $record->conversationid]
+                            ['rated' => true],
+                            ['conversationid' => $record->conversationid]
                         );
-                        $return['result']['message']="Charged message type   $msgType with ". $cost['rate_with_tax'];
-                        $return['result']['status']="sucess";
-                    //  debug("Rating save  as true for all  record" . $record->conversationid);
+                        $return['result']['message'] = "Charged message type   $msgType with " . $cost['rate_with_tax'];
+                        $return['result']['status'] = "sucess";
+                        //  debug("Rating save  as true for all  record" . $record->conversationid);
                     }
                 }
                 break;
             case "ISend":
-                    $return['result']['message']="Not Charged for $msgType and updated stream table";
-                    $return['result']['status']="success";
-                    $streamsTable = $this->getTableLocator()->get('Streams');
-                    $streamsTable->updateAll(
-                                ['rated' => true],
-                                ['conversationid' => $record->conversationid]
-                        );
+                $return['result']['message'] = "Not Charged for $msgType and updated stream table";
+                $return['result']['status'] = "success";
+                $streamsTable = $this->getTableLocator()->get('Streams');
+                $streamsTable->updateAll(
+                    ['rated' => true],
+                    ['conversationid' => $record->conversationid]
+                );
 
 
-                    break;    
+                break;
             default:
-                $return['result']['message']="Not Charged for $msgType";
-                $return['result']['status']="success";
-             
+                $return['result']['message'] = "Not Charged for $msgType";
+                $return['result']['status'] = "success";
+
                 break;
         }
         return $return;
     }
 
-    function _calculateCost($countryinfo, $msgCategory, $msgpricing_model) {
+    function _calculateCost($countryinfo, $msgCategory, $msgpricing_model)
+    {
 
-//debug($countryinfo);
+        //debug($countryinfo);
         $cost = [];
         $tax_perc = $this->_getsettings('tax');
         $profit_perc = $this->_getsettings('profit_margin');
@@ -760,11 +789,12 @@ class AppController extends Controller {
         return $cost;
     }
 
-    function _updatebalance($account_id, $cost) {
+    function _updatebalance($account_id, $cost)
+    {
         //UPDATE `streams` SET `cost` = '0' WHERE `streams`.`id` = 58588; 
-                $result = [];
-                $accountTable = $this->getTableLocator()->get('Accounts');
-                $result['old_balance'] = $accountTable->get($account_id)->toArray();
+        $result = [];
+        $accountTable = $this->getTableLocator()->get('Accounts');
+        $result['old_balance'] = $accountTable->get($account_id)->toArray();
         //    debug($old_balance);
         $result['status'] = 1;
 
@@ -772,28 +802,28 @@ class AppController extends Controller {
         $connection = ConnectionManager::get('default');
 
         try {
-        // Begin the transaction
+            // Begin the transaction
             $connection->begin();
 
-        // Lock the table
+            // Lock the table
             $connection->execute('LOCK TABLES accounts WRITE');
 
-        //  debug("Locking table to update $cost");
-        // Update the balance column
+            //  debug("Locking table to update $cost");
+            // Update the balance column
             $query = $connection->newQuery();
             $query->update('accounts')
-                    ->set(['current_balance' => $query->newExpr('current_balance - :cost')])
-                    ->bind(':cost', $cost, 'float')
-                    ->where(['id' => $account_id])
-                    ->execute();
+                ->set(['current_balance' => $query->newExpr('current_balance - :cost')])
+                ->bind(':cost', $cost, 'float')
+                ->where(['id' => $account_id])
+                ->execute();
 
-        // debug($query);
-        // debug("updating the balance");
-        // Unlock the table
-        //   debug($query->sql());
+            // debug($query);
+            // debug("updating the balance");
+            // Unlock the table
+            //   debug($query->sql());
             $connection->execute('UNLOCK TABLES');
 
-        // Commit the transaction
+            // Commit the transaction
             $connection->commit();
         } catch (\Exception $e) {
             $result['status'] = 10;
@@ -808,11 +838,11 @@ class AppController extends Controller {
         return $result;
     }
 
-    function _getCountry($ph = null) {
-//   debug($contact);
-//    $ph = "972345449595050";
+    function _getCountry($ph = null)
+    {
+        //   debug($contact);
+        //    $ph = "972345449595050";
         if (strlen($ph) === 12) {
-            
         }
         //$this->_format_mobile($ph, $data)
         $Country = [];
@@ -821,8 +851,8 @@ class AppController extends Controller {
 
         $pricaTable = $this->getTableLocator()->get('PriceCards');
         $codes = $pricaTable->find()
-                ->order(['country_code DESC'])
-                ->all();
+            ->order(['country_code DESC'])
+            ->all();
 
         foreach ($codes as $key => $val) {
             $this->writelog($val, "Current code array");
@@ -833,14 +863,15 @@ class AppController extends Controller {
         }
         return $Country;
 
-//  debug($Country);
+        //  debug($Country);
     }
 
-    function viewRcvImg($file_id = null, $filetype = null) {
+    function viewRcvImg($file_id = null, $filetype = null)
+    {
 
         $file_id = "6371848519559997";
         $filetype = "image/jpeg";
-//        $session = $this->request->getSession();
+        //        $session = $this->request->getSession();
         $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
 
@@ -867,7 +898,7 @@ class AppController extends Controller {
         curl_close($curl);
         $result = json_decode($response, true);
         $url = $result['url'];
-// debug($url);
+        // debug($url);
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
@@ -875,12 +906,12 @@ class AppController extends Controller {
             CURLOPT_CONNECTTIMEOUT => 0,
             CURLOPT_HEADER => 0,
             CURLOPT_ENCODING => '',
-//            CURLOPT_MAXREDIRS => 10,
+            //            CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 0,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
-//            CURLOPT_FILE => $file_handle,
+            //            CURLOPT_FILE => $file_handle,
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
@@ -900,14 +931,16 @@ class AppController extends Controller {
         fwrite($file_handle, $raw);
 
         fclose($file_handle);
-        $response = $this->response->withFile($file_path,
-                ['download' => true, 'name' => "myfilename"]
+        $response = $this->response->withFile(
+            $file_path,
+            ['download' => true, 'name' => "myfilename"]
         );
         $response->withType($filetype);
         return $response;
     }
 
-    public function _notify($message, $severity) {
+    public function _notify($message, $severity)
+    {
         //$functionName = __FUNCTION__;
         //$lineNumber = __LINE__;
 
@@ -931,7 +964,8 @@ class AppController extends Controller {
         $table->save($newrow);
     }
 
-    public function getMyAccountID() {
+    public function getMyAccountID()
+    {
         $user = $this->Authentication->getIdentity();
         if ($user) {
             $session = $this->request->getSession();
@@ -942,7 +976,8 @@ class AppController extends Controller {
         }
     }
 
-    public function getMyUID() {
+    public function getMyUID()
+    {
         $user = $this->Authentication->getIdentity();
         if ($user) {
             return $user->id;
@@ -951,19 +986,19 @@ class AppController extends Controller {
         }
     }
 
-    public function getMyAPIKey($account_id=null){
-        if(!isset($account_id)){
+    public function getMyAPIKey($account_id = null)
+    {
+        if (!isset($account_id)) {
             $account_id = $this->getMyAccountID();
         }
         $table = $this->getTableLocator()->get('ApiKeys');
         $apiquery = $table->find()
-                ->where(['account_id' => $account_id, 'enabled' => true])
-                ->first();
+            ->where(['account_id' => $account_id, 'enabled' => true])
+            ->first();
         if (empty($apiquery)) {
             return false;
-        }else{
+        } else {
             return $apiquery->api_key;
         }
-
     }
 }

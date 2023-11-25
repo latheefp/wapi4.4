@@ -235,6 +235,7 @@ class JobsController extends AppController
             $formarray = [];
 
             foreach ($CampaignForm as $key => $val) {
+               // debug($val);
                 $newval = array();
                 $vararray = explode('-', $val['field_name']);
                 $newval['field_name'] = $val->field_name;
@@ -256,13 +257,22 @@ class JobsController extends AppController
                             $newval['field_value'] = $data[$newvar];
                         }
                         break;
+                    // case "button":
+                    //     $newvar = $vararray[0] . "-" . $vararray[1];
+                    //     if (isset($data[$newvar])) {
+                    //         $newval['field_value'] = $data[$newvar];
+                    //     }
+                    //     break;    
                 }
                 $formarray[] = $newval;
             }
+
+         //   debug($formarray);
+
             //Check for Botton variables:
-            if (isset($data['button_var'])) {
-                $formarray[] = array('field_value' => $data['button_var'], 'field_name' => 'button-var');
-            }
+            // if (isset($data['button_var'])) {
+            //     $formarray[] = array('field_value' => $data['button_var'], 'field_name' => 'button-var');
+            // }
             $return['result'] = $this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings);
             return $return;
             // debug($result);
@@ -1061,7 +1071,7 @@ class JobsController extends AppController
 
 
         foreach ($form as $key => $val) {
-            //     debug($val);
+       //     debug($val);
             $component = [];
             $param = [];
             $field_name = $val['field_name'];
