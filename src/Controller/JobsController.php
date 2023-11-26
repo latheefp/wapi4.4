@@ -240,6 +240,8 @@ class JobsController extends AppController
                 $vararray = explode('-', $val['field_name']);
                 $newval['field_name'] = $val->field_name;
                 $newval['field_value'] = $val->field_value;
+                // debug($vararray);
+                // debug($data);
                 switch ($vararray[0]) {
                     case "file":
                         if (isset($data['media_id'])) {
@@ -257,17 +259,19 @@ class JobsController extends AppController
                             $newval['field_value'] = $data[$newvar];
                         }
                         break;
-                    // case "button":
-                    //     $newvar = $vararray[0] . "-" . $vararray[1];
-                    //     if (isset($data[$newvar])) {
-                    //         $newval['field_value'] = $data[$newvar];
-                    //     }
-                    //     break;    
+                    case "button":
+                        // debug($vararray);
+                        // debug($data);
+                        $newvar = "button-var";
+                        if (isset($data[$newvar])) {
+                            $newval['field_value'] = $data[$newvar];
+                        }
+                        break;
                 }
                 $formarray[] = $newval;
             }
 
-         //   debug($formarray);
+       //     debug($formarray);
 
             //Check for Botton variables:
             // if (isset($data['button_var'])) {
@@ -477,19 +481,6 @@ class JobsController extends AppController
             $this->writelog($response, "Failed to send response array as its empty");
         }
     }
-
-    // function writeinteractive($data, $type) {
-    //     if (intval(getenv('INTERACTIV')) == false) {
-    //         //   debug("No logs");
-    //         return false;
-    //     }
-    //     $file = LOGS . 'GrandInt' . '.log';
-    //     $time = date("Y-m-d H:i:s", time());
-    //     $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
-    //     fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
-    //     fwrite($handle, print_r($data, true));
-    //     fclose($handle);
-    // }
 
     function _sendIntToCustomer($list, $wa_id, $FBSettings)
     {
