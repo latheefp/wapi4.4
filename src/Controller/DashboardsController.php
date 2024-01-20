@@ -210,7 +210,7 @@ class DashboardsController extends AppController
         $result ['contact_numbers'] =$this->_getmetricval('contact_numbers');
         $result ['send'] =$this->_getmetricval('total_send');
         $result ['receive'] =$this->_getmetricval('total_receive');
-        $result['total_msg']=$result ['total_send']+$result ['total_receive'];
+        $result['total_msg']=$result ['send']+$result ['receive'];
         $result ['success_rate'] =$this->_getmetricval('success_rate');
         $result ['schedules'] =$this->_getmetricval('schdules');
         $result ['rcvq'] =$this->_getmetricval('total_receive');
