@@ -32,7 +32,9 @@ jobs:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
       run: |
-        docker build . -t latheefp/wapi:latest
+        docker build . -t latheefp/wapi:${CURRENT_DATE}_${COMMIT_HASH} \
+          --build-arg BUILD_DATE=${CURRENT_DATE} \
+          --build-arg COMMIT_HASH=${COMMIT_HASH}
         echo "$DOCKERHUB_PASSWORD" | base64 -d | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
         docker push latheefp/wapi:latest
 

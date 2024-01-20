@@ -32,6 +32,7 @@ class MetricsCommand extends Command
             $this->updatemetrics();
             sleep (60);
         }
+
     }
 
     public function initialize(): void

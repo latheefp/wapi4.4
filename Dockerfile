@@ -10,7 +10,10 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Set an environment variable with the build date
 ARG BUILD_DATE
-ENV BUILD_DATE=${BUILD_DATE}
+ARG COMMIT_HASH
+
+LABEL build_date="${BUILD_DATE}"
+LABEL commit_hash="${COMMIT_HASH}"
 
 
 # Install required PHP extensions
@@ -68,5 +71,3 @@ EXPOSE 80
 USER www-data
 
 ENTRYPOINT ["/var/www/html/bin/entrypoint.sh"]
-
-
