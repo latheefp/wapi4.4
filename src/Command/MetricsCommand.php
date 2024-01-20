@@ -29,6 +29,7 @@ class MetricsCommand extends Command
     public function execute(Arguments $args, ConsoleIo $io)
     {
         while (true) {
+            debug('Running metrics capturing');
             $this->updatemetrics();
             sleep (60);
         }
@@ -148,36 +149,36 @@ class MetricsCommand extends Command
     }
 
 
-    function cleanq(){
-        $this->app = new AppController();
-        //cleanSendQ
+    // function cleanq(){
+    //     $this->app = new AppController();
+    //     //cleanSendQ
        
-        $retentions=$this->app->_getsettings('q_retention');
-        debug("Deleting Send Q older than $retentions");
-        $sendTable=$this->getTableLocator()->get('SendQueues');
-        $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
-        $query = $sendTable->query();
-        $query->delete()
-        ->where([
-            'http_response_code' => 200,
-            'created <' => $retentionsHoursAgo
-        ])
-            ->execute();
+    //     $retentions=$this->app->_getsettings('q_retention');
+    //     debug("Deleting Send Q older than $retentions");
+    //     $sendTable=$this->getTableLocator()->get('SendQueues');
+    //     $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
+    //     $query = $sendTable->query();
+    //     $query->delete()
+    //     ->where([
+    //         'http_response_code' => 200,
+    //         'created <' => $retentionsHoursAgo
+    //     ])
+    //         ->execute();
 
 
-        debug("Deleting Send Q older than $retentions");
-        $rcvTable=$this->getTableLocator()->get('RcvQueues');
-        $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
-        $query = $rcvTable->query();
-        $query->delete()
-        ->where([
-            'http_response_code' => 200,
-            'created <' => $retentionsHoursAgo
-        ])
-            ->execute();
+    //     debug("Deleting Send Q older than $retentions");
+    //     $rcvTable=$this->getTableLocator()->get('RcvQueues');
+    //     $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
+    //     $query = $rcvTable->query();
+    //     $query->delete()
+    //     ->where([
+    //         'http_response_code' => 200,
+    //         'created <' => $retentionsHoursAgo
+    //     ])
+    //         ->execute();
 
         
-     }
+    //  }
  
 
 
