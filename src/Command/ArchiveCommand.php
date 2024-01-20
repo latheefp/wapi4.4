@@ -58,30 +58,56 @@ class ArchiveCommand extends Command
     function cleanq(){
         $this->app = new AppController();
         //cleanSendQ
-       
-        $retentions=(int)$this->app->_getsettings('q_retention');
+
+        $retentions = (int) $this->app->_getsettings('q_retention');
         debug("Deleting Send Q older than $retentions");
-        $sendTable=$this->getTableLocator()->get('SendQueues');
+
+        $sendTable = $this->getTableLocator()->get('SendQueues');
         $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
+
+        $query = $sendTable->query();
+        $sendCount = $query->select(['count' => $query->func()->count('*')])
+            ->where([
+                'http_response_code' => 200,
+                'created <' => $retentionsHoursAgo
+            ])
+            ->execute()
+            ->fetch('assoc')['count'];
+
+        debug("Number of SendQ records to be deleted: $sendCount");
+
         $query = $sendTable->query();
         $query->delete()
-        ->where([
-            'http_response_code' => 200,
-            'created <' => $retentionsHoursAgo
-        ])
+            ->where([
+                'http_response_code' => 200,
+                'created <' => $retentionsHoursAgo
+            ])
             ->execute();
-
 
         debug("Deleting Send Q older than $retentions");
-        $rcvTable=$this->getTableLocator()->get('RcvQueues');
+
+        $rcvTable = $this->getTableLocator()->get('RcvQueues');
         $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
+
+        $query = $rcvTable->query();
+        $rcvCount = $query->select(['count' => $query->func()->count('*')])
+            ->where([
+                'http_response_code' => 200,
+                'created <' => $retentionsHoursAgo
+            ])
+            ->execute()
+            ->fetch('assoc')['count'];
+
+        debug("Number of RcvQ records to be deleted: $rcvCount");
+
         $query = $rcvTable->query();
         $query->delete()
-        ->where([
-            'http_response_code' => 200,
-            'created <' => $retentionsHoursAgo
-        ])
+            ->where([
+                'http_response_code' => 200,
+                'created <' => $retentionsHoursAgo
+            ])
             ->execute();
+        
 
         
      }
