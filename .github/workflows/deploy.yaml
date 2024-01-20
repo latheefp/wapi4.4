@@ -41,10 +41,11 @@ jobs:
 
     - name: Update Kubernetes deployment
       env:
-        IMAGE_TAG: latest  # Change this to your desired tag
+        IMAGE_TAG: ${CURRENT_DATE}_${COMMIT_HASH}  # Change this to your desired tag
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
       run: |
         echo "$KUBE_CONFIG_DATA" | base64 -d > kubeconfig.yaml
+        echo image tag is $IMAGE_TAG
         export KUBECONFIG=$PWD/kubeconfig.yaml  # Set KUBECONFIG to the path of the kubeconfig file
         kubectl config get-contexts  # Lists available contexts
         kubectl config use-context egrand
