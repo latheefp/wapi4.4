@@ -986,6 +986,16 @@ class AppController extends Controller
         }
     }
 
+    public function getMyGID()
+    {
+        $user = $this->Authentication->getIdentity();
+        if ($user) {
+            return $user->ugroup_id;
+        } else {
+            // User is not authenticated
+        }
+    }
+
     public function getMyAPIKey($account_id = null)
     {
         if (!isset($account_id)) {

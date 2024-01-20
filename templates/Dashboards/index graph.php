@@ -29,7 +29,7 @@
             <!-- small box -->
             <div class="small-box bg-success">
                 <div class="inner">
-                    <h3 id="Campaings"></h3>
+                    <h3 id="campaigns"></h3>
                     <p>Campaigns</p>
                 </div>
                 <div class="icon">
@@ -374,8 +374,9 @@
         }, function(start, end, label) {
             $('#start_date').val(start.format('YYYY-MM-DD hh:mm'));
             $('#end_date').val(end.format('YYYY-MM-DD hh:mm'));
-            var json_url = "/dashboards/getdata?start_date=" + start.format('YYYY-MM-DD hh:mm') + '&end_date=' + end.format('YYYY-MM-DD HH:mm');
-            ajax_chart_sched(MessageStatusChart, json_url); //pass=>  chartID, url and date.
+            #var json_url = "/dashboards/getdata?start_date=" + start.format('YYYY-MM-DD hh:mm') + '&end_date=' + end.format('YYYY-MM-DD HH:mm');
+            var json_url = "/dashboards/getdata?;
+            ajax_chart_sched(MessageStatusChart, json_url);
             ajax_chartbar(schedulebarChart, '/dashboards/getshedjson?start_date=' + start.format('YYYY-MM-DD hh:mm') + '&end_date=' + end.format('YYYY-MM-DD HH:mm'));
         });
         var ctxschedulebarChart = document.getElementById('schedulebarChart').getContext('2d');
@@ -419,14 +420,10 @@
             },
         })
 
-        // fetchData();
+       // fetchData();
 
         //        $('input[name="dateRangeSelector"]').trigger('change');
-        //  setInterval(fetchData, 60000); // Fetch data every 30 seconds
-
-
-        getdata();
-        setInterval(getdata, 60000); // Fetch data every 30 seconds
+      //  setInterval(fetchData, 60000); // Fetch data every 30 seconds
 
 
     });
@@ -483,7 +480,7 @@
 
     function getdata() {
         $.ajax({
-            url: '/dashboards/getdata',
+            url: '/dashboards/getdata,
             method: 'GET', // Use 'POST' if needed
             dataType: 'json', // Adjust as per your response format
             success: function(jsonData) {

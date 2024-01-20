@@ -163,7 +163,7 @@ class JobsController extends AppController
 
 
 
-
+//send job start here.
     function _send_schedule($qid, $FBSettings)
     {
         //   debug("_Send Schdule");
@@ -235,7 +235,7 @@ class JobsController extends AppController
             $formarray = [];
 
             foreach ($CampaignForm as $key => $val) {
-               // debug($val);
+               
                 $newval = array();
                 $vararray = explode('-', $val['field_name']);
                 $newval['field_name'] = $val->field_name;
@@ -260,18 +260,19 @@ class JobsController extends AppController
                         }
                         break;
                     case "button":
-                        // debug($vararray);
-                        // debug($data);
                         $newvar = "button-var";
+                      //  debug($data[$newvar]);
                         if (isset($data[$newvar])) {
+                        //    debug($newvar);
                             $newval['field_value'] = $data[$newvar];
                         }
                         break;
                 }
+            //    debug($newval);
                 $formarray[] = $newval;
             }
 
-       //     debug($formarray);
+         //   debug($formarray);
 
             //Check for Botton variables:
             // if (isset($data['button_var'])) {

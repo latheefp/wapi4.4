@@ -63,6 +63,9 @@ class MetricsCommand extends Command
             $schedules = $this->getTableLocator()->get('ScheduleViews')->find()->where(['account_id' => $account_id]);
             $this->savemetric('schdules', $account_id, $schedules->count());
 
+            $groups = $this->getTableLocator()->get('Contacts')->find()->where(['account_id' => $account_id]);
+            $this->savemetric('groups', $account_id, $groups->count());
+
 
 
             $total_send = $this->getTableLocator()
@@ -142,6 +145,39 @@ class MetricsCommand extends Command
      //   debug($newRow);
         $metricTable->save($newRow);
     }
+
+
+    function cleanq(){
+        $this->app = new AppController();
+        //cleanSendQ
+       
+        $retentions=$this->app->_getsettings('q_retention');
+        debug("Deleting Send Q older than $retentions");
+        $sendTable=$this->getTableLocator()->get('SendQueues');
+        $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
+        $query = $sendTable->query();
+        $query->delete()
+        ->where([
+            'http_response_code' => 200,
+            'created <' => $retentionsHoursAgo
+        ])
+            ->execute();
+
+
+        debug("Deleting Send Q older than $retentions");
+        $rcvTable=$this->getTableLocator()->get('RcvQueues');
+        $retentionsHoursAgo = FrozenTime::now()->subHours($retentions);
+        $query = $rcvTable->query();
+        $query->delete()
+        ->where([
+            'http_response_code' => 200,
+            'created <' => $retentionsHoursAgo
+        ])
+            ->execute();
+
+        
+     }
+ 
 
 
 }

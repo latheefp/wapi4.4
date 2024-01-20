@@ -132,31 +132,6 @@ class DashboardsController extends AppController
             ->group('module_name');
 
 
-        // foreach ($uniqueModules as $module) {
-        //     echo 'Module Name: ' . $module->module_name . ', Highest ID: ' . $module->max_id . '<br>';
-        // }
-
-    //     $connection = ConnectionManager::get('default');
-    //    $MetricTable = $this->getTableLocator()->get('Metrics');
-    //     $uniqueModules = $MetricTable
-    //         ->find()
-    //         ->select([
-    //             'module_name',
-    //             'max_id' => $connection->query()
-    //                 ->select(['max_id' => 'MAX(id)'])
-    //                 ->from('metrics')
-    //                 ->where(function (QueryExpression $exp) use ($account_id) {
-    //                     return $exp->or_([
-    //                         'account_id' => $account_id,
-    //                         'account_id' => 0
-    //                     ]);
-    //                 })
-    //                 ->group('module_name')
-    //         ])
-    //         ->group('module_name');
-
-    //         debug($uniqueModules);
-
 
             }
 
@@ -204,91 +179,153 @@ class DashboardsController extends AppController
         //        $this->set('balance', $this->getTableLocator()->get('Accounts')->get($account_id));
     }
 
-    function getdata()
-    {
-        $formData = $this->request->getQuery();
-        //debug($formData);
-        $session = $this->request->getSession();
+    function getdata(){
+        $result=[];
         $account_id = $this->getMyAccountID();
+        debug($account_id);
         $this->viewBuilder()->setLayout('ajax');
-        //s    $days = 15;
+        $Accountstable=$this->getTableLocator()->get('Accounts');
+        $accountinfo=$Accountstable->get($account_id);
+        $result['balance']=$accountinfo->current_balance;
 
-        $wa_query = $this->getTableLocator()->get('Streams')->find();
-        $startDateTime = $formData['start_date'];
-        $endDateTime = $formData['end_date'];
+        $metricTable = $this->getTableLocator()->get('Metrics');
 
-        $createdTime = $wa_query->func()->date_format([
-            'created' => 'identifier',
-            "'%d-%m-%Y %H:%i'" => 'literal'
-        ]);
-        $wa_query
-            ->where(
-                function ($exp) use ($startDateTime, $endDateTime) {
-                    return $exp->between('Streams.created', $startDateTime, $endDateTime);
-                }
-            )
-            ->andWhere(['account_id' => $account_id])
-            ->group('Streams.has_wa, timeCreated')
-            ->order(['created ASC'])
-            ->having(['has_wa' => true])
-            ->select([
-                'timeCreated' => $createdTime,
-                'has_wa',
-                'type',
-                'count' => $wa_query->func()->count('has_wa')
-            ]);
-        $this->set('wa_data', $wa_query);
+        if ($this->getMyGID() == 1) {
+            $query  = $metricTable->find()
+            ->where(['module_name' => 'SendQueues'])
+            ->order(['id' => 'DESC']);
+            $result['SendQueues'] = $query->first()->metric_value;;
 
-        $no_wa_query = $this->getTableLocator()->get('Streams')->find();
-        $createdTime = $no_wa_query->func()->date_format([
-            'created' => 'identifier',
-            "'%d-%m-%Y %H:%i'" => 'literal'
-        ]);
 
-        $no_wa_query->where(
-            function ($exp) use ($startDateTime, $endDateTime) {
-                return $exp->between('Streams.created', $startDateTime, $endDateTime);
-            }
-        )
-            ->andWhere(['account_id' => $account_id])
-            ->group('Streams.has_wa, timeCreated')
-            ->order(['created ASC'])
-            ->having(['has_wa' => false])
-            ->select([
-                'timeCreated' => $createdTime,
-                'has_wa',
-                'type',
-                'count' => $no_wa_query->func()->count('has_wa')
-            ]);
-        //debug($no_wa_query);
-        $this->set('no_wa_data', $no_wa_query);
+            $query  = $metricTable->find()
+            ->where(['module_name' => 'RcvQueues'])
+            ->order(['id' => 'DESC']);
+            $RcvQ =
+            $result['RcvQueues'] = $query->first()->metric_value;
+        }
+
+
+        $result ['templates'] =$this->_getmetricval('template');
+        $result ['Campaings'] =$this->_getmetricval('campaings');
+        $result ['contact_numbers'] =$this->_getmetricval('contact_numbers');
+        $result ['send'] =$this->_getmetricval('total_send');
+        $result ['receive'] =$this->_getmetricval('total_receive');
+        $result['total_msg']=$result ['total_send']+$result ['total_receive'];
+        $result ['success_rate'] =$this->_getmetricval('success_rate');
+        $result ['schedules'] =$this->_getmetricval('schdules');
+        $result ['rcvq'] =$this->_getmetricval('total_receive');
+        $result ['sendq'] =$this->_getmetricval('total_send');
+        $result ['groups'] =$this->_getmetricval('groups');
+        $result ['success_rate'] =$this->_getmetricval('success_rate');
+
+
+       $this->set('result',$result);
+
     }
 
-    function getshedjson()
-    {
-        $formData = $this->request->getQuery();
-        //debug($formData);
-        $session = $this->request->getSession();
+
+    function _getmetricval($metric){
         $account_id = $this->getMyAccountID();
-        $this->viewBuilder()->setLayout('ajax');
-        $startDateTime = $formData['start_date'];
-        $endDateTime = $formData['end_date'];
-        $query = $this->getTableLocator()->get('Streams')->find();
-        $query->where(
-            function ($exp) use ($startDateTime, $endDateTime) {
-                return $exp->between('Streams.created', $startDateTime, $endDateTime);
-            }
-        )
-            ->andWhere(['account_id' => $account_id])
-            ->group('Streams.schedule_id')
-            ->select([
-                'schedule_id',
-                'Schedules.name',
-                'has_wa',
-                'count' => $query->func()->count('schedule_id')
-            ])
-            ->order(['count DESC'])
-            ->innerJoinWith('Schedules');
-        $this->set('data', $query);
+        $metricTable = $this->getTableLocator()->get('Metrics');
+        $query  = $metricTable->find()
+        ->where(['module_name' => $metric, 'account'=>$account_id])
+        ->order(['id' => 'DESC']);
+        if(!empty($query->first())){
+            return $query->first()->metric_value;
+        }else{
+            return 0;
+        }
+        
+
     }
+
+
+
+    // function getdata()
+    // {
+    //     $formData = $this->request->getQuery();
+    //     //debug($formData);
+    //     $session = $this->request->getSession();
+    //     $account_id = $this->getMyAccountID();
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     //s    $days = 15;
+
+    //     $wa_query = $this->getTableLocator()->get('Streams')->find();
+    //     $startDateTime = $formData['start_date'];
+    //     $endDateTime = $formData['end_date'];
+
+    //     $createdTime = $wa_query->func()->date_format([
+    //         'created' => 'identifier',
+    //         "'%d-%m-%Y %H:%i'" => 'literal'
+    //     ]);
+    //     $wa_query
+    //         ->where(
+    //             function ($exp) use ($startDateTime, $endDateTime) {
+    //                 return $exp->between('Streams.created', $startDateTime, $endDateTime);
+    //             }
+    //         )
+    //         ->andWhere(['account_id' => $account_id])
+    //         ->group('Streams.has_wa, timeCreated')
+    //         ->order(['created ASC'])
+    //         ->having(['has_wa' => true])
+    //         ->select([
+    //             'timeCreated' => $createdTime,
+    //             'has_wa',
+    //             'type',
+    //             'count' => $wa_query->func()->count('has_wa')
+    //         ]);
+    //     $this->set('wa_data', $wa_query);
+
+    //     $no_wa_query = $this->getTableLocator()->get('Streams')->find();
+    //     $createdTime = $no_wa_query->func()->date_format([
+    //         'created' => 'identifier',
+    //         "'%d-%m-%Y %H:%i'" => 'literal'
+    //     ]);
+
+    //     $no_wa_query->where(
+    //         function ($exp) use ($startDateTime, $endDateTime) {
+    //             return $exp->between('Streams.created', $startDateTime, $endDateTime);
+    //         }
+    //     )
+    //         ->andWhere(['account_id' => $account_id])
+    //         ->group('Streams.has_wa, timeCreated')
+    //         ->order(['created ASC'])
+    //         ->having(['has_wa' => false])
+    //         ->select([
+    //             'timeCreated' => $createdTime,
+    //             'has_wa',
+    //             'type',
+    //             'count' => $no_wa_query->func()->count('has_wa')
+    //         ]);
+    //     //debug($no_wa_query);
+    //     $this->set('no_wa_data', $no_wa_query);
+    // }
+
+    // function getshedjson()
+    // {
+    //     $formData = $this->request->getQuery();
+    //     //debug($formData);
+    //     $session = $this->request->getSession();
+    //     $account_id = $this->getMyAccountID();
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     $startDateTime = $formData['start_date'];
+    //     $endDateTime = $formData['end_date'];
+    //     $query = $this->getTableLocator()->get('Streams')->find();
+    //     $query->where(
+    //         function ($exp) use ($startDateTime, $endDateTime) {
+    //             return $exp->between('Streams.created', $startDateTime, $endDateTime);
+    //         }
+    //     )
+    //         ->andWhere(['account_id' => $account_id])
+    //         ->group('Streams.schedule_id')
+    //         ->select([
+    //             'schedule_id',
+    //             'Schedules.name',
+    //             'has_wa',
+    //             'count' => $query->func()->count('schedule_id')
+    //         ])
+    //         ->order(['count DESC'])
+    //         ->innerJoinWith('Schedules');
+    //     $this->set('data', $query);
+    // }
 }
