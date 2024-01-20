@@ -182,7 +182,7 @@ class DashboardsController extends AppController
     function getdata(){
         $result=[];
         $account_id = $this->getMyAccountID();
-        debug($account_id);
+       // debug($account_id);
         $this->viewBuilder()->setLayout('ajax');
         $Accountstable=$this->getTableLocator()->get('Accounts');
         $accountinfo=$Accountstable->get($account_id);
