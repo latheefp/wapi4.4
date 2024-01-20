@@ -28,10 +28,14 @@ jobs:
 
     - name: Build and push Docker image
       env:
-        IMAGE_TAG: ${CURRENT_DATE}_${COMMIT_HASH}  # Change this to your desired tag
+        
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        CURRENT_DATE: $(date +"%Y%m%d%H%M%S")
+        COMMIT_HASH: $(git rev-parse --short HEAD)
+        IMAGE_TAG: ${CURRENT_DATE}_${COMMIT_HASH}  # Change this to your desired tag
       run: |
+        
         echo "Building image with tag $IMAGE_TAG"
         docker build . -t latheefp/wapi:$IMAGE_TAG \
           --build-arg BUILD_DATE=${CURRENT_DATE} \
@@ -42,6 +46,8 @@ jobs:
 
     - name: Update Kubernetes deployment
       env:
+        CURRENT_DATE: $(date +"%Y%m%d%H%M%S")
+        COMMIT_HASH: $(git rev-parse --short HEAD)
         IMAGE_TAG: ${CURRENT_DATE}_${COMMIT_HASH}  # Change this to your desired tag
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
       run: |
