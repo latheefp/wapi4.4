@@ -42,7 +42,9 @@ jobs:
           --build-arg BUILD_DATE=${CURRENT_DATE} \
           --build-arg COMMIT_HASH=${COMMIT_HASH}
         echo "$DOCKERHUB_PASSWORD" | base64 -d | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+        docker tag latheefp/wapi:$IMAGE_TAG latheefp/wapi:latest
         docker push latheefp/wapi:$IMAGE_TAG
+        docker push latheefp/wapi:latest
 
 
     - name: Update Kubernetes deployment
