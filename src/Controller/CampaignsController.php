@@ -721,10 +721,10 @@ class CampaignsController extends AppController {
 
 
 
-    function test(){
-        $this->viewBuilder()->setLayout('ajax');
-        debug($this->getMyAccountID());
-    }
+    // function test(){
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     debug($this->getMyAccountID());
+    // }
 
     function sendmsgnew()
     {
@@ -1040,7 +1040,7 @@ class CampaignsController extends AppController {
     function blockme($stream_id) {
         $streamtable = $this->getTableLocator()->get('Streams');
         $row = $streamtable->get($stream_id);
-        debug($row);
+     //   debug($row);
     }
 
 }

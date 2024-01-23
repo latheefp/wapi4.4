@@ -161,9 +161,9 @@ class SettingsController extends AppController {
     public function _logincount() {
         //   echo debug ("You are here");
         $loggeduser = $this->request->session()->read('Auth.User');
-        echo debug($loggeduser);
+     //   echo debug($loggeduser);
         $time = date("Y-m-d h:i:s", time());
-        echo debug($time);
+       // echo debug($time);
         $ntime = new Time($time, 'Asia/Riyadh');
 
         $query = $this->Users->query();
@@ -304,7 +304,7 @@ class SettingsController extends AppController {
     }
 
     public function fieldtypes($table_name = null) {
-        debug($this->_fieldtypes($table_name));
+       // debug($this->_fieldtypes($table_name));
     }
 
     function view($view) {

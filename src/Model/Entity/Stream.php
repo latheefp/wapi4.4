@@ -42,7 +42,7 @@ use Cake\ORM\Entity;
  * @property string|null $result
  * @property bool|null $billable
  * @property string|null $pricing_model
- * @property float|null $cost
+ * @property float|null $costed
  * @property bool $rated
  * @property string|null $category
  * @property bool|null $success
@@ -62,6 +62,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Account $account
  * @property \App\Model\Entity\RatingView[] $rating_views
  * @property \App\Model\Entity\Rating[] $ratings
+ * @property \App\Model\Entity\Ratings-aug-30[] $ratings_aug_30
  * @property \App\Model\Entity\StreamsUpdate[] $streams_updates
  */
 class Stream extends Entity
@@ -73,7 +74,7 @@ class Stream extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'hookid' => true,
@@ -109,7 +110,7 @@ class Stream extends Entity
         'result' => true,
         'billable' => true,
         'pricing_model' => true,
-        'cost' => true,
+        'costed' => true,
         'rated' => true,
         'category' => true,
         'success' => true,
@@ -128,6 +129,7 @@ class Stream extends Entity
         'account' => true,
         'rating_views' => true,
         'ratings' => true,
+        'ratings_aug_30' => true,
         'streams_updates' => true,
     ];
 }

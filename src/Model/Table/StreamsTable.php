@@ -17,6 +17,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
  * @property \App\Model\Table\RatingViewsTable&\Cake\ORM\Association\HasMany $RatingViews
  * @property \App\Model\Table\RatingsTable&\Cake\ORM\Association\HasMany $Ratings
+ * @property \App\Model\Table\Ratings-aug-30Table&\Cake\ORM\Association\HasMany $Ratings-aug-30
  * @property \App\Model\Table\StreamsUpdatesTable&\Cake\ORM\Association\HasMany $StreamsUpdates
  *
  * @method \App\Model\Entity\Stream newEmptyEntity()
@@ -89,10 +90,6 @@ class StreamsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->scalar('hookid')
             ->maxLength('hookid', 32)
             ->allowEmptyString('hookid');
@@ -113,9 +110,22 @@ class StreamsTable extends Table
             ->allowEmptyString('phonenumberid');
 
         $validator
+            ->integer('contact_stream_id')
+            ->allowEmptyString('contact_stream_id');
+
+        $validator
+            ->integer('schedule_id')
+            ->allowEmptyString('schedule_id');
+
+        $validator
             ->scalar('lang')
             ->maxLength('lang', 8)
             ->notEmptyString('lang');
+
+        $validator
+            ->scalar('contact_id')
+            ->maxLength('contact_id', 32)
+            ->allowEmptyString('contact_id');
 
         $validator
             ->scalar('message_context_from')
@@ -234,8 +244,8 @@ class StreamsTable extends Table
             ->allowEmptyString('pricing_model');
 
         $validator
-            ->numeric('cost')
-            ->allowEmptyString('cost');
+            ->numeric('costed')
+            ->allowEmptyString('costed');
 
         $validator
             ->boolean('rated')
@@ -264,6 +274,10 @@ class StreamsTable extends Table
             ->allowEmptyString('conversationid');
 
         $validator
+            ->integer('account_id')
+            ->notEmptyString('account_id');
+
+        $validator
             ->dateTime('conversation_expiration_timestamp')
             ->allowEmptyDateTime('conversation_expiration_timestamp');
 
@@ -288,10 +302,10 @@ class StreamsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['contact_stream_id'], 'ContactStreams'), ['errorField' => 'contact_stream_id']);
-        $rules->add($rules->existsIn(['schedule_id'], 'Schedules'), ['errorField' => 'schedule_id']);
-        $rules->add($rules->existsIn(['contact_id'], 'Contacts'), ['errorField' => 'contact_id']);
-        $rules->add($rules->existsIn(['account_id'], 'Accounts'), ['errorField' => 'account_id']);
+        $rules->add($rules->existsIn('contact_stream_id', 'ContactStreams'), ['errorField' => 'contact_stream_id']);
+        $rules->add($rules->existsIn('schedule_id', 'Schedules'), ['errorField' => 'schedule_id']);
+        $rules->add($rules->existsIn('contact_id', 'Contacts'), ['errorField' => 'contact_id']);
+        $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
 
         return $rules;
     }

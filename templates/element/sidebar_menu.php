@@ -1,7 +1,7 @@
 <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
         <!-- Add icons to the links using the .nav-icon class
-             with font-awesome or any other icon font library -->
+             with Font Awesome Free 5.15.3 icons -->
         <li class="nav-item menu-open">
             <a href="/dashboard" class="nav-link">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -14,17 +14,16 @@
 
         <li class="nav-item menu-open">
             <a href="/uis/index" class="nav-link">
-                <i class="nav-icon fas fa-comment-alt"></i>
+                <i class="nav-icon fas fa-comments"></i>
                 <p>
                     Chat Console<i class="right fas fa-angle-left"></i>
                 </p>
             </a>
         </li>
 
-
         <li class="nav-item menu-open">
             <a href="#" class="nav-link">
-                <i class="nav-icon fas  fa-bullhorn"></i>
+                <i class="nav-icon fas fa-bullhorn"></i>
                 <p>
                     Messages
                     <i class="fas fa-angle-left right"></i>
@@ -70,13 +69,11 @@
                     </a>
                 </li>
             </ul>
-
         </li>
-
 
         <li class="nav-item menu-open">
             <a href="#" class="nav-link">
-                <i class="nav-icon fas  fa-address-book"></i>
+                <i class="nav-icon fas fa-address-book"></i>
                 <p>
                     Contacts
                     <i class="fas fa-angle-left right"></i>
@@ -91,6 +88,28 @@
                 </li>
             </ul>
         </li>
+
+
+
+        <li class="nav-item menu-open">
+    <a href="#" class="nav-link">
+        <i class="nav-icon fas fa-money-bill-alt"></i>
+        <p>
+            Invoice and Payment
+            <i class="fas fa-angle-left right"></i>
+        </p>
+    </a>
+    <ul class="nav nav-treeview">
+        <li class="nav-item">
+            <a href="/invoices/bills" class="nav-link">
+                <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                <p>Invoices</p>
+            </a>
+        </li>
+    </ul>
+</li>
+
+
 
 
         <li class="nav-item menu-open">
@@ -112,8 +131,8 @@
                 <?php
                 $session = $this->request->getSession();
                 $group_id = $session->read('Auth.User.ugroup_id');
-                if ($group_id == 1) {  //Below menus are only for super users. 
-                    ?>
+                if ($group_id == 1) {  //Below menus are only for super users.
+                ?>
                     <li class="nav-item">
                         <a href="/settings/listgroups" class="nav-link">
                             <i class="fas fa-users nav-icon"></i>
@@ -126,15 +145,10 @@
                             <p>Permissions</p>
                         </a>
                     </li>
-                <?php }
+                <?php
+                }
                 ?>
-
-
-
-
-
             </ul>
         </li>
     </ul>
 </nav>
-

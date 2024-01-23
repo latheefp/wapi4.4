@@ -68,7 +68,7 @@ class TemplatesController extends AppController {
         $templates = $this->getTableLocator()->get('Templates');
 //        $templates->updateAll((['status' => 'DELETED']), 'true');
 //        $templates->updateAll((['active' => 0]), 'true');
-        debug($templatelist);
+    //    debug($templatelist);
         if (isset($templatelist['data'])) {
             foreach ($templatelist['data'] as $key => $val) {
                 $info = TableRegistry::get('Templates')

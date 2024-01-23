@@ -656,7 +656,7 @@ class ApisController extends AppController {
 
         $msgArray = json_decode($rcvarray, true);
 
-        debug($msgArray);
+       // debug($msgArray);
 
         $apiTable = $this->getTableLocator()->get('ApiKeys');
         $apiKey = $apiTable->find()
@@ -664,9 +664,9 @@ class ApisController extends AppController {
                 ->first();
 
         $data['api_key'] = $apiKey['api_key'];
-        debug($data);
+      //  debug($data);
         $FBSettings = $this->_getFBsettings($data);
-        debug($FBSettings);
+       // debug($FBSettings);
         if ($FBSettings['status']['code'] !== 200) {
             $result['status'] = "failed";
             $result['msg'] = "Internal system error, Wrong IP info";

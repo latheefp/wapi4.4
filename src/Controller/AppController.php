@@ -532,10 +532,10 @@ class AppController extends Controller
             if ($table->save($row)) {
                 //                debug("Saved");
             } else {
-                debug($row->getError);
+          //      debug($row->getError);
             }
         } else {
-            debug("nothign found");
+           // debug("nothign found");
         }
     }
 
@@ -713,7 +713,7 @@ class AppController extends Controller
                 //    debug("Message type is send");
                 $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
                 $cost['cost'] = round($cost['cost'], 2);
-                $row->cost = $cost['cost'];
+                $row->costed = $cost['cost'];
                 if ($StreamsTable->save($row)) {
                     $result = $this->_updatebalance($row->account_id, $cost['cost']);
                     // debug($cost);
@@ -827,8 +827,8 @@ class AppController extends Controller
             $connection->commit();
         } catch (\Exception $e) {
             $result['status'] = 10;
-            debug($e);
-            debug("Rolling back");
+        //    debug($e);
+         //   debug("Rolling back");
             // Rollback the transaction in case of an error
             $connection->rollback();
             // Handle the error appropriately
