@@ -6,7 +6,8 @@ FROM php:8.1.18-apache
 # Set the COMPOSER_ALLOW_SUPERUSER environment variable
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-
+# Set PHP memory limit to 2G
+RUN echo "memory_limit=2G" > /usr/local/etc/php/conf.d/memory-limit.ini
 
 # Set an environment variable with the build date
 ARG BUILD_DATE
