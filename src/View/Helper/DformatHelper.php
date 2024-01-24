@@ -56,7 +56,13 @@ class DformatHelper extends Helper {
                 if (!empty($odata)) {
                     $result = $odata->format('Y-m-d');
                 }
+                
                 break;
+                case "N2Month":
+                    if (!empty($odata)) {
+                        $result =  date('F', mktime(0, 0, 0, $odata, 1));
+                    }
+                    break;    
             default:
                 $result = $option['data'];
         }
