@@ -140,7 +140,7 @@ class JobsController extends AppController
     {
         $retun=[];
         $form_data = json_decode($sendQrecord->form_data, true);
-     //  debug($form_data['stream_id']);
+       debug($form_data);
         
        
 
@@ -188,17 +188,21 @@ class JobsController extends AppController
                         $payload['body'] = $message[$type]['body'];
                         break;
                     case "location":
+                        $payload = $message[$type];
                         break;
                     case "sticker":
+                        $payload = $message[$type];
                         break;
                     case "interactive":
+                        $payload = $message[$type];
                         break;
                     case "audio":
                         $payload['id'] = $message[$type]['id'];
                     case "reaction":
-                       
+                        $payload = $message[$type];
                         break;
                     case "contacts":
+                        $payload = $message[$type];
     
                         break;
                 }
