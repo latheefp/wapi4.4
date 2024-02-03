@@ -609,94 +609,94 @@ class ApisController extends AppController {
         }
     }
 
-    function forwarder($id = null) {
+//     function forwarder($id = null) {
 
-        $rcvarray = '{
-            "object": "whatsapp_business_account",
-            "entry": [
-                {
-                    "id": "118818951179553",
-                    "changes": [
-                        {
-                            "value": {
-                                "messaging_product": "whatsapp",
-                                "metadata": {
-                                    "display_phone_number": "914952223307",
-                                    "phone_number_id": "103908902684969"
-                                },
-                                "contacts": [
-                                    {
-                                        "profile": {
-                                            "name": "latheef"
-                                        },
-                                        "wa_id": "966547237272"
-                                    }
-                                ],
-                                "messages": [
-                                    {
-                                        "from": "966547237272",
-                                        "id": "wamid.HBgMOTY2NTQ3MjM3MjcyFQIAEhgUM0FGMUJDOUNFRkU5N0Q5NDdGODUA",
-                                        "timestamp": "1695097923",
-                                        "type": "image",
-                                        "image": {
-                                            "caption": "Test",
-                                            "mime_type": "image\/jpeg",
-                                            "sha256": "tmc9iTQY\/5DBP7fSter0vHkb4X\/admSPEObydgruIyI=",
-                                            "id": "1286862582033925"
-                                        }
-                                    }
-                                ] 
-                            },
-                            "field": "messages"
-                        }
-                    ]
-                }
-            ]
-        }';
+//         $rcvarray = '{
+//             "object": "whatsapp_business_account",
+//             "entry": [
+//                 {
+//                     "id": "118818951179553",
+//                     "changes": [
+//                         {
+//                             "value": {
+//                                 "messaging_product": "whatsapp",
+//                                 "metadata": {
+//                                     "display_phone_number": "914952223307",
+//                                     "phone_number_id": "103908902684969"
+//                                 },
+//                                 "contacts": [
+//                                     {
+//                                         "profile": {
+//                                             "name": "latheef"
+//                                         },
+//                                         "wa_id": "966547237272"
+//                                     }
+//                                 ],
+//                                 "messages": [
+//                                     {
+//                                         "from": "966547237272",
+//                                         "id": "wamid.HBgMOTY2NTQ3MjM3MjcyFQIAEhgUM0FGMUJDOUNFRkU5N0Q5NDdGODUA",
+//                                         "timestamp": "1695097923",
+//                                         "type": "image",
+//                                         "image": {
+//                                             "caption": "Test",
+//                                             "mime_type": "image\/jpeg",
+//                                             "sha256": "tmc9iTQY\/5DBP7fSter0vHkb4X\/admSPEObydgruIyI=",
+//                                             "id": "1286862582033925"
+//                                         }
+//                                     }
+//                                 ] 
+//                             },
+//                             "field": "messages"
+//                         }
+//                     ]
+//                 }
+//             ]
+//         }';
 
-        $msgArray = json_decode($rcvarray, true);
+//         $msgArray = json_decode($rcvarray, true);
 
-       // debug($msgArray);
+//        // debug($msgArray);
 
-        $apiTable = $this->getTableLocator()->get('ApiKeys');
-        $apiKey = $apiTable->find()
-                ->where(['account_id' => $this->getMyAccountID(), 'enabled' => true])
-                ->first();
+//         $apiTable = $this->getTableLocator()->get('ApiKeys');
+//         $apiKey = $apiTable->find()
+//                 ->where(['account_id' => $this->getMyAccountID(), 'enabled' => true])
+//                 ->first();
 
-        $data['api_key'] = $apiKey['api_key'];
-      //  debug($data);
-        $FBSettings = $this->_getFBsettings($data);
-       // debug($FBSettings);
-        if ($FBSettings['status']['code'] !== 200) {
-            $result['status'] = "failed";
-            $result['msg'] = "Internal system error, Wrong IP info";
-        } else {
-            //  $contactStream = $this->getTableLocator()->get('ContactStreams')->get($data['mobilenumberId']);
-            $streams_table = $this->getTableLocator()->get('Streams');
-            $streamrow = $streams_table->newEmptyEntity();
-//            $streamrow->schedule_id = $sched_id;
-            $streamrow->contact_stream_id = $data['mobilenumberId']; //
-            $streamrow->initiator = "Console";
-            $streamrow->type = "Console";
-            $streamrow->postdata = json_encode($data);
-            $streamrow->account_id = $FBSettings['account_id'];
-            $streams_table->save($streamrow);
-            $contact = $streams_table->get($streamrow->id);
-//            $result = $this->_despatch_msg($contact, $data, null, $FBSettings, "text");
-            //debug($result);
-            if (isset($result['messages'][0]['id'])) {
-                $status['status'] = "success";
-                $status['msg'] = json_encode($result);
-            } else {
-                $status['status'] = "failed";
-                $status['msg'] = json_encode($result);
-            }
-            $this->set('result', $status);
-        }
-
-
+//         $data['api_key'] = $apiKey['api_key'];
+//       //  debug($data);
+//         $FBSettings = $this->_getFBsettings($data);
+//        // debug($FBSettings);
+//         if ($FBSettings['status']['code'] !== 200) {
+//             $result['status'] = "failed";
+//             $result['msg'] = "Internal system error, Wrong IP info";
+//         } else {
+//             //  $contactStream = $this->getTableLocator()->get('ContactStreams')->get($data['mobilenumberId']);
+//             $streams_table = $this->getTableLocator()->get('Streams');
+//             $streamrow = $streams_table->newEmptyEntity();
+// //            $streamrow->schedule_id = $sched_id;
+//             $streamrow->contact_stream_id = $data['mobilenumberId']; //
+//             $streamrow->initiator = "Console";
+//             $streamrow->type = "Console";
+//             $streamrow->postdata = json_encode($data);
+//             $streamrow->account_id = $FBSettings['account_id'];
+//             $streams_table->save($streamrow);
+//             $contact = $streams_table->get($streamrow->id);
+// //            $result = $this->_despatch_msg($contact, $data, null, $FBSettings, "text");
+//             //debug($result);
+//             if (isset($result['messages'][0]['id'])) {
+//                 $status['status'] = "success";
+//                 $status['msg'] = json_encode($result);
+//             } else {
+//                 $status['status'] = "failed";
+//                 $status['msg'] = json_encode($result);
+//             }
+//             $this->set('result', $status);
+//         }
 
 
-// Now, $msgArray contains the JSON data as a PHP array
-    }
+
+
+// // Now, $msgArray contains the JSON data as a PHP array
+//     }
 }

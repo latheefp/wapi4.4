@@ -923,9 +923,6 @@ class CampaignsController extends AppController {
         $stream = $this->getTableLocator()->get('Streams')->find()->where(['id' => $id])->first();
         $data['account_id'] = $stream->account_id;
         $FBSettings = $this->_getFBsettings($data);
-//        debug($FBSettings);
-        // debug($stream);
-
         $this->writelog($id, "Resending MSG");
         $curl = curl_init();
         curl_setopt_array($curl, array(
@@ -1041,6 +1038,31 @@ class CampaignsController extends AppController {
         $streamtable = $this->getTableLocator()->get('Streams');
         $row = $streamtable->get($stream_id);
      //   debug($row);
+    }
+
+    
+
+    function forwarderq($stream_id) {
+        $this->viewBuilder()->setLayout('ajax');
+        $sendQData['mobile_number']=$this->getMyMobileNumber();
+        $sendQData['type']="forward";
+        $sendQData['api_key']=$this->getMyAPIKey($this->getMyAccountID());
+        $sendQData['stream_id']=$stream_id;
+        $sendQ = $this->getTableLocator()->get('SendQueues');
+        $sendQrow = $sendQ->newEmptyEntity();
+        $sendQrow->form_data = json_encode($sendQData);
+        $sendQrow->status = "queued";
+        $sendQrow->type = "forward";
+        $result=[];
+        if($sendQ->save($sendQrow)){
+            $result['status']="success";
+            $result['msg']="Message queued for delivery, $sendQrow->id";
+        }else{
+            $result['status']="failed";
+            $result['msg']="Failed to forward";
+        }
+
+        $this->set('result',$result);
     }
 
 }

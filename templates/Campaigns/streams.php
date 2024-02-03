@@ -12,7 +12,7 @@ $this->Breadcrumbs->add([
             <?php
             foreach ($feildsType as $key => $val) {
                 if ($val['viewable'] == true) {
-//                             print '<th>'.$key.'</th>';
+                    //                             print '<th>'.$key.'</th>';
                     print '<th>' . $val['title'] . '</th>';
                 }
             }
@@ -26,7 +26,7 @@ $this->Breadcrumbs->add([
 </table>
 
 
-<div class="modal fade bs-example-modal-lg table-responsive" id="contactmodel"  tabindex="-1" role="dialog"  aria-hidden="true">
+<div class="modal fade bs-example-modal-lg table-responsive" id="contactmodel" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -46,18 +46,19 @@ $this->Breadcrumbs->add([
                             <div class="card-body">
                                 <?php
                                 $products = null;
-                                echo $this->Form->create($products,
-                                        [
-                                            'type' => 'post',
-                                            'class' => 'form-horizontal',
-                                            'url' => '/compaigns/newcamp',
-                                            'idPrefix' => 'newcontactlist',
-                                            'id' => 'newcampform',
-                                            'defaction' => null,
-                                            'class' => ["form-horizontal", "needs-validation"],
-                                            "novalidate",
-                                            'enctype' => 'multipart/form-data'
-                                        ]
+                                echo $this->Form->create(
+                                    $products,
+                                    [
+                                        'type' => 'post',
+                                        'class' => 'form-horizontal',
+                                        'url' => '/compaigns/newcamp',
+                                        'idPrefix' => 'newcontactlist',
+                                        'id' => 'newcampform',
+                                        'defaction' => null,
+                                        'class' => ["form-horizontal", "needs-validation"],
+                                        "novalidate",
+                                        'enctype' => 'multipart/form-data'
+                                    ]
                                 );
                                 ?>
                                 <div class="row ">
@@ -66,7 +67,7 @@ $this->Breadcrumbs->add([
                                             <label>Campaign Name *</label>
                                             <input type="text" class="form-control" name="campaign_name" id="campaign_name" required="" placeholder="Campaign Name">
                                         </div>
-                                        <div tabindex="1" class="form-group  datepicker col-xl-12  " >
+                                        <div tabindex="1" class="form-group  datepicker col-xl-12  ">
                                             <label>Start Date *</label>
                                             <input type="text" class="form-control  " name="start_date" id="start_date" required="" placeholder="Start Date">
                                             <div class="input-group-addon">
@@ -78,7 +79,7 @@ $this->Breadcrumbs->add([
                                     <div class="col-md-6 col-xl-6 col-sm-12">
                                         <div class="form-group">
                                             <label>Template </label>
-                                            <select class="form-control select2bs4 "  maxlength="12"  minlength="12"  required="" name="template_id" id="template_id"  tabindex="-1" aria-hidden="true">
+                                            <select class="form-control select2bs4 " maxlength="12" minlength="12" required="" name="template_id" id="template_id" tabindex="-1" aria-hidden="true">
                                                 <?php
                                                 $template_id = null;
                                                 if (isset($data['template_id'])) {
@@ -94,7 +95,7 @@ $this->Breadcrumbs->add([
                                                 ?>
                                             </select>
                                         </div>
-                                        <div class="form-group  datepicker" >
+                                        <div class="form-group  datepicker">
                                             <label>End Date *</label>
                                             <input type="text" class="form-control  " name="end_date" id="end_date" required="" placeholder="End Date">
                                             <div class="input-group-addon ">
@@ -106,7 +107,7 @@ $this->Breadcrumbs->add([
                                 <?php echo $this->Form->end() ?>
                                 <form method="post" enctype="multipart/form-data" accept-charset="utf-8" class="form-horizontal needs-validation" id="varform">
                                     <div class="row">
-                                        <div id="variables" class="col-md-12 col-sm-12" >
+                                        <div id="variables" class="col-md-12 col-sm-12">
 
 
                                         </div>
@@ -118,7 +119,7 @@ $this->Breadcrumbs->add([
                                             <button type="button" name="submit" id="newcamp-btn" class="btn btn-primary waves-effect waves-light mr-1">
                                                 Submit
                                             </button>
-                                            <button type="button"  data-dismiss="modal" id="cancle-btn" class="btn btn-secondary waves-effect">
+                                            <button type="button" data-dismiss="modal" id="cancle-btn" class="btn btn-secondary waves-effect">
                                                 Cancel
                                             </button>
                                         </div>
@@ -137,23 +138,22 @@ $this->Breadcrumbs->add([
         <!-- /.modal-content -->
     </div>
     <!-- /.modal-dialog -->
-</div>  
+</div>
 
 <?php $this->Html->scriptStart(['block' => true]); ?>
 //<script>
-
-    $(function () {
+    $(function() {
 
 
         var table = $('#tablecampaign').DataTable({
             "ajax": {
                 "url": "/campaigns/getstreams",
                 "type": "POST",
-                beforeSend: function (xhr) { // Add this line
+                beforeSend: function(xhr) { // Add this line
                     xhr.setRequestHeader('X-CSRF-Token', csrfToken);
                 },
             },
-            "createdRow": function (row, data, dataIndex) {
+            "createdRow": function(row, data, dataIndex) {
                 //   console.log(data.Type);
                 if (data.Type == "receive") {
                     $(row).addClass('table-primary');
@@ -173,16 +173,20 @@ $this->Breadcrumbs->add([
             },
             //        lengthChange: false,        
             "stateSave": true,
-            "lengthMenu": [[5, 10, 15, 25, 50, 100], [5, 10, 15, 25, 50, 100]],
+            "lengthMenu": [
+                [5, 10, 15, 25, 50, 100],
+                [5, 10, 15, 25, 50, 100]
+            ],
             "processing": true,
             "serverSide": true,
             "pageLength": <?php print $PageLength; ?>,
             scrollX: "300px",
-            order: [[0, 'desc']],
+            order: [
+                [0, 'desc']
+            ],
             scrollCollapse: true,
-//            select: true,
-            "columns": [
-                {
+            //            select: true,
+            "columns": [{
                     className: 'dt-control',
                     searchable: false,
                     orderable: false,
@@ -190,24 +194,86 @@ $this->Breadcrumbs->add([
                     data: null,
                     defaultContent: ''
                 },
-    <?php
-    foreach ($feildsType as $key => $val) {
-        if ($val['viewable'] == true) {
-            if ($val['searchable'] == 1) {
-                $searchable = "true";
-            } else {
-                $searchable = "false";
-            }
-            print '{"data":"' . $val['title'] . '", "name":"' . $val['fld_name'] . '", "width":"' . $val['width'] . '%",' . '"searchable":' . $searchable . '},' . "\n";
-        }
-    }
-    ?>
+                <?php
+                foreach ($feildsType as $key => $val) {
+                    if ($val['viewable'] == true) {
+                        if ($val['searchable'] == 1) {
+                            $searchable = "true";
+                        } else {
+                            $searchable = "false";
+                        }
+                        print '{"data":"' . $val['title'] . '", "name":"' . $val['fld_name'] . '", "width":"' . $val['width'] . '%",' . '"searchable":' . $searchable . '},' . "\n";
+                    }
+                }
+                ?>
 
             ],
         }); //End of dT.
 
+
+
+
+        new $.fn.dataTable.Buttons(table, [
+
+            {
+                text: '<i class="fas fa-eye-slash"></i>',
+                className: 'btn btn-info btn-sm',
+                titleAttr: 'Show only Recive',
+                action: function(e, dt, node, config) {
+                    togglercv();
+                },
+                enabled: true
+            },
+            {
+                text: '<i class="far fa-share-square"></i>',
+                className: 'btn btn-info btn-sm',
+                titleAttr: 'Forward Me',
+                action: function(e, dt, node, config) {
+                    forwardme();
+                },
+                enabled: false
+            },
+            {
+                text: '<i class="fas fa-share-square"></i>',
+                className: 'btn btn-info btn-sm',
+                titleAttr: 'Forward to',
+                action: function(e, dt, node, config) {
+                    forwardany();
+                },
+                enabled: false
+            }
+
+
+        ]);
+        table.buttons().container()
+            .appendTo($('.col-md-6:eq(0)', table.table().container()));
+
+
+
+        
+            // var table = $('#tableschedule').DataTable();
+                $('#tablecampaign tbody').on('click', 'tr', function() {
+                    if ($(this).hasClass('selected')) {
+                        $(this).removeClass('selected');
+                        table.button(1).disable();
+                        table.button(2).disable();
+                    } else {
+                        table.$('tr.selected').removeClass('selected');
+                        $(this).addClass('selected');
+                        table.button(1).enable();
+                        table.button(2).enable();
+                        //    loaddetails();
+
+                    }
+                });
+
+    
+
+
+
+
         var table = $('#tablecampaign').DataTable();
-        $('#tabletemplates tbody').on('click', 'tr', function () {
+        $('#tabletemplates tbody').on('click', 'tr', function() {
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected');
             } else {
@@ -216,35 +282,35 @@ $this->Breadcrumbs->add([
             }
         });
 
-        $(document).on('click', '.resendmsg', function () {
+        $(document).on('click', '.resendmsg', function() {
             var table = $('#tablecampaign').DataTable();
             var tr = $(this).closest('tr')
             var rowid = table.row(tr).id();
             $.ajax({
-                url: "/campaigns/resend/" + rowid,
-                method: "GET"
-            })
-                    .done(function (data) {
+                    url: "/campaigns/resend/" + rowid,
+                    method: "GET"
+                })
+                .done(function(data) {
 
 
-                        var obj = JSON.parse(data);
-                        var status = obj.status;
-                        var msg = obj.msg;
-                        if (status == "success") {
-                            var table = $('#tablecampaign').DataTable();
-                            table.ajax.reload('null', false);
-                            toastr.success("Message has been resent");
-                        } else {
-                            toastr.error(msg);
-                        }
+                    var obj = JSON.parse(data);
+                    var status = obj.status;
+                    var msg = obj.msg;
+                    if (status == "success") {
+                        var table = $('#tablecampaign').DataTable();
+                        table.ajax.reload('null', false);
+                        toastr.success("Message has been resent");
+                    } else {
+                        toastr.error(msg);
+                    }
 
-                    });
+                });
 
         });
 
 
 
-        $('#tablecampaign tbody').on('click', 'td.dt-control', function () {
+        $('#tablecampaign tbody').on('click', 'td.dt-control', function() {
             var tr = $(this).closest('tr');
             var row = table.row(tr);
             // console.log(row);
@@ -264,22 +330,56 @@ $this->Breadcrumbs->add([
     }); //end of DR.
 
 
+    function togglercv(){
+
+
+    }
+
+
+    function forwardme() {
+                    var table = $('#tablecampaign').DataTable();
+                    var id = table.row('.selected').id();
+                    $.ajax({
+                        beforeSend: function(xhr) { // Add this line
+                            xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+                        },
+                        url: "/campaigns/forwarderq/" + id,
+                        method: "GET",
+                        success: function(data) {
+                            var obj = JSON.parse(data);
+                            var status = obj.status;
+                            var msg = obj.msg;
+                            if (status == "success") {
+                                toastr.success(msg);
+                              
+                            } else {
+                                toastr.error(msg);
+                            }
+                        }
+                    })
+            }
+
+    function forwardany(){
+
+    }
+
+
     function format(rowData) {
         var div = $('<div/>')
-                .addClass('loading')
-                .text('Loading...');
+            .addClass('loading')
+            .text('Loading...');
         //   console.log(rowData);
         $.ajax({
             url: '/campaigns/getstreamdetails/' + rowData.DT_RowId,
-//                        data: {
-//                            id: rowData.DT_RowId
-//                        },
+            //                        data: {
+            //                            id: rowData.DT_RowId
+            //                        },
             //  dataType: 'json',
-            success: function (json) {
+            success: function(json) {
                 //   console.log(json);
                 div
-                        .html(json)
-                        .removeClass('loading');
+                    .html(json)
+                    .removeClass('loading');
             }
         });
 
@@ -297,16 +397,16 @@ $this->Breadcrumbs->add([
                 stream_id: id,
                 comment: updateText
             },
-            beforeSend: function (xhr) { // Add this line
+            beforeSend: function(xhr) { // Add this line
                 xhr.setRequestHeader('X-CSRF-Token', csrfToken);
             },
-            success: function (response) {
+            success: function(response) {
                 // Display toaster notification
                 toastr.success("Update successful!");
 
 
 
-                response.data.forEach(function (commentData) {
+                response.data.forEach(function(commentData) {
                     var commentHtml = `
                     <div class="comment">
                         <div class="comment-header">
@@ -318,7 +418,7 @@ $this->Breadcrumbs->add([
                         </div>
                     </div>
                 `;
-                    $('.comment-section-'+commentData.stream_id).append(commentHtml);
+                    $('.comment-section-' + commentData.stream_id).append(commentHtml);
                 });
 
 
@@ -329,7 +429,7 @@ $this->Breadcrumbs->add([
                 // Call a function to load and append the latest data
                 //  loadAndAppendLatestData();
             },
-            error: function (xhr, status, error) {
+            error: function(xhr, status, error) {
                 // Display error toaster notification
                 toastr.error("Update failed: " + error);
             }
@@ -339,4 +439,3 @@ $this->Breadcrumbs->add([
 
 
     <?php $this->Html->scriptEnd(); ?>
-    

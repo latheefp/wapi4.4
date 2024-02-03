@@ -15,6 +15,7 @@ use Cake\Event\Event;
 //use Cake\Datasource\ConnectionManager;
 //use Cake\Cache\Cache;
 use Cake\ORM\Query;
+use Twig\TokenParser\EmbedTokenParser;
 
 class TestsController extends AppController
 {
@@ -425,5 +426,156 @@ class TestsController extends AppController
     } else {
         debug("Save Success");
     }
+    }
+
+
+    function forwarderQ($mobile_number="00966547237272", $stream_id = 170176) {
+        $sendQData['mobile_number']=$mobile_number;
+        $sendQData['type']="forward";
+        $sendQData['api_key']=$this->getMyAPIKey($this->getMyAccountID());
+        $sendQData['stream_id']=stream_id;
+        $sendQ = $this->getTableLocator()->get('SendQueues');
+        $sendQrow = $sendQ->newEmptyEntity();
+        $sendQrow->form_data = json_encode($sendQData);
+        $sendQrow->status = "queued";
+        $result=[];
+        if($sendQ->save($sendQrow)){
+            $result['status']="success";
+            $result['msg']="Message queued for delivery, $sendQrow->id";
+        }else{
+            $result['status']="failed";
+            $result['msg']="Failed to forward";
+
+        }
+
+        $this->set('result',$result);
+    }
+
+
+    function printmobile(){
+        debug($this->getMyMobileNumber());
+    }
+
+
+    function forwarder($mobile_number="00966547237272", $id = 170176) {
+
+        $streams=$this->getTableLocator()->get('Streams')->get($id);
+     //   debug($streams->recievearray);
+        $msgArray = json_decode($streams->recievearray, true);
+
+        $message=$msgArray['entry'][0]['changes'][0]['value']['messages'][0];
+
+        if(empty($message)){
+            debug ("Error: empty message");
+            return false;
+        }
+
+        $sendarrayJson='{
+            "to": "966547237272",
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual"
+        }';
+
+
+        $sendarray = json_decode($sendarrayJson, true);
+        $type=$message['type'];
+        $sendarray['type']=$type;
+        $sendarray['api_key']=$this->getMyAPIKey($this->getMyAccountID());
+        $sendarray['mobile_number']=$mobile_number;
+        
+        $payload=[];
+
+        switch ($type) {
+            case "image":
+               $payload['id']=$message[$type]['id'];
+                break;
+            case "document":
+                 $payload['id']=$message[$type]['id'];
+                break;
+            case "video":
+                $payload['id']=$message[$type]['id'];
+                break;
+            case "text":
+                $payload['body']=$message[$type]['body'];
+                break;
+            case "location":
+                $result = $result . "https://maps.google.com/?q=" . $val['location']['latitude'] . "," . $val['location']['longitude'];
+                break;
+            case "sticker":
+                $result = $result . '<img  width="512" height="512" src="/campaigns/viewrcvImage?fileid=' . $val['sticker']['id'] . '&type=' . $val['sticker']['mime_type'] . '&id=' . $data['id'] . '">';
+                break;
+            case "interactive":
+                $result = $result . "Interactive Reply:" . $val['interactive']['list_reply']['title'] . ":" . $val['interactive']['list_reply']['description'];
+                break;
+            case "audio":
+                $result = $result . '<div class="audio-message"><div class="audio-player"><audio id="audioPlayer" controls>';
+                $result = $result . '<source src="/campaigns/viewrcvImage?fileid=' . $val['audio']['id'] . '&type=' . $val['audio']['mime_type'] . '&id=' . $data['id'] . '" type="audio/mpeg">';
+                $result = $result . 'Your browser does not support the audio element.</audio></div>';
+                $result = $result . '<div class="play-button"> <button id="playButton" onclick="togglePlayback()"></button> </div> </div>';
+                break;
+            case "reaction":
+                $result = $result . "Reaction:" . $val['reaction']['emoji'];
+                break;
+            case "contacts":
+                $i = 0;
+                $result = $result . ' <div class="container"><div class="table-responsive">';
+                foreach ($val['contacts'] as $ckey => $cval) {
+                    $i++;
+                    $result = $result . "<h4>Shared Contact: $i </h4><table class='table table-boarderd col-md-6'>";
+                    if (isset($cval['name']['first_name'])) {
+                        $result = $result . "<tr><td><b>First Name</b></td><td>" . $cval['name']['first_name'] . "</td></tr>";
+                    }
+
+                    if (isset($cval['org']['company'])) {
+                        $result = $result . "<tr><td><b>Organization</b></td><td>" . $cval['org']['company'] . "</td></tr>";
+                    }
+
+
+                    $result = $result . "<tr><td><b>Last Name</b></td><td>" . $cval['name']['last_name'] . "</td></tr>";
+                    $result = $result . "<tr><td><b>Formated Name</b></td><td>" . $cval['name']['formatted_name'] . "</td></tr>";
+
+                    foreach ($cval['phones'] as $key => $val) {
+                        $result = $result . "<tr><td><b>" . $val['type'] . "</b></td><td>" . $val['phone'] . "</td></tr>";
+                    }
+                    $result = $result . "</table>";
+                    $result = $result . "<br>";
+                }
+                $result = $result . "</div></div>";
+
+                break;
+        }
+
+        $sendarray[$type]=$payload;
+
+        debug($message);
+        debug($sendarray);
+
+
+
+        
+
+
+
+
+
+    //     $data['account_id'] = $this->getMyAccountID();
+    //   //  debug($data);
+    //     $FBSettings = $this->_getFBsettings($data);
+    //     debug($FBSettings);
+    //     if ($FBSettings['status']['code'] !== 200) {
+    //         $result['status'] = "failed";
+    //         $result['msg'] = "Internal system error, Wrong IP info";
+    //     } else {
+           
+
+    //     }
+
+
+
+
+
+
+
+// Now, $msgArray contains the JSON data as a PHP array
     }
 }

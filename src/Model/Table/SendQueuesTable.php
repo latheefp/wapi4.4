@@ -66,12 +66,22 @@ class SendQueuesTable extends Table
             ->notEmptyString('status');
 
         $validator
-            ->dateTime('process_start_time')
-            ->allowEmptyDateTime('process_start_time');
+            ->scalar('type')
+            ->maxLength('type', 15)
+            ->notEmptyString('type');
 
         $validator
             ->boolean('processed')
             ->notEmptyString('processed');
+
+        $validator
+            ->dateTime('process_start_time')
+            ->allowEmptyDateTime('process_start_time');
+
+        $validator
+            ->scalar('http_response_code')
+            ->maxLength('http_response_code', 3)
+            ->notEmptyString('http_response_code');
 
         return $validator;
     }

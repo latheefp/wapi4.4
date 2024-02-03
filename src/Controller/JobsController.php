@@ -92,16 +92,22 @@ class JobsController extends AppController
                     $this->set('response', $response);
                     return;
                 }
+                if($sendQrecord->type = "forward"){
+                    $return = $this->_forwardmsg($sendQrecord, $FBSettings);
+                    debug($return);
+                }else{
+                    $return = $this->_send_schedule($qid, $FBSettings);
+
+                }
 
 
-                $return = $this->_send_schedule($qid, $FBSettings);
-
+               
                 if (isset($return['result']['error'])) {
                     // debug($return);
                     $this->_update_http_code($qid, '403', $type); //forbidden
                     $this->response = $this->response->withStatus(403); // forbidden
                     $response['success'] = 'Failed';
-                } elseif ($return['result']['messages'][0]['message_status'] == "accepted") {
+                } elseif (isset($return['result']['messages'][0]['id'])) {
                     //  debug($return);
                     $this->_update_http_code($qid, '200', $type); //success
                     $this->_update_http_code($qid, '200', $type);  //success
@@ -129,6 +135,109 @@ class JobsController extends AppController
         //      debug($return);
         $this->set('response', $return['result']);
     }
+
+    function _forwardmsg($sendQrecord, $FBsettings)
+    {
+        $retun=[];
+        $form_data = json_decode($sendQrecord->form_data, true);
+     //  debug($form_data['stream_id']);
+        
+       
+
+        $streamsTable = $this->getTableLocator()->get('Streams');
+        if ($streamsTable->exists(['id' => $form_data['stream_id']])) {
+            $streams = $streamsTable->get($form_data['stream_id']);
+        } else {
+            $return['result']['error'] = "Invalid mobile stream id.";
+            return $return;
+        }
+        debug($streams);
+
+        switch ($streams->type) {
+            case "send":
+                debug("Send");
+                $msgArray = json_decode($streams->sendarray, true);
+                break;
+            case "receive":
+                debug("Recieve");
+                $msgArray = json_decode($streams->recievearray, true);
+                $message = $msgArray['entry'][0]['changes'][0]['value']['messages'][0];
+                $sendarrayJson = '{
+                    "to": "966547237272",
+                    "messaging_product": "whatsapp",
+                    "recipient_type": "individual"
+                }';
+                $sendarray = json_decode($sendarrayJson, true);
+                debug($message);
+                $type = $message['type'];
+                $sendarray['type'] = $type;
+                $sendarray['mobile_number'] = $form_data['mobile_number'];
+                $payload = [];
+                debug($sendarray);
+                switch ($type) {
+                    case "image":
+                        $payload['id'] = $message[$type]['id'];
+                        break;
+                    case "document":
+                        $payload['id'] = $message[$type]['id'];
+                        break;
+                    case "video":
+                        $payload['id'] = $message[$type]['id'];
+                        break;
+                    case "text":
+                        $payload['body'] = $message[$type]['body'];
+                        break;
+                    case "location":
+                        break;
+                    case "sticker":
+                        break;
+                    case "interactive":
+                        break;
+                    case "audio":
+                        $payload['id'] = $message[$type]['id'];
+                    case "reaction":
+                       
+                        break;
+                    case "contacts":
+    
+                        break;
+                }
+                $sendarray[$type] = $payload;
+                debug($sendarray);
+                break;
+        }
+
+        debug($FBsettings);
+        $streams_table = $this->getTableLocator()->get('Streams');
+        $streamrow = $streams_table->newEmptyEntity();
+     //   $streamrow->schedule_id = $sched_id;
+        $streamrow->contact_stream_id = $this->getWastreamsContactId( $form_data['mobile_number'], $FBsettings);
+        $streamrow->initiator = "API";
+        $streamrow->type = "forward";
+        $streamrow->postdata = json_encode($sendarray);
+        $streamrow->account_id = $FBsettings['account_id'];
+        if (!$streams_table->save($streamrow)) {
+            debug($streamrow);
+            debug($streamrow->getErrors()); // Print save errors
+            $return['result']['error'] = "Failed to upate streams";
+            return $return;
+        }
+
+        debug($streamrow->id);
+        $contact = $streams_table->get($streamrow->id);
+        $templateQuery=[];
+        $return['result'] = $this->_despatch_msg($contact, $sendarray, $templateQuery, $FBsettings,$type="forward");
+        debug($return);
+        return $return;
+        
+       
+    }
+
+    function forwardrcv(){
+
+    }
+
+    
 
     function _update_http_code($qid, $code, $type)
     {
@@ -187,6 +296,7 @@ class JobsController extends AppController
         }
 
 
+
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
         $schedTable = $this->getTableLocator()->get('Schedules');
         $schedQuery = $schedTable->find()
@@ -235,13 +345,10 @@ class JobsController extends AppController
             $formarray = [];
 
             foreach ($CampaignForm as $key => $val) {
-               
                 $newval = array();
                 $vararray = explode('-', $val['field_name']);
                 $newval['field_name'] = $val->field_name;
                 $newval['field_value'] = $val->field_value;
-                // debug($vararray);
-                // debug($data);
                 switch ($vararray[0]) {
                     case "file":
                         if (isset($data['media_id'])) {
@@ -261,26 +368,15 @@ class JobsController extends AppController
                         break;
                     case "button":
                         $newvar = "button-var";
-                      //  debug($data[$newvar]);
                         if (isset($data[$newvar])) {
-                        //    debug($newvar);
                             $newval['field_value'] = $data[$newvar];
                         }
                         break;
                 }
-            //    debug($newval);
                 $formarray[] = $newval;
             }
-
-         //   debug($formarray);
-
-            //Check for Botton variables:
-            // if (isset($data['button_var'])) {
-            //     $formarray[] = array('field_value' => $data['button_var'], 'field_name' => 'button-var');
-            // }
             $return['result'] = $this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings);
             return $return;
-            // debug($result);
         }
     }
 

@@ -271,10 +271,6 @@ class AppController extends Controller
 
     function _despatch_msg($contact, $form, $templateQuery, $FBSettings, $type = "template")
     {
-        //        debug("Despatching");
-        //  debug($contact);
-
-        //       debug($FBSettings);
         switch ($type) {
             case "template":
                 $this->writelog($contact, "Despatching message, Contact");
@@ -397,6 +393,10 @@ class AppController extends Controller
                 $sendarray['text']['body'] = $form['message'];
 
                 break;
+            case "forward":
+                $sendarray=$form;
+                
+                break;
         }
 
     //    debug($sendarray);
@@ -426,7 +426,7 @@ class AppController extends Controller
         $table = $this->getTableLocator()->get('Streams');
         $row = $table->get($contact->id);
         // debug($row);
-        //  debug($response);
+          debug($response);
         if (isset($response['messages'][0]['id'])) {
             $row->messageid = $response['messages'][0]['id'];
             $row->type = "send";
@@ -1009,6 +1009,23 @@ class AppController extends Controller
             return false;
         } else {
             return $apiquery->api_key;
+        }
+    }
+
+    public function getMyMobileNumber($user_id = null)
+    {
+        if (!isset($user_id)) {
+            $user_id = $this->getMyUID();
+        }
+      //  debug($user_id);
+        $table = $this->getTableLocator()->get('Users');
+        $userquery = $table->find()
+            ->where(['id' => $user_id, 'active' => true])
+            ->first();
+        if (empty($userquery)) {
+            return false;
+        } else {
+            return $userquery->mobile_number;
         }
     }
 }

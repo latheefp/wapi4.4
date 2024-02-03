@@ -12,8 +12,10 @@ use Cake\ORM\Entity;
  * @property string $form_data
  * @property \Cake\I18n\FrozenTime $created
  * @property string $status
- * @property \Cake\I18n\FrozenTime|null $process_start_time
+ * @property string $type
  * @property bool $processed
+ * @property \Cake\I18n\FrozenTime|null $process_start_time
+ * @property string $http_response_code
  */
 class SendQueue extends Entity
 {
@@ -30,7 +32,9 @@ class SendQueue extends Entity
         'form_data' => true,
         'created' => true,
         'status' => true,
-        'process_start_time' => true,
+        'type' => true,
         'processed' => true,
+        'process_start_time' => true,
+        'http_response_code' => true,
     ];
 }

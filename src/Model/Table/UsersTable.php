@@ -11,6 +11,7 @@ use Cake\Validation\Validator;
 /**
  * Users Model
  *
+ * @property \App\Model\Table\UgroupsTable&\Cake\ORM\Association\BelongsTo $Ugroups
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\HasMany $Accounts
  * @property \App\Model\Table\ApiKeysTable&\Cake\ORM\Association\HasMany $ApiKeys
@@ -19,6 +20,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\CampaignsTable&\Cake\ORM\Association\HasMany $Campaigns
  * @property \App\Model\Table\Campaigns-blockedTable&\Cake\ORM\Association\HasMany $Campaigns-blocked
  * @property \App\Model\Table\ContactsTable&\Cake\ORM\Association\HasMany $Contacts
+ * @property \App\Model\Table\GroupsUsersTable&\Cake\ORM\Association\HasMany $GroupsUsers
  * @property \App\Model\Table\PointNotificationsTable&\Cake\ORM\Association\HasMany $PointNotifications
  * @property \App\Model\Table\ScheduleViewsTable&\Cake\ORM\Association\HasMany $ScheduleViews
  * @property \App\Model\Table\SchedulesTable&\Cake\ORM\Association\HasMany $Schedules
@@ -84,9 +86,6 @@ class UsersTable extends Table
         $this->hasMany('Campaigns-blocked', [
             'foreignKey' => 'user_id',
         ]);
-        $this->hasMany('ContactNumbersViews', [
-            'foreignKey' => 'user_id',
-        ]);
         $this->hasMany('Contacts', [
             'foreignKey' => 'user_id',
         ]);
@@ -100,6 +99,9 @@ class UsersTable extends Table
             'foreignKey' => 'user_id',
         ]);
         $this->hasMany('Schedules', [
+            'foreignKey' => 'user_id',
+        ]);
+        $this->hasMany('StreamsUpdates', [
             'foreignKey' => 'user_id',
         ]);
         $this->hasMany('Uploads', [
@@ -116,16 +118,21 @@ class UsersTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->dateTime('last_logged')
             ->allowEmptyDateTime('last_logged');
 
         $validator
             ->boolean('show_closed')
             ->notEmptyString('show_closed');
+
+        $validator
+            ->scalar('ugroup_id')
+            ->maxLength('ugroup_id', 255)
+            ->notEmptyString('ugroup_id');
+
+        $validator
+            ->integer('account_id')
+            ->notEmptyString('account_id');
 
         $validator
             ->scalar('name')
@@ -153,7 +160,12 @@ class UsersTable extends Table
             ->add('email', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->integer('active')
+            ->scalar('mobile_number')
+            ->maxLength('mobile_number', 15)
+            ->allowEmptyString('mobile_number');
+
+        $validator
+            ->boolean('active')
             ->allowEmptyString('active');
 
         $validator
@@ -178,8 +190,8 @@ class UsersTable extends Table
     {
         $rules->add($rules->isUnique(['username']), ['errorField' => 'username']);
         $rules->add($rules->isUnique(['email']), ['errorField' => 'email']);
-        $rules->add($rules->existsIn(['ugroup_id'], 'Ugroups'), ['errorField' => 'ugroup_id']);
-        $rules->add($rules->existsIn(['account_id'], 'Accounts'), ['errorField' => 'account_id']);
+        $rules->add($rules->existsIn('ugroup_id', 'Ugroups'), ['errorField' => 'ugroup_id']);
+        $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
 
         return $rules;
     }
