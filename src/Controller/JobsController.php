@@ -200,13 +200,14 @@ class JobsController extends AppController
                         $payload = $message[$type];
                         break;
                     case "audio":
+                        debug("This is an audio");
                         $payload['id'] = $message[$type]['id'];
+                        debug($payload);
                     case "reaction":
                         $payload = $message[$type];
                         break;
                     case "contacts":
                         $payload = $message[$type];
-    
                         break;
                 }
                 $sendarray[$type] = $payload;
