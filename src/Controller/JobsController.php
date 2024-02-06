@@ -176,6 +176,7 @@ class JobsController extends AppController
                 debug($sendarray);
                 debug($type);
                 debug($message);
+                debug($message[$type]['id']);
                 switch ($type) {
                     case "image":
                         $payload['id'] = $message[$type]['id'];
@@ -213,7 +214,7 @@ class JobsController extends AppController
                 break;
         }
 
-        debug($FBsettings);
+      //  debug($FBsettings);
         $streams_table = $this->getTableLocator()->get('Streams');
         $streamrow = $streams_table->newEmptyEntity();
      //   $streamrow->schedule_id = $sched_id;
