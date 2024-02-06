@@ -174,6 +174,7 @@ class JobsController extends AppController
                 $sendarray['mobile_number'] = $form_data['mobile_number'];
                 $payload = [];
             //    debug($sendarray);
+                debug($type);
                 switch ($type) {
                     case "image":
                         $payload['id'] = $message[$type]['id'];
@@ -207,7 +208,7 @@ class JobsController extends AppController
                         break;
                 }
                 $sendarray[$type] = $payload;
-           //     debug($sendarray);
+                debug($sendarray);
                 break;
         }
 
