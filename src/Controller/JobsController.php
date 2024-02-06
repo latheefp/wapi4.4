@@ -140,7 +140,7 @@ class JobsController extends AppController
     {
         $retun=[];
         $form_data = json_decode($sendQrecord->form_data, true);
-       debug($form_data);
+     //  debug($form_data);
         
        
 
@@ -151,11 +151,11 @@ class JobsController extends AppController
             $return['result']['error'] = "Invalid mobile stream id.";
             return $return;
         }
-        debug($streams);
+      //  debug($streams);
 
         switch ($streams->type) {
             case "send":
-                debug("Send");
+           //     debug("Send");
                 $msgArray = json_decode($streams->sendarray, true);
                 break;
             case "receive":
@@ -168,12 +168,12 @@ class JobsController extends AppController
                     "recipient_type": "individual"
                 }';
                 $sendarray = json_decode($sendarrayJson, true);
-                debug($message);
+            //    debug($message);
                 $type = $message['type'];
                 $sendarray['type'] = $type;
                 $sendarray['mobile_number'] = $form_data['mobile_number'];
                 $payload = [];
-                debug($sendarray);
+            //    debug($sendarray);
                 switch ($type) {
                     case "image":
                         $payload['id'] = $message[$type]['id'];
@@ -207,7 +207,7 @@ class JobsController extends AppController
                         break;
                 }
                 $sendarray[$type] = $payload;
-                debug($sendarray);
+           //     debug($sendarray);
                 break;
         }
 
