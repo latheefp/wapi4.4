@@ -1,6 +1,7 @@
 <?php
 
 //debug ($data);
+//debug($ugroup_id);
 ?>
 <ul class="nav nav-tabs">
     <li class="nav-item">

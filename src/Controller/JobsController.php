@@ -212,7 +212,7 @@ class JobsController extends AppController
                         break;
                 }
                 $sendarray[$type] = $payload;
-                debug($sendarray);
+            //    debug($sendarray);
                 break;
         }
 
