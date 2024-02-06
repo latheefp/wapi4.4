@@ -35,7 +35,7 @@ echo $this->Form->create($user,
     </div>
     <div class="form-group col-xl-3">
         <label>Mobile No. *</label>
-        <input type="text" class="form-control" name="phone" id="phone" required="" placeholder="Mobile No.">
+        <input type="text" class="form-control" name="mobile_number" id="mobile_number" required="" placeholder="Mobile No.">
     </div>
     <?php
     $group_id = null;

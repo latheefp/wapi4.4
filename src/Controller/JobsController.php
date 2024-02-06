@@ -92,7 +92,7 @@ class JobsController extends AppController
                     $this->set('response', $response);
                     return;
                 }
-                if($sendQrecord->type = "forward"){
+                if($sendQrecord->type == "forward"){
                     $return = $this->_forwardmsg($sendQrecord, $FBSettings);
                     debug($return);
                 }else{

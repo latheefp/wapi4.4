@@ -21,6 +21,14 @@ class SettingsController extends AppController {
         $this->FormProtection->setConfig('unlockedActions', [
             'getapis'            
         ]);
+
+     //   $this->Authentication->allowUnauthenticated(['getuserdata']);
+
+        $formaction = $this->request->getParam('action');
+
+        $this->FormProtection->setConfig('unlockedActions', array(
+            $formaction
+        ));
     }
 
 
@@ -116,6 +124,7 @@ class SettingsController extends AppController {
     }
 
     public function _set_user_query($querydata) {  //return array of quey based on passed values from index page search.
+       // debug($querydata);
         $query = [
             'order' => [
                 'User.id' => 'asc'
@@ -134,7 +143,7 @@ class SettingsController extends AppController {
         }
 
         $session = $this->request->getSession();
-        $query['conditions']['AND'][] = array('Users.account_id' => $session->read('Auth.User.account_id'));
+        $query['conditions']['AND'][] = array('Users.account_id' => $this->getMyAccountID());
 
         // debug($query);
         return $query;
@@ -501,7 +510,7 @@ class SettingsController extends AppController {
         if ($admin_id == 1) {  //Super User
             $user = $this->getTableLocator()->get('Users')->get($id);
         } else {
-            $account_id = $session->read('Auth.User.account_id');
+            $account_id = $this->getMyAccountID();
             $user = $this->getTableLocator()
                     ->get('Users')
                     ->find()
@@ -558,7 +567,7 @@ class SettingsController extends AppController {
               //  $this->loadModel('Users');
                $userTable=$this->getTableLocator()->get('Users');
                 $session = $this->request->getSession();
-                $account_id = $session->read('Auth.User.account_id');
+                $account_id = $this->getMyAccountID();
               //  debug($account_id);
                 $user = $userTable->find()
                         ->where(['id' => $id])

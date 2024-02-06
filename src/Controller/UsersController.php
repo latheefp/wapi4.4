@@ -320,17 +320,25 @@ class UsersController extends AppController {
             $time = date("Y-m-d h:i:s", time());
             $ntime = new FrozenTime($time, 'Asia/Riyadh');
             $query = $this->Users->query();
-            $result = $query
-                    ->update()
-                    ->set([
-                        $query->newExpr('login_count = login_count + 1'),
-                        ['last_logged' => $time]
-                            ]
-                    )
-                    ->where([
-                        'id' => $this->getMyUID()
-                    ])
-                    ->execute();
+
+            // $result = $query
+            //         ->update()
+            //         ->set([
+            //             $query->newExpr('login_count = login_count + 1'),
+            //             ['last_logged' => $time]
+            //                 ]
+            //         )
+            //         ->where([
+            //             'id' => $this->getMyUID()
+            //         ])
+            //         ->execute();
+
+            $usersTable = $this->getTableLocator()->get('Users');
+            $usersTable->query()
+                ->update()
+                ->set(['login_count' => new \Cake\Database\Expression\QueryExpression('login_count + 1')])
+                ->where(['id' => $this->getMyUID()])
+                ->execute();
 
             //end of sessions.
             

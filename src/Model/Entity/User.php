@@ -95,5 +95,16 @@ class User extends Entity
     {
         return (new DefaultPasswordHasher)->hash($password);
     }
+    protected function _setLoginCount($loginCount)
+    {
+        // This callback will be triggered whenever login_count is set
+        // You can customize this logic based on your requirements
+        return $loginCount;
+    }
+
+    public function updateLoginCount()
+    {
+        $this->set('login_count', $this->get('login_count') + 1);
+    }
     
 }
