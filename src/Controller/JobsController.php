@@ -164,7 +164,7 @@ class JobsController extends AppController
                 $message = $msgArray['entry'][0]['changes'][0]['value']['messages'][0];
                 $mynumber=$this->getMyMobileNumber();
                 $sendarrayJson = '{
-                    "to": "'.$mynumber.'",
+                    "to": "'. $form_data['mobile_number'].'",
                     "messaging_product": "whatsapp",
                     "recipient_type": "individual"
                 }';
