@@ -159,11 +159,12 @@ class JobsController extends AppController
                 $msgArray = json_decode($streams->sendarray, true);
                 break;
             case "receive":
-                debug("Recieve");
+             //   debug("Recieve");
                 $msgArray = json_decode($streams->recievearray, true);
                 $message = $msgArray['entry'][0]['changes'][0]['value']['messages'][0];
+                $mynumber=$this->getMyMobileNumber();
                 $sendarrayJson = '{
-                    "to": "966547237272",
+                    "to": "'.$mynumber.'",
                     "messaging_product": "whatsapp",
                     "recipient_type": "individual"
                 }';
