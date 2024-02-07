@@ -162,9 +162,8 @@ class JobsController extends AppController
              //   debug("Recieve");
                 $msgArray = json_decode($streams->recievearray, true);
                 $message = $msgArray['entry'][0]['changes'][0]['value']['messages'][0];
-                $mynumber=$this->getMyMobileNumber();
+             //   $mynumber=$this->getMyMobileNumber();
                 $sendarrayJson = '{
-                    "to": "'. $form_data['mobile_number'].'",
                     "messaging_product": "whatsapp",
                     "recipient_type": "individual"
                 }';
@@ -172,12 +171,12 @@ class JobsController extends AppController
             //    debug($message);
                 $type = $message['type'];
                 $sendarray['type'] = $type;
-                $sendarray['mobile_number'] = $form_data['mobile_number'];
+                $sendarray['to'] = $form_data['mobile_number'];
                 $payload = [];
                 // debug($sendarray);
                 // debug($type);
-                // debug($message);
-                // debug($message[$type]['id']);
+             //   debug($message);
+               // debug($message[$type]['id']);
                 switch ($type) {
                     case "image":
                         $payload['id'] = $message[$type]['id'];
