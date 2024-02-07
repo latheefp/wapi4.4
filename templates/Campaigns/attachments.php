@@ -1,12 +1,9 @@
 <?php
-debug(json_decode($data['template_details']));
 $formarray = [];
 foreach ($formdata as $key => $val) {
     $formarray[$val['field_name']] = $val;
 }
 $varcount = 1;
-// debug($formdata);
-// debug($formarray);
 ?>
 <div class="row">
     <div class="col-md-12">

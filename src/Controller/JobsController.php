@@ -532,15 +532,11 @@ class JobsController extends AppController
         // sleep(2);
     }
 
-    function test(){
-        $FBSettings = $this->_getFBsettings(['account_id' => 1]);
-     //   debug($FBSettings);
-        $this->adminforwarder(175305,$FBSettings);
-       
-    }
+ 
+    
 
 
-    function adminforwarder($stream_id,$FBSettings){ //this function to formward this all receving message to admins
+    function adminforwarder($stream_id,$FBSettings, $sender){ //this function will be called from rcv array to formward this all receving message to admins
         //    $this->viewBuilder()->setLayout('ajax');
             //find all users under this account to notify.
             $UserTable=$this->getTableLocator()->get('Users');
@@ -548,7 +544,9 @@ class JobsController extends AppController
             ->where(['account_id'=>$FBSettings['account_id']]);
         //    debug($users);
             foreach ($users as $key =>$val){
-             //   debug($val);
+                
+                escortadminmsg($val->mobile_number, $customer_number,$FBSettings,$sender){
+
                 $sendQData['mobile_number']=$val->mobile_number;
                 $sendQData['type']="forward";
                 $sendQData['api_key']=$this->getMyAPIKey($FBSettings['account_id']);
@@ -571,6 +569,27 @@ class JobsController extends AppController
     
             }
            
+    }
+
+    function escortadminmsg($admin_mobile, $customer_number,$FBSettings,$sender){ //this function sedna message,  "You have a message from $sender"
+        $sendQData['mobile_number'] = $admin_mobile;
+        $sendQData['type'] = "send";
+        $sendQData['var-1'] = $customer_number;
+        $sendQData['schedule_name']='reply_notification';
+        $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
+        $sendQ = $this->getTableLocator()->get('SendQueues');
+        $sendQrow = $sendQ->newEmptyEntity();
+        $sendQrow->form_data = json_encode($sendQData);
+        $sendQrow->status = "queued";
+        $sendQrow->type = "send";
+        $result=[];
+        if($sendQ->save($sendQrow)){
+            $result['status']="success";
+            $result['msg']="Message queued for delivery, $sendQrow->id";
+        }else{
+            $result['status']="failed";
+            $result['msg']="Failed to forward";
+        }
     }
 
     function _processInteractive($input, $FBSettings)
