@@ -232,7 +232,7 @@ class JobsController extends AppController
             return $return;
         }
 
-        debug($streamrow->id);
+        debug($streamrow);
         $contact = $streams_table->get($streamrow->id);
         $templateQuery=[];
         $return['result'] = $this->_despatch_msg($contact, $sendarray, $templateQuery, $FBsettings,$type="forward");
