@@ -280,10 +280,8 @@ class JobsController extends AppController
 
 
 //send job start here.
-    function _send_schedule($qid, $FBSettings)
+    function _send_schedule($qid, $FBSettings) //send scheduled message from sendq. this is the main function for delivering message.
     {
-        //   debug("_Send Schdule");
-        // debug($FBSettings);
         $return = array();
         $Qtable = TableRegistry::getTableLocator()->get('SendQueues');
         $record = $Qtable->get($qid);
@@ -325,7 +323,7 @@ class JobsController extends AppController
             $streamrow->schedule_id = $sched_id;
             $streamrow->contact_stream_id = $this->getWastreamsContactId($data['mobile_number'], $FBSettings);
             $streamrow->initiator = "API";
-            $streamrow->type = "send";
+            $streamrow->type = $record->type;
             $streamrow->postdata = json_encode($data);
             $streamrow->account_id = $FBSettings['account_id'];
             if (!$streams_table->save($streamrow)) {
