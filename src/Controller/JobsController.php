@@ -242,9 +242,7 @@ class JobsController extends AppController
        
     }
 
-    function forwardrcv(){
-
-    }
+ 
 
     
 
@@ -441,7 +439,7 @@ class JobsController extends AppController
             }
             $msgtype = $dataarray['message_format_type'];
             $return['result']['msg_type'] = $msgtype;
-
+            $adminforward=true;
             switch ($msgtype) {
                 case "text":
                     $dataarray['message_txt_body'] = $message['text']['body'];
@@ -463,6 +461,7 @@ class JobsController extends AppController
                 case "image":
                     break;
                 case "interactive":
+                    $adminforward=false;
                     $this->_processInteractive($record->json, $FBSettings);
                     $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
                     break;
@@ -518,10 +517,11 @@ class JobsController extends AppController
                 }
             }
             $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
+            $this->adminforwarder($save_status['id'], $FBSettings); //passing stream ID and Account id.
 
             // $result = array("success" => true);
             // return $this->response->withType("application/json")->withStringBody(json_encode($result));
-        } elseif (isset($input['entry'][0]['changes'][0]['value']['statuses'])) {  //type ie status update.
+        }elseif (isset($input['entry'][0]['changes'][0]['value']['statuses'])) {  //type ie status update.
             //    $status = $input['entry'][0]['changes'][0]['value']['statuses'][0];
             $status = $input['entry'][0]['changes'][0]['value']['statuses'];
             $this->writelog($status, "Picked up by Status update");
@@ -532,6 +532,47 @@ class JobsController extends AppController
 
         return $return;
         // sleep(2);
+    }
+
+    function test(){
+        $FBSettings = $this->_getFBsettings(['account_id' => 1]);
+     //   debug($FBSettings);
+        $this->adminforwarder(175305,$FBSettings);
+       
+    }
+
+
+    function adminforwarder($stream_id,$FBSettings){ //this function to formward this all receving message to admins
+        //    $this->viewBuilder()->setLayout('ajax');
+            //find all users under this account to notify.
+            $UserTable=$this->getTableLocator()->get('Users');
+            $users=$UserTable->find()
+            ->where(['account_id'=>$FBSettings['account_id']]);
+        //    debug($users);
+            foreach ($users as $key =>$val){
+             //   debug($val);
+                $sendQData['mobile_number']=$val->mobile_number;
+                $sendQData['type']="forward";
+                $sendQData['api_key']=$this->getMyAPIKey($FBSettings['account_id']);
+                $sendQData['stream_id']=$stream_id;
+                $sendQ = $this->getTableLocator()->get('SendQueues');
+                $sendQrow = $sendQ->newEmptyEntity();
+                $sendQrow->form_data = json_encode($sendQData);
+                $sendQrow->status = "queued";
+                $sendQrow->type = "forward";
+                $result=[];
+                if($sendQ->save($sendQrow)){
+                    $result['status']="success";
+                    $result['msg']="Message queued for delivery, $sendQrow->id";
+                }else{
+                    $result['status']="failed";
+                    $result['msg']="Failed to forward";
+                }
+                debug($sendQrow);
+                debug($result);
+    
+            }
+           
     }
 
     function _processInteractive($input, $FBSettings)
@@ -755,8 +796,8 @@ class JobsController extends AppController
         if (isset($data['contacts_profile_name'])) {
             $this->updateProfileWastreamsContact($data['contact_waid'], $data['contacts_profile_name'], $FBSettings);
         }
-        $Table = $this->getTableLocator()->get('Streams');
-        $record = $Table->newEntity($data);
+        $Streams = $this->getTableLocator()->get('Streams');
+        $record = $Streams->newEntity($data);
         if ($record->getErrors()) {
             $result['status'] = "failed";
             $result['msg'] = "Validation errors";
@@ -764,7 +805,7 @@ class JobsController extends AppController
             $this->writelog($record->getErrors(), "Error");
         }
 
-        if ($Table->save($record)) {
+        if ($Streams->save($record)) {
             $result['status'] = "success";
             $result['msg'] = "Data has been saved";
             $result['id'] = $record->id;
