@@ -515,7 +515,7 @@ class JobsController extends AppController
                 }
             }
             $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
-            $this->adminforwarder($save_status['id'], $FBSettings); //passing stream ID and Account id.
+            $this->adminforwarder($save_status['id'], $FBSettings,$sender); //passing stream ID and Account id.
 
             // $result = array("success" => true);
             // return $this->response->withType("application/json")->withStringBody(json_encode($result));
@@ -545,7 +545,7 @@ class JobsController extends AppController
         //    debug($users);
             foreach ($users as $key =>$val){
                 
-                escortadminmsg($val->mobile_number, $customer_number,$FBSettings,$sender){
+                $this->escortadminmsg($val->mobile_number, $sender,$FBSettings,$sender);
 
                 $sendQData['mobile_number']=$val->mobile_number;
                 $sendQData['type']="forward";
@@ -571,7 +571,7 @@ class JobsController extends AppController
            
     }
 
-    function escortadminmsg($admin_mobile, $customer_number,$FBSettings,$sender){ //this function sedna message,  "You have a message from $sender"
+    function escortadminmsg($admin_mobile, $customer_number,$FBSettings,$sender){ //this function sedna message,  "You have a message from $sender enve ther
         $sendQData['mobile_number'] = $admin_mobile;
         $sendQData['type'] = "send";
         $sendQData['var-1'] = $customer_number;
