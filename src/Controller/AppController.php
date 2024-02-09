@@ -62,33 +62,33 @@ class AppController extends Controller
         //$this->loadComponent('FormProtection');
     }
 
-    function _ajaxvalidation1($Table, $data)
-    {
-        //  debug("table is $Table");
-        $result = [];
-        $this->loadModel($Table);
-        $newrow = $this->$Table->newEmptyEntity();
-        $newrow = $this->$Table->patchEntity($newrow, $data);
-        $errors = $newrow->getErrors();
-        //        debug ($data);
-        //        debug ($errors);
-        if (empty($errors)) {
-            return $errors;
-        } else {
-            // pr($errors);
-            foreach ($errors as $key => $val) {
-                $error['field'] = $key;
+    // function _ajaxvalidation1($Table, $data)
+    // {
+    //     //  debug("table is $Table");
+    //     $result = [];
+    //     $this->loadModel($Table);
+    //     $newrow = $this->$Table->newEmptyEntity();
+    //     $newrow = $this->$Table->patchEntity($newrow, $data);
+    //     $errors = $newrow->getErrors();
+    //     //        debug ($data);
+    //     //        debug ($errors);
+    //     if (empty($errors)) {
+    //         return $errors;
+    //     } else {
+    //         // pr($errors);
+    //         foreach ($errors as $key => $val) {
+    //             $error['field'] = $key;
 
-                foreach ($val as $msgkey => $msgval) {
-                    $error['error'] = $msgval;
-                }
-                $result[] = $error;
-                $error = array();
-            }
-            //    debug ($result);
-            return $result;
-        }
-    }
+    //             foreach ($val as $msgkey => $msgval) {
+    //                 $error['error'] = $msgval;
+    //             }
+    //             $result[] = $error;
+    //             $error = array();
+    //         }
+    //         //    debug ($result);
+    //         return $result;
+    //     }
+    // }
 
     function _dteditvalidation($Table, $data)
     {
@@ -315,7 +315,6 @@ class AppController extends Controller
                 $bodyarray = [];
                 $bodyarray['type'] = "body";
                 $bodyarray['parameters'] = [];
-         //       debug($form);
                 foreach ($form as $key => $val) {
                  //   debug($val);
                     $component = [];
@@ -394,7 +393,9 @@ class AppController extends Controller
 
                 break;
             case "forward":
+            //    debug("This is forward msg");
                 $sendarray=$form;
+                debug($sendarray);
                 
                 break;
         }
@@ -426,10 +427,10 @@ class AppController extends Controller
         $table = $this->getTableLocator()->get('Streams');
         $row = $table->get($contact->id);
         // debug($row);
-          debug($response);
+      //    debug($response);
         if (isset($response['messages'][0]['id'])) {
             $row->messageid = $response['messages'][0]['id'];
-            $row->type = "send";
+       //     $row->type = "send";
             $row->has_wa = true;
             $row->success = true;
             $row->result = $jsonresponse;
@@ -622,6 +623,7 @@ class AppController extends Controller
         $data['interactive_webhook'] = $result->interactive_webhook;
         $data['interactive_notification_numbers'] = $result->interactive_notification_numbers;
         $data['interactive_api_key'] = $result->interactive_api_key;
+        $data['rcv_notification_template'] = $result->rcv_notification_template;
         if (intval(getenv('SEND_MSG')) == true) {
             //   debug("Message enabled ". getenv('SEND_MSG'));
             $data['ACCESSTOKENVALUE'] = $result->ACCESSTOKENVALUE;

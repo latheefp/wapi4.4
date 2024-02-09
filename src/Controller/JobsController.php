@@ -148,7 +148,7 @@ class JobsController extends AppController
         if ($streamsTable->exists(['id' => $form_data['stream_id']])) {
             $streams = $streamsTable->get($form_data['stream_id']);
         } else {
-            $return['result']['error'] = "Invalid mobile stream id.";
+            $return['result']['error'] = "Invalid  stream id.";
             return $return;
         }
       //  debug($streams);
@@ -156,7 +156,7 @@ class JobsController extends AppController
         switch ($streams->type) {
             case "send":
            //     debug("Send");
-                $msgArray = json_decode($streams->sendarray, true);
+                //currently we are proceesing only reciv msg.
                 break;
             case "receive":
              //   debug("Recieve");
@@ -231,6 +231,7 @@ class JobsController extends AppController
             $return['result']['error'] = "Failed to upate streams";
             return $return;
         }
+      //  return false;
 
         debug($streamrow);
         $contact = $streams_table->get($streamrow->id);
@@ -438,9 +439,11 @@ class JobsController extends AppController
             $msgtype = $dataarray['message_format_type'];
             $return['result']['msg_type'] = $msgtype;
             $adminforward=true;
+            $isCmd=false;
             switch ($msgtype) {
                 case "text":
                     $dataarray['message_txt_body'] = $message['text']['body'];
+                    $isCmd=$this->processCMd($dataarray['message_txt_body'],$FBSettings);
                     break;
                 case "button":
                     $dataarray['button_payload'] = $message['button']['payload'];
@@ -489,7 +492,7 @@ class JobsController extends AppController
                 $this->writelog($dataarray, "Save New Massage in streams");
                 //   $save_status = $this->_savedata($dataarray, $FBSettings); //save data before sending welcome msg.
 
-                if (($Timeout) && ($msgtype != "interactive")) {  // new message and not reply for interactive msg
+                if (($Timeout) && ($msgtype != "interactive")&&($isCmd == false)) {  // new message and not reply for interactive msg and commands. 
                     $this->writelog($msgtype, "Sending Interactive Menu to " . $dataarray['contact_waid']);
                     $data = [
                         "mobile_number" => $dataarray['contact_waid'],
@@ -515,7 +518,10 @@ class JobsController extends AppController
                 }
             }
             $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
-            $this->adminforwarder($save_status['id'], $FBSettings,$sender); //passing stream ID and Account id.
+            if(!$isCmd){ //admin forward only if the message is not command. 
+                $this->adminforwarder($save_status['id'], $FBSettings,$sender); //passing stream ID and Account id.
+            }
+           
 
             // $result = array("success" => true);
             // return $this->response->withType("application/json")->withStringBody(json_encode($result));
@@ -532,6 +538,38 @@ class JobsController extends AppController
         // sleep(2);
     }
 
+    function test(){
+        $FBSettings['account_id']=1;
+       # $this->processCMd("bill 2024 01",$FBSettings);
+        $this->processCMd("register",$FBSettings);
+         $this->processCMd("svc",$FBSettings);
+        // $this->processCMd("sale",$FBSettings);
+       
+    }
+    function processCMd($text,$FBSettings){
+        $CMDarray = explode(' ', $text);
+        debug($CMDarray);
+        $cmd = strtolower($CMDarray[0]);
+        $sendarray=[];
+        $CommantTable=$this->getTableLocator()->get('Commands');
+        $comand=$CommantTable->find()
+        ->where(['cmd'=>$CMDarray[0],'account_id'=>$FBSettings['account_id']]);
+    //    debug($comand);
+        if($comand->isEmpty()){
+
+            debug("empty");
+
+            return false;
+
+        }else{
+                switch($CMDarray['0']){
+                    case "register":
+                        ///send all failed forward mesg on this number. 
+                        break;
+                }       
+        }
+        return true;
+    }
  
     
 
@@ -575,7 +613,7 @@ class JobsController extends AppController
         $sendQData['mobile_number'] = $admin_mobile;
         $sendQData['type'] = "send";
         $sendQData['var-1'] = $customer_number;
-        $sendQData['schedule_name']='reply_notification';
+        $sendQData['schedule_name']=$FBSettings['rcv_notification_template'];
         $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
         $sendQ = $this->getTableLocator()->get('SendQueues');
         $sendQrow = $sendQ->newEmptyEntity();
