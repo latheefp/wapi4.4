@@ -74,7 +74,7 @@ class JobsController extends AppController
             $this->response = $this->response->withStatus(400); // Bad Request
             $this->_update_http_code($qid, '400', $type);
             http_response_code(400); // Bad Request
-            $response['error'] = 'Invalid qid ' . $qid;
+            $response['error'] = "Invalid qid not numbr or empty  $qid";
             $this->set('response', $response);
             return;
         }
