@@ -17,6 +17,7 @@ use Cake\Mailer\Mailer;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\ServerRequest;
 use Cake\Cache\Cache;
+use Cake\Datasource\Exception\RecordNotFoundException;
 
 use function PHPUnit\Framework\isEmpty;
 
@@ -83,8 +84,22 @@ class JobsController extends AppController
         switch ($type) {
             case "send":
 
-                $table = TableRegistry::getTableLocator()->get('SendQueues');
-                $sendQrecord = $table->get($qid);
+                // $table = TableRegistry::getTableLocator()->get('SendQueues');
+                // $sendQrecord = $table->get($qid);
+
+                try {
+                    $table = TableRegistry::getTableLocator()->get('SendQueues');
+                    $sendQrecord = $table->get($qid);
+                } catch (RecordNotFoundException $exception) {
+                    $this->_update_http_code($qid, '404', $type);
+                    $response['error'] = "Record not found:".$exception->getMessage();
+                    $this->set('response', $response);
+                    return;
+                }
+
+
+
+                
                 $form_data = json_decode($sendQrecord->form_data, true);
                 $FBSettings = $this->_getFBsettings($data = ['api_key' => $form_data['api_key']]);
                 if ($FBSettings['status']['code'] == 404) {
@@ -133,6 +148,13 @@ class JobsController extends AppController
                 }
 
                 break;
+                default:
+                    $return['error'] = "Invalid qid request type $type";
+                    $return['result'] = "Invalid qid request type $type";
+                    $this->response = $this->response->withStatus(500); // Unauthorized
+                    $this->set('response', $return);
+                break;
+
         }
         //      debug($return);
         $this->set('response', $return['result']);
@@ -254,27 +276,50 @@ class JobsController extends AppController
 
         switch ($type) {
             case 'send':
-                $table = TableRegistry::getTableLocator()->get('SendQueues');
-                $row = $table->get($qid);
+              //  $table = TableRegistry::getTableLocator()->get('SendQueues');
+                try {
+                    $table = TableRegistry::getTableLocator()->get('SendQueues');
+                    $row = $table->get($qid);
+                } catch (RecordNotFoundException $exception) {
+                    $return['result']['status'] = "failed";
+                    $return['result']['message'] =  "Record not found:".$exception->getMessage();
+                    return $return;
+                }
+               
                 $row->http_response_code = $code;
                 $row->processed = 1;
                 $row->status = "processed";
                 $table->save($row);
                 break;
             case "receive":
-                $table = TableRegistry::getTableLocator()->get('RcvQueues');
-                $row = $table->get($qid);
+
+                try {
+                    $table = TableRegistry::getTableLocator()->get('RcvQueues');
+                    $row = $table->get($qid);
+                } catch (RecordNotFoundException $exception) {
+                    $return['result']['status'] = "failed";
+                    $return['result']['message'] =  "Record not found:".$exception->getMessage();
+                    return $return;
+                }
+                // $table = TableRegistry::getTableLocator()->get('RcvQueues');
+                // $row = $table->get($qid);
                 $row->http_response_code = $code;
                 $row->processed = 1;
                 $row->status = "processed";
                 $table->save($row);
                 break;
             case "camp":
-                $table = TableRegistry::getTableLocator()->get('Schedules');
+                try {
+                    $table = TableRegistry::getTableLocator()->get('Schedules');
+                    $row = $table->get($qid);
+                } catch (RecordNotFoundException $exception) {
+                    $return['result']['status'] = "failed";
+                    $return['result']['message'] =  "Record not found:".$exception->getMessage();
+                    return $return;
+                }
+             //   $table = TableRegistry::getTableLocator()->get('Schedules');
                 $row = $table->get($qid);
                 $row->http_response_code = $code;
-                //  $row->processed = 1;
-                //   $row->status = "processed";
                 $table->save($row);
         }
     }
@@ -302,8 +347,6 @@ class JobsController extends AppController
             $return['result']['error'] = "Invalid mobile number";
             return $return;
         }
-
-
 
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
         $schedTable = $this->getTableLocator()->get('Schedules');
@@ -395,10 +438,14 @@ class JobsController extends AppController
     {
         // $this->viewBuilder->setLayout('ajax');
         $return['result'] = [];
-        // $table = TableRegistry::getTableLocator()->get('RcvQueues');
-        //  $io->out('proessing ' . $record->id);
-        $Qtable = TableRegistry::getTableLocator()->get('RcvQueues');
-        $record = $Qtable->get($id);
+        try {
+            $Qtable = TableRegistry::getTableLocator()->get('RcvQueues');
+            $record = $Qtable->get($id);
+        } catch (RecordNotFoundException $exception) {
+            $return['result']['status'] = "failed";
+            $return['result']['message'] =  "Record not found:".$exception->getMessage();
+            return $return;
+        }
 
         // debug(getenv('LOG'));
         $input = json_decode($record->json, true);
