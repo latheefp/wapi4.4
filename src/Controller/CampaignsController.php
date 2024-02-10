@@ -918,64 +918,7 @@ class CampaignsController extends AppController {
         return $query;
     }
 
-    function resend($id = null) {
-        $this->viewBuilder()->setLayout('ajax');
-        $stream = $this->getTableLocator()->get('Streams')->find()->where(['id' => $id])->first();
-        $data['account_id'] = $stream->account_id;
-        $FBSettings = $this->_getFBsettings($data);
-        $this->writelog($id, "Resending MSG");
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => $stream->sendarray,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $FBSettings['ACCESSTOKENVALUE'],
-            ),
-        ));
 
-        $jsonresponse = curl_exec($curl);
-        curl_close($curl);
-        $response = json_decode($jsonresponse, true);
-        if (isset($response['error'])) {
-            $result['status'] = "failed";
-            $result['msg'] = $response['error']['message'];
-        } else {
-            $result['status'] = "success";
-            //       $result['msg']=$response['error']['message'];
-        }
-        //  debug($response);
-        //       debug($response);
-        $this->writelog($response, "Despatch response of Resend msg");
-//
-        $table = $this->getTableLocator()->get('Streams');
-        $row = $table->get($id);
-        if (isset($response['messages'][0]['id'])) {
-            $row->messageid = $response['messages'][0]['id'];
-            $row->type = "send";
-            $row->has_wa = true;
-            $row->success = true;
-            $row->result = $jsonresponse;
-            $table->save($row);
-        } else {
-            $this->writelog($response, "Response error");
-            $row->type = "send";
-            $row->has_wa = false;
-            $row->result = $jsonresponse;
-            $row->success = false;
-            //  $row->sendarray = json_encode($sendarray);
-            $table->save($row);
-        }
-
-        $this->set('result', $result);
-    }
 
     function getstreamdetails($id = null) {
         $session = $this->request->getSession();

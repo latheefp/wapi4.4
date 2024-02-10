@@ -18,6 +18,8 @@ use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\ServerRequest;
 use Cake\Cache\Cache;
 
+use function PHPUnit\Framework\isEmpty;
+
 /**
  * 
  * 
@@ -309,7 +311,7 @@ class JobsController extends AppController
             ->where(['Schedules.name' => $data['schedule_name']])
             ->select(['Campaigns.template_id', 'Schedules.campaign_id', 'id'])
             ->innerJoinWith('Campaigns')
-            ->first();;
+            ->first();
         if (empty($schedQuery)) {
             $return['result']['error'] = "No matching schedule found, " . $data['schedule_name'];
             $this->writelog($schedQuery, "Shedule query result is empty, no matching schedule name");
@@ -423,6 +425,8 @@ class JobsController extends AppController
         $display_phone_number = $input['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'];
         $dataarray['display_phone_number'] = $display_phone_number;
         $dataarray['phonenumberid'] = $phone_number_id;
+        $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+        $dataarray['contact_waid'] = $sender;
         if (isset($input['entry'][0]['changes'][0]['value']['messages'])) { //type is message
 
             $message = $input['entry'][0]['changes'][0]['value']['messages'][0];
@@ -443,7 +447,7 @@ class JobsController extends AppController
             switch ($msgtype) {
                 case "text":
                     $dataarray['message_txt_body'] = $message['text']['body'];
-                    $isCmd=$this->processCMd($dataarray['message_txt_body'],$FBSettings);
+                    $isCmd=$this->processCMd($dataarray, $FBSettings);
                     break;
                 case "button":
                     $dataarray['button_payload'] = $message['button']['payload'];
@@ -470,11 +474,11 @@ class JobsController extends AppController
             $dataarray['delivered_time'] = date("Y-m-d h:i:s", time());
             $dataarray['type'] = "receive";
             $this->writelog($message, "message");
-            $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+            
             $this->writelog($sender, "is the sender");
             $dataarray['message_timestamp'] = $this->_formate_date($input['entry'][0]['changes'][0]['value']['messages'][0]['timestamp']);
             $dataarray['contacts_profile_name'] = $input['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name'];
-            $dataarray['contact_waid'] = $sender;
+           
             $Timeout = $this->_checktimeout($dataarray['contact_waid']); //dont move this function from here , it should be 
             if (isset($input['entry'][0]['changes'][0]['value']['messages'][0]['context'])) {  //reply of existing msg
                 $return['result']['msg_context'] = "reply";
@@ -546,8 +550,8 @@ class JobsController extends AppController
         // $this->processCMd("sale",$FBSettings);
        
     }
-    function processCMd($text,$FBSettings){
-        $CMDarray = explode(' ', $text);
+    function processCMd($dataarray,$FBSettings){
+        $CMDarray = explode(' ', $dataarray['message_txt_body']);
         debug($CMDarray);
         $cmd = strtolower($CMDarray[0]);
         $sendarray=[];
@@ -564,11 +568,28 @@ class JobsController extends AppController
         }else{
                 switch($CMDarray['0']){
                     case "register":
-                        ///send all failed forward mesg on this number. 
+                        $contact_stream_id= $this->getWastreamsContactId($dataarray['contact_waid'], $FBSettings);  
+                        $streamTable=$this->getTableLocator()->get('Streams');
+                        $failedQ=$streamTable->find()
+                        ->where(['contact_stream_id'=>$contact_stream_id,'type'=>'forward','success'=>0]);
+                        if($failedQ->isEmpty()){
+                            debug($failedQ->count());
+                        }else{
+                           foreach($failedQ as $key =>$val){
+                                $this->resend($val->id);
+                           }
+                        }
+                       
                         break;
                 }       
         }
         return true;
+    }
+
+
+    function sendFailedForwards($phone_number){
+
+
     }
  
     
