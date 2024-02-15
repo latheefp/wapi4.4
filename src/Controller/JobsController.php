@@ -308,7 +308,7 @@ class JobsController extends AppController
                 $row->status = "processed";
                 $table->save($row);
                 break;
-            case "camp":
+            case "camp": //for Campagn.
                 try {
                     $table = TableRegistry::getTableLocator()->get('Schedules');
                     $row = $table->get($qid);
@@ -449,7 +449,7 @@ class JobsController extends AppController
 
         // debug(getenv('LOG'));
         $input = json_decode($record->json, true);
-        //  debug($input);
+
 
         $this->writelog($input, "Post Data from Process Job");
 
@@ -472,9 +472,11 @@ class JobsController extends AppController
         $display_phone_number = $input['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'];
         $dataarray['display_phone_number'] = $display_phone_number;
         $dataarray['phonenumberid'] = $phone_number_id;
-        $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
-        $dataarray['contact_waid'] = $sender;
+        // $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+        // $dataarray['contact_waid'] = $sender;
         if (isset($input['entry'][0]['changes'][0]['value']['messages'])) { //type is message
+            $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+            $dataarray['contact_waid'] = $sender;
 
             $message = $input['entry'][0]['changes'][0]['value']['messages'][0];
             $dataarray['recievearray'] = $record->json;
@@ -589,14 +591,14 @@ class JobsController extends AppController
         // sleep(2);
     }
 
-    function test(){
-        $FBSettings['account_id']=1;
-       # $this->processCMd("bill 2024 01",$FBSettings);
-        $this->processCMd("register",$FBSettings);
-         $this->processCMd("svc",$FBSettings);
-        // $this->processCMd("sale",$FBSettings);
+    // function test(){
+    //     $FBSettings['account_id']=1;
+    //    # $this->processCMd("bill 2024 01",$FBSettings);
+    //     $this->processCMd("register",$FBSettings);
+    //      $this->processCMd("svc",$FBSettings);
+    //     // $this->processCMd("sale",$FBSettings);
        
-    }
+    // }
     function processCMd($dataarray,$FBSettings){
         $CMDarray = explode(' ', $dataarray['message_txt_body']);
         debug($CMDarray);
