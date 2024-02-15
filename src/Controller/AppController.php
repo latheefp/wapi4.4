@@ -395,7 +395,7 @@ class AppController extends Controller
             case "forward":
             //    debug("This is forward msg");
                 $sendarray=$form;
-                debug($sendarray);
+           //     debug($sendarray);
                 
                 break;
         }

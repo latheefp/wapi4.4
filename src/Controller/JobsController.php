@@ -111,7 +111,7 @@ class JobsController extends AppController
                 }
                 if($sendQrecord->type == "forward"){
                     $return = $this->_forwardmsg($sendQrecord, $FBSettings);
-                    debug($return);
+              //      debug($return);
                 }else{
                     $return = $this->_send_schedule($qid, $FBSettings);
 
@@ -164,7 +164,7 @@ class JobsController extends AppController
     {
         $retun=[];
         $form_data = json_decode($sendQrecord->form_data, true);
-     //  debug($form_data);
+      // debug($form_data);
         
        
 
@@ -175,7 +175,7 @@ class JobsController extends AppController
             $return['result']['error'] = "Invalid  stream id.";
             return $return;
         }
-      //  debug($streams);
+     //   debug($streams);
 
         switch ($streams->type) {
             case "send":
@@ -257,11 +257,11 @@ class JobsController extends AppController
         }
       //  return false;
 
-        debug($streamrow);
+     //   debug($streamrow);
         $contact = $streams_table->get($streamrow->id);
         $templateQuery=[];
         $return['result'] = $this->_despatch_msg($contact, $sendarray, $templateQuery, $FBsettings,$type="forward");
-        debug($return);
+      //  debug($return);
         return $return;
         
        
@@ -648,9 +648,11 @@ class JobsController extends AppController
     function adminforwarder($stream_id,$FBSettings, $sender){ //this function will be called from rcv array to formward this all receving message to admins
         //    $this->viewBuilder()->setLayout('ajax');
             //find all users under this account to notify.
+            debug("Running admin fowader");
             $UserTable=$this->getTableLocator()->get('Users');
             $users=$UserTable->find()
-            ->where(['account_id'=>$FBSettings['account_id']]);
+            ->where(['account_id'=>$FBSettings['account_id']])
+            ->whereNotNull('mobile_number');
         //    debug($users);
             foreach ($users as $key =>$val){
                 
@@ -673,7 +675,7 @@ class JobsController extends AppController
                     $result['status']="failed";
                     $result['msg']="Failed to forward";
                 }
-                // debug($sendQrow);
+                // debug($sendQData);
                 // debug($result);
     
             }
@@ -683,7 +685,7 @@ class JobsController extends AppController
     function escortadminmsg($admin_mobile, $customer_number,$FBSettings,$sender){ //this function sedna message,  "You have a message from $sender enve ther
         $sendQData['mobile_number'] = $admin_mobile;
         $sendQData['type'] = "send";
-        $sendQData['var-1'] = $customer_number;
+        $sendQData['var-1'] = "wa.me/".$customer_number;
         $sendQData['schedule_name']=$FBSettings['rcv_notification_template'];
         $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
         $sendQ = $this->getTableLocator()->get('SendQueues');
@@ -694,11 +696,13 @@ class JobsController extends AppController
         $result=[];
         if($sendQ->save($sendQrow)){
             $result['status']="success";
-            $result['msg']="Message queued for delivery, $sendQrow->id";
+            $result['msg']="Escort Message queued for delivery, $sendQrow->id";
         }else{
             $result['status']="failed";
             $result['msg']="Failed to forward";
         }
+        // debug($sendQData);
+        // debug($result);
     }
 
     function _processInteractive($input, $FBSettings)
