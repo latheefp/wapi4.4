@@ -571,6 +571,7 @@ class JobsController extends AppController
                 }
             }
             $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
+
             if(!$isCmd){ //admin forward only if the message is not command. 
                 $this->adminforwarder($save_status['id'], $FBSettings,$sender); //passing stream ID and Account id.
             }
@@ -610,7 +611,7 @@ class JobsController extends AppController
     //    debug($comand);
         if($comand->isEmpty()){
 
-            debug("empty");
+         //   debug("empty");
 
             return false;
 
@@ -672,8 +673,8 @@ class JobsController extends AppController
                     $result['status']="failed";
                     $result['msg']="Failed to forward";
                 }
-                debug($sendQrow);
-                debug($result);
+                // debug($sendQrow);
+                // debug($result);
     
             }
            
