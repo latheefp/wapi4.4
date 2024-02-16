@@ -109,12 +109,10 @@ class JobsController extends AppController
                     $this->set('response', $response);
                     return;
                 }
-                if($sendQrecord->type == "forward"){
+                if ($sendQrecord->type == "forward") {
                     $return = $this->_forwardmsg($sendQrecord, $FBSettings);
-              //      debug($return);
-                }else{
+                } else {
                     $return = $this->_send_schedule($qid, $FBSettings);
-
                 }
 
 
@@ -164,7 +162,7 @@ class JobsController extends AppController
     {
         $retun=[];
         $form_data = json_decode($sendQrecord->form_data, true);
-      // debug($form_data);
+
         
        
 
@@ -185,8 +183,12 @@ class JobsController extends AppController
             case "receive":
              //   debug("Recieve");
                 $msgArray = json_decode($streams->recievearray, true);
+            //    debug($msgArray);
                 $message = $msgArray['entry'][0]['changes'][0]['value']['messages'][0];
-             //   $mynumber=$this->getMyMobileNumber();
+                $sender=$msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+                $sender_profile=$msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name'];
+              //  debug($sender);
+               // debug($sender_profile);
                 $sendarrayJson = '{
                     "messaging_product": "whatsapp",
                     "recipient_type": "individual"
@@ -201,6 +203,11 @@ class JobsController extends AppController
                 // debug($type);
              //   debug($message);
                // debug($message[$type]['id']);
+               if(isset($message[$type]['caption'])){
+                $payload['caption']=$message[$type]['caption'] ." from $sender_profile($sender)";
+               }else{
+                $payload['caption']=" from $sender_profile($sender)";
+               }
                 switch ($type) {
                     case "image":
                         $payload['id'] = $message[$type]['id'];
@@ -496,7 +503,7 @@ class JobsController extends AppController
             switch ($msgtype) {
                 case "text":
                     $dataarray['message_txt_body'] = $message['text']['body'];
-                    $isCmd=$this->processCMd($dataarray, $FBSettings);
+                    $isCmd=$this->processCMd($dataarray, $FBSettings); 
                     break;
                 case "button":
                     $dataarray['button_payload'] = $message['button']['payload'];
@@ -602,7 +609,7 @@ class JobsController extends AppController
     // }
     function processCMd($dataarray,$FBSettings){
         $CMDarray = explode(' ', $dataarray['message_txt_body']);
-        debug($CMDarray);
+     //   debug($CMDarray);
         $cmd = strtolower($CMDarray[0]);
         $sendarray=[];
         $CommantTable=$this->getTableLocator()->get('Commands');
@@ -610,27 +617,33 @@ class JobsController extends AppController
         ->where(['cmd'=>$CMDarray[0],'account_id'=>$FBSettings['account_id']]);
     //    debug($comand);
         if($comand->isEmpty()){
-
-         //   debug("empty");
-
+         //   debug("Emtpy Command");
             return false;
-
+            
         }else{
                 switch($CMDarray['0']){
                     case "register":
+                        //67265
+                        echo "Processing pending list in register for ". $dataarray['contact_waid'];
                         $contact_stream_id= $this->getWastreamsContactId($dataarray['contact_waid'], $FBSettings);  
                         $streamTable=$this->getTableLocator()->get('Streams');
                         $failedQ=$streamTable->find()
                         ->where(['contact_stream_id'=>$contact_stream_id,'type'=>'forward','success'=>0]);
                         if($failedQ->isEmpty()){
+                            debug("Nothing to send");
                             debug($failedQ->count());
                         }else{
                            foreach($failedQ as $key =>$val){
+                                debug("resending $val->id");
                                 $this->resend($val->id);
                            }
                         }
                        
                         break;
+                    default:
+                        debug("Nothing process in Commandas as command not matching ".$CMDarray['0']);
+                    break;
+                    
                 }       
         }
         return true;
@@ -1401,4 +1414,16 @@ class JobsController extends AppController
         }
         return array_unique($contact_array);
     }
+
+
+
+    // function test(){
+    //     $this->resend(176883);
+    //     $this->resend(176213);
+    //     $this->resend(176642);
+    //     $this->resend(176889);
+    //    // $this->resend(177172);
+
+        
+    // }
 }

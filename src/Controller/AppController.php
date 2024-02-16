@@ -1065,7 +1065,7 @@ class AppController extends Controller
             //       $result['msg']=$response['error']['message'];
         }
         //  debug($response);
-        //       debug($response);
+           debug($response);
         $this->writelog($response, "Despatch response of Resend msg");
 //
         $table = $this->getTableLocator()->get('Streams');
