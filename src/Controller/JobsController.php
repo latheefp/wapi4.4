@@ -204,19 +204,22 @@ class JobsController extends AppController
              //   debug($message);
                // debug($message[$type]['id']);
                if(isset($message[$type]['caption'])){
-                $payload['caption']=$message[$type]['caption'] ." from $sender_profile($sender)";
+                $caption=$message[$type]['caption'] ." from $sender_profile($sender)";
                }else{
-                $payload['caption']=" from $sender_profile($sender)";
+                $caption="from $sender_profile($sender)";
                }
                 switch ($type) {
                     case "image":
                         $payload['id'] = $message[$type]['id'];
+                        $payload['caption'] =  $caption;
                         break;
                     case "document":
                         $payload['id'] = $message[$type]['id'];
+                        $payload['caption'] =  $caption;
                         break;
                     case "video":
                         $payload['id'] = $message[$type]['id'];
+                        $payload['caption'] =  $caption;
                         break;
                     case "text":
                         $payload['body'] = $message[$type]['body'];
