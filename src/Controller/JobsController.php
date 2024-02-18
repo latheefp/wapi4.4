@@ -228,7 +228,7 @@ class JobsController extends AppController
                         $payload = $message[$type];
                         break;
                     case "sticker":
-                        $payload = $message[$type];
+                        $payload['id'] = $message[$type]['id'];
                         break;
                     case "interactive":
                         $payload = $message[$type];
