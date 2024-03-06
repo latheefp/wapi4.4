@@ -231,7 +231,7 @@ class JobsController extends AppController
                         $payload['id'] = $message[$type]['id'];
                         break;
                     case "interactive":
-                        $payload = $message[$type];
+                        $payload['id'] = $message[$type]['id'];
                         break;
                     case "audio":
   
@@ -506,7 +506,10 @@ class JobsController extends AppController
             switch ($msgtype) {
                 case "text":
                     $dataarray['message_txt_body'] = $message['text']['body'];
-                    $isCmd=$this->processCMd($dataarray, $FBSettings); 
+
+
+                    $isCmd=$this->processCMd($dataarray, $FBSettings);  //process CMD and set cmd is true or false.
+                    //if cme is true, we will use this status to skip this msg forwarding.  
                     break;
                 case "button":
                     $dataarray['button_payload'] = $message['button']['payload'];
@@ -610,6 +613,8 @@ class JobsController extends AppController
     //     // $this->processCMd("sale",$FBSettings);
        
     // }
+
+
     function processCMd($dataarray,$FBSettings){
         $CMDarray = explode(' ', $dataarray['message_txt_body']);
      //   debug($CMDarray);
@@ -617,34 +622,37 @@ class JobsController extends AppController
         $sendarray=[];
         $CommantTable=$this->getTableLocator()->get('Commands');
         $comand=$CommantTable->find()
-        ->where(['cmd'=>$CMDarray[0],'account_id'=>$FBSettings['account_id']]);
+        ->where(['cmd'=> $cmd,'account_id'=>$FBSettings['account_id']]);
     //    debug($comand);
         if($comand->isEmpty()){
-         //   debug("Emtpy Command");
+            $this->writelog($cmd, "Command: The provided command is not one of the listd command, false.  ");
             return false;
-            
         }else{
-                switch($CMDarray['0']){
+            $this->writelog($cmd, "Command: command is found $cmd ");
+                switch( $cmd){
                     case "register":
                         //67265
-                        echo "Processing pending list in register for ". $dataarray['contact_waid'];
+                    //    echo "Processing pending list in register for ". $dataarray['contact_waid'];
+                        $this->writelog($dataarray['contact_waid'], "Command: Processing register");
                         $contact_stream_id= $this->getWastreamsContactId($dataarray['contact_waid'], $FBSettings);  
                         $streamTable=$this->getTableLocator()->get('Streams');
                         $failedQ=$streamTable->find()
                         ->where(['contact_stream_id'=>$contact_stream_id,'type'=>'forward','success'=>0]);
                         if($failedQ->isEmpty()){
-                            debug("Nothing to send");
-                            debug($failedQ->count());
+                          
+                            $this->writelog($failedQ, "Command: Failed Q is empty for  ".$dataarray['contact_waid'] ."with contact ID contact_stream_id");
+                         
                         }else{
                            foreach($failedQ as $key =>$val){
                                 debug("resending $val->id");
-                                $this->resend($val->id);
+                                $this->writelog($val, "Command: Failed Q senidng with ID $val->id on   ".$dataarray['contact_waid'] ."with contact ID contact_stream_id");
+
                            }
                         }
                        
                         break;
                     default:
-                        debug("Nothing process in Commandas as command not matching ".$CMDarray['0']);
+                        $this->writelog($cmd, "Command:  nothing code for $cmd");
                     break;
                     
                 }       
