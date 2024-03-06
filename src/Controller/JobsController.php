@@ -640,12 +640,13 @@ class JobsController extends AppController
                         ->where(['contact_stream_id'=>$contact_stream_id,'type'=>'forward','success'=>0]);
                         if($failedQ->isEmpty()){
                           
-                            $this->writelog($failedQ, "Command: Failed Q is empty for  ".$dataarray['contact_waid'] ."with contact ID contact_stream_id");
+                            $this->writelog($failedQ, "Command: Failed Q is empty for  ".$dataarray['contact_waid'] ." with contact ID contact_stream_id");
                          
                         }else{
                            foreach($failedQ as $key =>$val){
                                 debug("resending $val->id");
-                                $this->writelog($val, "Command: Failed Q senidng with ID $val->id on   ".$dataarray['contact_waid'] ."with contact ID contact_stream_id");
+                                $this->writelog($val, "Command: Failed Q senidng with ID $val->id on   ".$dataarray['contact_waid'] ." with contact ID contact_stream_id");
+                                
 
                            }
                         }
@@ -1428,13 +1429,10 @@ class JobsController extends AppController
 
 
 
-    // function test(){
-    //     $this->resend(176883);
-    //     $this->resend(176213);
-    //     $this->resend(176642);
-    //     $this->resend(176889);
-    //    // $this->resend(177172);
-
-        
-    // }
+    function test(){
+        $this->resend(185068);
+        $this->resend(185085);
+        $this->resend(185553);
+        $this->resend(186015);        
+    }
 }
