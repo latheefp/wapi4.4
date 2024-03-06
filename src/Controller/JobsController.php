@@ -646,7 +646,7 @@ class JobsController extends AppController
                            foreach($failedQ as $key =>$val){
                                 debug("resending $val->id");
                                 $this->writelog($val, "Command: Failed Q senidng with ID $val->id on   ".$dataarray['contact_waid'] ." with contact ID contact_stream_id");
-                                
+                                $this->resend($val->id);  
 
                            }
                         }
@@ -1429,10 +1429,10 @@ class JobsController extends AppController
 
 
 
-    function test(){
-        $this->resend(185068);
-        $this->resend(185085);
-        $this->resend(185553);
-        $this->resend(186015);        
-    }
+    // function test(){
+    //     $this->resend(185068);
+    //     $this->resend(185085);
+    //     $this->resend(185553);
+    //     $this->resend(186015);        
+    // }
 }
