@@ -638,7 +638,8 @@ class JobsController extends AppController
                         $contact_stream_id= $this->getWastreamsContactId($dataarray['contact_waid'], $FBSettings);  
                         $streamTable=$this->getTableLocator()->get('Streams');
                         $failedQ=$streamTable->find()
-                        ->where(['contact_stream_id'=>$contact_stream_id,'type'=>'forward','success'=>0]);
+                        ->where(['contact_stream_id'=>$contact_stream_id,'type'=>'forward','success'=>0])
+                        ->all();
                         if($failedQ->isEmpty()){
                           
                             $this->writelog($failedQ, "Command: Failed Q is empty for  ".$dataarray['contact_waid'] ." with contact ID contact_stream_id");
