@@ -622,7 +622,8 @@ class JobsController extends AppController
         $sendarray=[];
         $CommantTable=$this->getTableLocator()->get('Commands');
         $comand=$CommantTable->find()
-        ->where(['cmd'=> $cmd,'account_id'=>$FBSettings['account_id']]);
+        ->where(['cmd'=> $cmd,'account_id'=>$FBSettings['account_id']])
+        ->all();
     //    debug($comand);
         if($comand->isEmpty()){
             $this->writelog($cmd, "Command: The provided command is not one of the listd command, false.  ");
