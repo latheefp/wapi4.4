@@ -360,6 +360,7 @@ class JobsController extends AppController
 
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
         $schedTable = $this->getTableLocator()->get('Schedules');
+        //TODO: add account ID also in query to make sure, we catch exact schedule the account. 
         $schedQuery = $schedTable->find()
             ->where(['Schedules.name' => $data['schedule_name']])
             ->select(['Campaigns.template_id', 'Schedules.campaign_id', 'id'])
@@ -372,7 +373,7 @@ class JobsController extends AppController
         } else {
             $this->writelog($schedQuery, "Found schedule " . $data['schedule_name'] . " in table");
             $sched_id = $schedQuery->id;
-            //    debug($schedQuery);
+           //     debug($schedQuery);
             //!!Do the related updates in console as well. 
             $streams_table = $this->getTableLocator()->get('Streams');
             $streamrow = $streams_table->newEmptyEntity();
@@ -404,10 +405,12 @@ class JobsController extends AppController
                 ->all();
 
             $formarray = [];
-
+          //  debug($data);
+           // debug($CampaignForm);
             foreach ($CampaignForm as $key => $val) {
                 $newval = array();
                 $vararray = explode('-', $val['field_name']);
+           //     debug($vararray);
                 $newval['field_name'] = $val->field_name;
                 $newval['field_value'] = $val->field_value;
                 switch ($vararray[0]) {
@@ -1383,17 +1386,17 @@ class JobsController extends AppController
 
 
         foreach ($form as $key => $val) {
-       //     debug($val);
+          //  debug($val);
             $component = [];
             $param = [];
             $field_name = $val['field_name'];
             $keyarray = explode("-", $field_name);
-            //   debug($keyarray);
+               debug($keyarray);
             if (($keyarray[0] == "file") && ($keyarray[2] == "header")) {  //its an image. 
                 if (isset($val['filename'])) {
                     $sendarray['filename'] = $val['filename'];
                 }
-                $sendarray['imageid'] = $val['fbimageid'];
+                $sendarray['media_id'] = $val['fbimageid']; //this was $sendarray['imageid'] before. corrected but not sure about the real imapct.
             }
 
             if ($keyarray[0] == "var") {  //parmeters injection. 
@@ -1416,6 +1419,9 @@ class JobsController extends AppController
                 
             }
         }
+
+        debug($sendarray);
+
         foreach ($contact_array as $contact_id => $contact_number) {
             $sendarray['mobile_number'] = $contact_number;
             //  debug($sendarray);

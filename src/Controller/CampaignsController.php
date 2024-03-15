@@ -837,7 +837,8 @@ class CampaignsController extends AppController {
             'campaign_id'=>56,
             'service_type_id'=>14,
             'account_id'=>1,
-            'action'=>'camps'
+            'action'=>'camps',
+            'backend'=>true
         ];
         debug(json_encode($data));
         debug(base64_encode(json_encode($data)));

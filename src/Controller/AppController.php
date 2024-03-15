@@ -315,17 +315,19 @@ class AppController extends Controller
                 $bodyarray = [];
                 $bodyarray['type'] = "body";
                 $bodyarray['parameters'] = [];
+              //  debug($form);
                 foreach ($form as $key => $val) {
-                 //   debug($val);
+               //    debug($val);
                     $component = [];
                     $param = [];
                     $field_name = $val['field_name'];
                     $keyarray = explode("-", $field_name);
+                  //  debug($keyarray);
                     if (($keyarray[0] == "file") && ($keyarray[2] == "header")) {
                         $headerarray['type'] = 'header';
                         $headerarray['parameters'] = [];
                         $component['type'] = $keyarray[2]; //header
-                        $param['type'] = $keyarray[3];
+                        $param['type'] = $keyarray[3]; //image.
                         if (isset($val['filename'])) {
                             $param[$keyarray[3]]['filename'] = $val['filename'];
                         }
