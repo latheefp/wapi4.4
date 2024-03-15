@@ -25,7 +25,89 @@ class CampaignsController extends AppController {
 
     var $uses = array('Campaigns');
 
-    function viewimage($file_id = null) { //should be replaced by   viewrcvImage() functoin.
+
+
+    function viewimage($file_id,$account_id) { //should be replaced by   viewrcvImage() functoin.
+        if((!isset($file_id))&&(empty($file_id))) {
+            $result['status']="failed";
+            $result['msg']="Missing image ID";
+            return $result;
+        }
+
+        $FBsettings=$this->_getFBsettings(['account_id'=>$account_id]);
+
+     //   debug($FBsettings);
+
+
+        $this->viewBuilder()->setLayout('ajax');
+        $file = tmpfile();
+        $file_path = stream_get_meta_data($file)['uri'];
+        $curl = curl_init();
+        $table = $this->getTableLocator()->get('CampaignForms');
+        $query = $table->find()
+                ->where(['fbimageid' => $file_id])
+                ->first();
+        //  debug ($query);
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $file_id,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: ' . $query->file_type,
+                'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
+            ),
+        ));
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $result = json_decode($response, true);
+        $url = $result['url'];
+        // debug($url);
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 0,
+            CURLOPT_HEADER => 0,
+            CURLOPT_ENCODING => '',
+//            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+//            CURLOPT_FILE => $file_handle,
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json',
+                'Authorization: Bearer ' .  $FBsettings['ACCESSTOKENVALUE'],
+                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
+            ),
+        ));
+
+        $raw = curl_exec($curl);
+
+        curl_close($curl);
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+        $file_handle = fopen($file_path, 'x');
+
+        fwrite($file_handle, $raw);
+
+        fclose($file_handle);
+        $response = $this->response->withFile($file_path,
+                ['download' => true, 'name' => $query->field_value]
+        );
+        $response->withType($query->file_type);
+        return $response;
+    }
+
+    function viewimageold($file_id = null) { //should be replaced by   viewrcvImage() functoin.
         if((!isset($file_id))&&(empty($file_id))) {
             $result['status']="failed";
             $result['msg']="Missing image ID";
@@ -378,14 +460,34 @@ class CampaignsController extends AppController {
         if ($this->request->is('post')) {
             $this->viewBuilder()->setLayout('ajax');
             $data = $this->request->getData();
+         //   debug($data);
             $files = $_FILES;
             $id = $data['id'];
             unset($data['id']);
             $table = $this->getTableLocator()->get('CampaignForms');
             //delete any existing entry in form before saving. 
             $conditions = ['Campaign_id' => $id];
+
+            if(isset($data['auto_inject'])){
+                if($data['auto_inject']=="1"){
+              //      debug("Autoinject is setting");
+                    //process to save autoinject to campaigns table.
+                    $CampaignTable=$this->getTableLocator()->get('Campaigns');
+                    $CampaginRow=$CampaignTable->get($id);
+                  //  debug($CampaginRow);
+                    $CampaginRow->auto_inject=1;
+                    $CampaginRow->inject_text=$data['inject_text'];
+                    if(!$CampaignTable->save($CampaginRow)){
+                      // debug($CampaginRow->getErrors());
+                    }
+                    
+                }
+                unset($data['auto_inject']);
+                unset($data['inject_text']);
+            }
+
             $deleteresult = $table->deleteAll($conditions);
-            foreach ($files as $key => $val) {
+            foreach ($files as $key => $val) { //loop to process the file upload if any. 
                 // 
                 $table->deleteAll(['field_name' => $key, 'campaign_id' => $id]);
                 if (($val == "undefined") || empty($val['tmp_name'])) {
@@ -417,7 +519,12 @@ class CampaignsController extends AppController {
             }
             if (!empty($data)) {
 
-              //  debug($data);
+         //       debug($data);
+                //process auto inject values params from form and delete it from array.
+
+              
+
+
                 foreach ($data as $key => $val) {
                     $keyarray = explode("-", $key);
                  //   debug($keyarray);
@@ -452,6 +559,7 @@ class CampaignsController extends AppController {
         $tableCampaignForms = $this->getTableLocator()->get('CampaignForms');
         $queryCampaignForms = $tableCampaignForms->query()
                 ->find('all')
+               
                 ->where(['campaign_id' => $id]);
 
         $this->set('formdata', $queryCampaignForms->toArray());
@@ -721,10 +829,21 @@ class CampaignsController extends AppController {
 
 
 
-    // function test(){
-    //     $this->viewBuilder()->setLayout('ajax');
-    //     debug($this->getMyAccountID());
-    // }
+    function test(){
+        $this->viewBuilder()->setLayout('ajax');
+        $data=[
+            'issue'=>"Ac maintaineace",
+            'mobile'=>"9496470804",
+            'campaign_id'=>56,
+            'service_type_id'=>14,
+            'account_id'=>1,
+            'action'=>'camps'
+        ];
+        debug(json_encode($data));
+        debug(base64_encode(json_encode($data)));
+
+
+    }
 
     function sendmsgnew()
     {

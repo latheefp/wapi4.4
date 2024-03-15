@@ -85,6 +85,7 @@ return static function (RouteBuilder $routes) {
         $builder->connect('/admin/logout', ['controller' => 'Users', 'action' => 'logout']);
         $builder->connect('/register', ['controller' => 'Members', 'action' => 'register']);
         $builder->connect('/ajaxregister', ['controller' => 'Members', 'action' => 'ajaxregister']);
+        $builder->connect('/camp', ['controller' => 'camps', 'action' => 'camps']);
         $builder->connect('/membervalidation', ['controller' => 'Members', 'action' => 'membervalidation']);
         $builder->connect('/webhook', ['controller' => 'Apis', 'action' => 'webhook']);
         $builder->connect('/pricing', ['controller' => 'Publics', 'action' => 'pricing']);

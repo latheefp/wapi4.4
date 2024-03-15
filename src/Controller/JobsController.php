@@ -1272,7 +1272,7 @@ class JobsController extends AppController
 
 
 
-    //!Schdule comapgain related code starts from here. 
+    //!Schdule comapgain related code starts from here. it directly hit here. 
     function sendcamp()
     {
 
@@ -1327,17 +1327,34 @@ class JobsController extends AppController
         $schedTable = $this->getTableLocator()->get('Schedules');
         $schedQuery = $schedTable->find()
             ->where(['Schedules.id' => $schedule_id])
-            ->select(['Campaigns.template_id', 'Schedules.name', 'Schedules.campaign_id', 'Schedules.user_id', 'Schedules.account_id', 'Schedules.contact_csv'])
+            ->select([
+                'Campaigns.template_id',
+                'Schedules.name',
+                'Schedules.campaign_id',
+                'Schedules.user_id',
+                'Schedules.account_id',
+                'Schedules.contact_csv',
+                'Campaigns.auto_inject',
+                'Campaigns.inject_text'
+            ])
             ->innerJoinWith('Campaigns')
             ->first();
-        //    debug($schedQuery);      
+       
         if (empty($schedQuery)) {
             print "Empty Schedule info\n";
             return false;
         }
 
-        //   debug($schedQuery);
-
+        if (isset($schedQuery->campaign)) {
+            // Access the auto_inject property
+            $autoInject = $schedQuery->campaign->auto_inject;
+           
+        } else {
+            // Handle the case when there's no associated campaign
+            $autoInject = null; // or any other default value you want
+        }
+       // debug(schedQuery);
+        //debug($schedQuery->toArray());
 
         $contact_array = $this->create_contact_array($schedQuery->contact_csv);
 
@@ -1384,7 +1401,19 @@ class JobsController extends AppController
             }
 
             if ($keyarray[0] == "button") {  //parmeters for button variables. 
-                $sendarray['button_var'] = $val['field_value'];
+                $scheduleArray=$schedQuery->toArray();
+                if (isset($scheduleArray['_matchingData']['Campaigns']['auto_inject'])) {
+                    $autoInject = $scheduleArray['_matchingData']['Campaigns']['auto_inject'];
+                   if($autoInject == true){
+                    $inject_json=$scheduleArray['_matchingData']['Campaigns']['inject_text'];
+                   // debug($inject_json);
+                    $sendarray['button_var']=base64_encode($inject_json);
+                   }
+                } else {
+                    // Handle the case when auto_inject is not set
+                   $sendarray['button_var'] = $val['field_value'];
+                }
+                
             }
         }
         foreach ($contact_array as $contact_id => $contact_number) {

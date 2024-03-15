@@ -1,4 +1,5 @@
 <?php
+//debug($data['account_id']);
 $formarray = [];
 foreach ($formdata as $key => $val) {
     $formarray[$val['field_name']] = $val;
@@ -83,7 +84,7 @@ $varcount = 1;
                                                             $cvar = $formarray[$var]['field_value'];
                                                         } else {
                                                             $cvar = null;
-                                                        }                                                     
+                                                        }
                 ?>
                                                         <div class="form-group col-sm-6">
                                                             <label>Header Variable <?= $i ?> of <?= $lang ?>:</label>
@@ -171,7 +172,7 @@ $varcount = 1;
                                                 $var = 'var-' . $i . '-' . $lang;
                                                 if (isset($formarray[$var])) {
                                                     $cvar = $formarray[$var]['field_value'];
-                                                //   debug($cvar);
+                                                    //   debug($cvar);
                                                 } else {
                                                     $cvar = null;
                                                 }
@@ -193,9 +194,9 @@ $varcount = 1;
                                     case "BUTTONS":
                                         //if button has a example member, which means, there a variable.
                                         foreach ($val['buttons'] as $bkey => $bval) {
-                                  //             debug($bkey);
+                                            //             debug($bkey);
                                             if (isset($bval['example'])) {
-                                                $var="button-$bkey-" . $lang;
+                                                $var = "button-$bkey-" . $lang;
                                                 if (isset($formarray[$var])) {
                                                     $cvar = $formarray[$var]['field_value'];
                                                 } else {
@@ -204,8 +205,25 @@ $varcount = 1;
                                             ?>
                                                 <div class="form-group col-sm-6">
                                                     <label>Button Variable of <?= $lang ?>:</label>
-                                                    <input type="text" class="form-control input-group-lg whatsappvar" name="<?= "button-$bkey-$lang" ?>" value=" <?= $cvar ?>" required="" placeholder="Button Variable">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control input-group-lg whatsappvar" name="<?= "button-$bkey-$lang" ?>" value="<?= $cvar ?>" required="" placeholder="Button Variable">
+
+                                                    </div>
+                                                    <div class="checkbox">
+                                                        <label>
+                                                            <input type="checkbox" name="auto_inject" value="1" id="auto_inject" <?= $camp->auto_inject == 1 ? 'checked' : '' ?>> Auto inject with custom encoded array.
+                                                        </label>
+                                                        <div id="injectContainer" style="display: none;">
+                                                            <textarea class="col-md-12" id="jsonTextArea" rows="10" cols="50" name="inject_text"><?= $camp->inject_text ?></textarea>
+                                                            <div class="input-group-append">
+                                                                <!-- Change input to textarea for multiline placeholder -->
+                                                                <textarea class="form-control input-group-lg" readonly placeholder="You can replace the value with known fields. Currently it supports only {{mobile}}"></textarea>
+                                                            </div>
+                                                            <a href="#" class="link-primary" onclick="beautifyJson(event)">Beautify JSON</a>
+                                                        </div>
+                                                    </div>
                                                 </div>
+
                 <?php
                                             }
                                         }
@@ -319,7 +337,7 @@ $varcount = 1;
 
                                                                     <?php if (isset($formarray[$fname])) {
                                                                     ?>
-                                                                        <a href="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] . "/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox" data-gallery="gallery">
+                                                                        <a href="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] . "/".$data['account_id']."/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox" data-gallery="gallery">
                                                                             <img class="img-fluid mb-2" src="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] ?>" id="<?= $fname ?>-prev">
                                                                         <?php } else {
                                                                         ?>
@@ -404,7 +422,7 @@ $varcount = 1;
                                                     break;
                                                 case "BUTTONS":
 
-                                                  //  debug($val['buttons']);
+                                                    //  debug($val['buttons']);
                                                 ?>
                                                     <div class="button-container">
                                                         <?php
@@ -412,23 +430,23 @@ $varcount = 1;
                                                             switch ($bval['type']) {
                                                                 case 'PHONE_NUMBER': ?>
                                                                     <div class="form-group">
-                                                                    <button><?= $bval['text'] ."=>". $bval['phone_number']?></button>
+                                                                        <button><?= $bval['text'] . "=>" . $bval['phone_number'] ?></button>
                                                                     </div>
                                                                 <?php
                                                                     break;
                                                                 case 'URL':
                                                                 ?>
                                                                     <div class="form-group">
-                                                                        <button><?= $bval['text'] ."=>". $bval['url']?></button>
+                                                                        <button><?= $bval['text'] . "=>" . $bval['url'] ?></button>
                                                                     </div>
-                                                        <?php
+                                                                <?php
                                                                     break;
                                                                 default:
                                                                 ?>
                                                                     <div class="form-group">
-                                                                    <button><?= $bval['text']?></button>
+                                                                        <button><?= $bval['text'] ?></button>
                                                                     </div>
-                                                                <?php
+                                                        <?php
                                                                     break;
                                                             }
                                                         }
@@ -591,6 +609,35 @@ $varcount = 1;
             preview.style.display = "block";
         }
     }
+
+    function beautifyJson() {
+        const jsonTextArea = document.getElementById("jsonTextArea");
+        try {
+            const parsedJson = JSON.parse(jsonTextArea.value);
+            const beautifiedJson = JSON.stringify(parsedJson, null, 4); // 4 is the number of spaces for indentation
+            jsonTextArea.value = beautifiedJson;
+        } catch (error) {
+            alert("Invalid JSON");
+        }
+    }
+
+
+    function toggleInjectContainer() {
+        var checkbox = document.getElementById('auto_inject');
+        var injectContainer = document.getElementById('injectContainer');
+        if (checkbox.checked) {
+            injectContainer.style.display = 'block';
+        } else {
+            injectContainer.style.display = 'none';
+        }
+    }
+
+    // Add event listener to checkbox
+    document.getElementById('auto_inject').addEventListener('change', toggleInjectContainer);
+
+    // Call the function initially to set initial state
+    toggleInjectContainer();
+
     //
 </script>
 <?php $this->Html->scriptEnd(); ?>

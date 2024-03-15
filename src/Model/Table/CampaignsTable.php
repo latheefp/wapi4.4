@@ -56,7 +56,13 @@ class CampaignsTable extends Table
             'foreignKey' => 'template_id',
             'joinType' => 'INNER',
         ]);
-        $this->hasMany('CampainForms', [
+        $this->hasMany('CampaignForms', [
+            'foreignKey' => 'campaign_id',
+        ]);
+        $this->hasMany('ScheduleViews', [
+            'foreignKey' => 'campaign_id',
+        ]);
+        $this->hasMany('Schedules', [
             'foreignKey' => 'campaign_id',
         ]);
     }
@@ -70,15 +76,11 @@ class CampaignsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->scalar('campaign_name')
             ->maxLength('campaign_name', 128)
             ->requirePresence('campaign_name', 'create')
             ->notEmptyString('campaign_name')
-            ->add('campaign_name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table', 'message'=>'Campain Name already exist']);
+            ->add('campaign_name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
             ->date('start_date')
@@ -89,6 +91,21 @@ class CampaignsTable extends Table
             ->date('end_date')
             ->requirePresence('end_date', 'create')
             ->notEmptyDate('end_date');
+
+        $validator
+            ->boolean('auto_inject')
+            ->notEmptyString('auto_inject');
+
+        $validator
+            ->scalar('inject_text')
+            ->allowEmptyString('inject_text');
+
+        $validator
+            ->integer('user_id')
+            ->notEmptyString('user_id');
+
+        $validator
+            ->notEmptyString('template_id');
 
         return $validator;
     }
@@ -103,8 +120,8 @@ class CampaignsTable extends Table
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->isUnique(['campaign_name']), ['errorField' => 'campaign_name']);
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
-        $rules->add($rules->existsIn(['template_id'], 'Templates'), ['errorField' => 'template_id']);
+        $rules->add($rules->existsIn('user_id', 'Users'), ['errorField' => 'user_id']);
+        $rules->add($rules->existsIn('template_id', 'Templates'), ['errorField' => 'template_id']);
 
         return $rules;
     }

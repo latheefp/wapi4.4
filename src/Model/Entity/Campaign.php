@@ -10,14 +10,17 @@ use Cake\ORM\Entity;
  *
  * @property int $id
  * @property string $campaign_name
- * @property \Cake\I18n\FrozenTime $start_date
- * @property \Cake\I18n\FrozenTime $end_date
+ * @property \Cake\I18n\FrozenDate $start_date
+ * @property \Cake\I18n\FrozenDate $end_date
+ * @property bool $auto_inject
+ * @property string|null $inject_text
  * @property \Cake\I18n\FrozenTime $created
  * @property int $user_id
  * @property int $template_id
  *
  * @property \App\Model\Entity\User $user
  * @property \App\Model\Entity\Template $template
+ * @property \App\Model\Entity\CampainForm[] $campain_forms
  */
 class Campaign extends Entity
 {
@@ -28,16 +31,19 @@ class Campaign extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'campaign_name' => true,
         'start_date' => true,
         'end_date' => true,
+        'auto_inject' => true,
+        'inject_text' => true,
         'created' => true,
         'user_id' => true,
         'template_id' => true,
         'user' => true,
         'template' => true,
+        'campain_forms' => true,
     ];
 }
