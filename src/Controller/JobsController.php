@@ -1420,7 +1420,7 @@ class JobsController extends AppController
             }
         }
 
-        debug($sendarray);
+     //   debug($sendarray);
 
         foreach ($contact_array as $contact_id => $contact_number) {
             $sendarray['mobile_number'] = $contact_number;
