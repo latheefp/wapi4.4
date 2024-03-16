@@ -1283,7 +1283,9 @@ class JobsController extends AppController
 
     //!Schdule comapgain related code starts from here. it directly hit here. 
     function sendcamp()
-    {
+    { //this API need two values, 1. API-key as header and schedule_id. this will send the scdules to all contactacts. 
+        //this is auto triggered when new shedules are added from FE. /campaigns/schedules
+        //this will add the schedule to sendQ.
 
 
         //validate apis
@@ -1348,10 +1350,11 @@ class JobsController extends AppController
             ])
             ->innerJoinWith('Campaigns')
             ->first();
-       
-        if (empty($schedQuery)) {
-            print "Empty Schedule info\n";
-            return false;
+      //          debug($schedQuery);
+        if (empty($schedQuery->toArray())) {
+            print "No data available in Schedules for $schedule_id";
+            $return['result']['error']="Not data in Schedules for $schedule_id";
+            return $return;
         }
 
         if (isset($schedQuery->campaign)) {
@@ -1388,8 +1391,6 @@ class JobsController extends AppController
         $form = $CampaignFormstable->find()
             ->where(['campaign_id' => $campaign_id])
             ->all();
-
-
 
         foreach ($form as $key => $val) {
           //  debug($val);

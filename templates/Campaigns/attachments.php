@@ -302,7 +302,9 @@ $varcount = 1;
                                 foreach ($dval as $cdkey => $cdval) {
                                     if ($cdkey == "components") {
                                         foreach ($cdval as $key => $val) {
+                                           
                                             switch ($val['type']) {
+                                               
                                                 case "HEADER":
                                                     switch ($val['format']) {
                                                         case "TEXT":
@@ -326,15 +328,14 @@ $varcount = 1;
                                                         <?php
                                                             break;
                                                         case "IMAGE":
+                                                         //   debug($val);
                                                             $fname = "file-" . $lang . "-header-image";
+                                                            // debug($fname);
+                                                            // debug($formarray);
                                                         ?>
                                                             <div>
 
                                                                 <div class="col-sm-4">
-                                                                    <?php
-                                                                    //  debug($formarray);
-                                                                    ?>
-
                                                                     <?php if (isset($formarray[$fname])) {
                                                                     ?>
                                                                         <a href="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] . "/".$data['account_id']."/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox" data-gallery="gallery">
