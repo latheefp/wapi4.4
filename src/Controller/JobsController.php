@@ -431,7 +431,11 @@ class JobsController extends AppController
                         }
                         break;
                     case "button":
-                        $newvar = "button-var";
+                     //   debug("Button");
+                    //    debug($data);
+                        $newvar = "button_var"; 
+                      //  debug($data[$newvar]);
+                       
                         if (isset($data[$newvar])) {
                             $newval['field_value'] = $data[$newvar];
                         }
@@ -439,6 +443,8 @@ class JobsController extends AppController
                 }
                 $formarray[] = $newval;
             }
+
+//            debug($formarray);
             $return['result'] = $this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings);
             return $return;
         }
@@ -1391,7 +1397,7 @@ class JobsController extends AppController
             $param = [];
             $field_name = $val['field_name'];
             $keyarray = explode("-", $field_name);
-               debug($keyarray);
+    //           debug($keyarray);
             if (($keyarray[0] == "file") && ($keyarray[2] == "header")) {  //its an image. 
                 if (isset($val['filename'])) {
                     $sendarray['filename'] = $val['filename'];
@@ -1404,19 +1410,16 @@ class JobsController extends AppController
             }
 
             if ($keyarray[0] == "button") {  //parmeters for button variables. 
-                $scheduleArray=$schedQuery->toArray();
+                $scheduleArray = $schedQuery->toArray();
                 if (isset($scheduleArray['_matchingData']['Campaigns']['auto_inject'])) {
                     $autoInject = $scheduleArray['_matchingData']['Campaigns']['auto_inject'];
-                   if($autoInject == true){
-                    $inject_json=$scheduleArray['_matchingData']['Campaigns']['inject_text'];
-                   // debug($inject_json);
-                    $sendarray['button_var']=base64_encode($inject_json);
-                   }
+                    if ($autoInject == true) {
+                        $inject_json = $scheduleArray['_matchingData']['Campaigns']['inject_text']; //this data will be modified to repalce real user data in next loop with contact numbers. 
+                    }
                 } else {
                     // Handle the case when auto_inject is not set
-                   $sendarray['button_var'] = $val['field_value'];
+                    $sendarray['button_var'] = $val['field_value'];
                 }
-                
             }
         }
 
@@ -1424,6 +1427,11 @@ class JobsController extends AppController
 
         foreach ($contact_array as $contact_id => $contact_number) {
             $sendarray['mobile_number'] = $contact_number;
+            if($autoInject == true){ //replace the variables in json data with real value. 
+                $modifiedinject_json = str_replace('{{mobile}}', $contact_number, $inject_json);
+                //TODO: add more replicements here based on future plans. 
+                $sendarray['button_var']=base64_encode($modifiedinject_json);
+            }
             //  debug($sendarray);
             $json = json_encode($sendarray);
             $sendTable = $this->getTableLocator()->get('SendQueues');
@@ -1443,7 +1451,7 @@ class JobsController extends AppController
         $contact_array = [];
         $contact_contact_number_table = $this->getTableLocator()->get('ContactsContactNumbers');
         $contact_id = explode(",", $contact_csv);
-        print_r($contact_id);
+       // print_r($contact_id);
         foreach ($contact_id as $ckey => $cval) {
             $query = $contact_contact_number_table->find()->innerJoinWith('ContactNumbers');
             $query->where(['contact_id' => $cval])

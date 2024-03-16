@@ -70,7 +70,7 @@ class CampsController extends AppController
         $URL = $FBSettings['interactive_webhook'];
         $APIKEY = $FBSettings['interactive_api_key'];
      //   debug($URL);
-        $URL="http://help_egrand/apis/wapi"; //temporary URL
+      //  $URL="http://help_egrand/apis/wapi"; //temporary URL
         $curl = curl_init();
 
         curl_setopt_array($curl, array(

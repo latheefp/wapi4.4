@@ -294,13 +294,6 @@ class CampaignsController extends AppController {
             $fname=$message_array['from'].".".$ext;
         }
 
-
-
-
-
-
-
-
         fclose($file_handle);
         $response = $this->response->withFile($file_path,
                 ['download' => true, 'name' => $fname]
