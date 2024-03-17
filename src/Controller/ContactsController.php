@@ -34,7 +34,11 @@ class ContactsController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
-//        $this->Security->setConfig('unlockedActions', ['getdata', 'edit']);
+        $formaction = $this->request->getParam('action');
+
+        $this->FormProtection->setConfig('unlockedActions', array(
+            $formaction
+        ));
     }
 
     function index() {
