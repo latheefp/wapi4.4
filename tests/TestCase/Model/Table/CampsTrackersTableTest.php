@@ -25,7 +25,8 @@ class CampsTrackersTableTest extends TestCase
      */
     protected $fixtures = [
         'app.CampsTrackers',
-        'app.ContactStreams',
+        'app.Campaigns',
+        'app.ContactNumbers',
     ];
 
     /**

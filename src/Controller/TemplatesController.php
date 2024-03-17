@@ -66,12 +66,11 @@ class TemplatesController extends AppController {
         curl_close($curl);
         $templatelist = (json_decode($response, TRUE));
         $templates = $this->getTableLocator()->get('Templates');
-//        $templates->updateAll((['status' => 'DELETED']), 'true');
-//        $templates->updateAll((['active' => 0]), 'true');
-    //    debug($templatelist);
+        $edit=0;
+        $new=0;
         if (isset($templatelist['data'])) {
             foreach ($templatelist['data'] as $key => $val) {
-                $info = TableRegistry::get('Templates')
+                $info = $this->getTableLocator()->get('Templates')
                         ->find()
                         ->where([
                             'id' => $val['id'],
@@ -89,6 +88,7 @@ class TemplatesController extends AppController {
                     //      $record->wbaid = $WBAID;
                     $record->template_details = $this->_gettemplate_details($val['name'], $FBsettings);
                     $templates->save($record);
+                    $new++;
                 } else {
                     $templates->get($info->id);
                     $info->name = $val['name'];
@@ -101,10 +101,20 @@ class TemplatesController extends AppController {
                     //      $info->wbaid = $WBAID;
                     $info->template_details = $this->_gettemplate_details($val['name'], $FBsettings);
                     $templates->save($info);
+                    $edit++;
                 }
                 //           debug($info);
             }
+
+            $result['status']="success";
+            $result['msg']="$edit Updated, $new Created new.";
+        }else{
+            $result['status']="warning";
+            $result['msg']="No data to update";
+    
         }
+        $this->set('result',$result);
+        
     }
 
     function _gettemplate_details($tname, $FBsettings) {
@@ -133,7 +143,7 @@ class TemplatesController extends AppController {
         $response = curl_exec($curl);
 
         curl_close($curl);
-//        debug($response);
+     //   debug($response);
         return $response;
     }
 

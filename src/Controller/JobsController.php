@@ -1321,11 +1321,14 @@ class JobsController extends AppController
 
         if (isset($return['result']['error'])) {
             // debug($return);
-            $this->_update_http_code($qid, '403', $type); //forbidden
+            $this->_update_http_code($sched_id, '403', $type); //forbidden
             $this->response = $this->response->withStatus(403); // forbidden
             $response['success'] = 'Failed';
         } else {
-            $return['message'] = "The message has been scheduled";
+            $this->_update_http_code($sched_id, '200', $type); //forbidden
+            $this->response = $this->response->withStatus(403); // forbidden
+            $this->set('response', $return);
+           // $response['success'] = 'Failed';
         }
 
         $this->set('response', $return);
@@ -1340,33 +1343,27 @@ class JobsController extends AppController
             ->where(['Schedules.id' => $schedule_id])
             ->select([
                 'Campaigns.template_id',
+                'Campaigns.id',
                 'Schedules.name',
                 'Schedules.campaign_id',
                 'Schedules.user_id',
                 'Schedules.account_id',
                 'Schedules.contact_csv',
                 'Campaigns.auto_inject',
-                'Campaigns.inject_text'
+                'Campaigns.inject_text',
+
+
             ])
             ->innerJoinWith('Campaigns')
             ->first();
-      //          debug($schedQuery);
-        if (empty($schedQuery->toArray())) {
+           //     debug($schedQuery->account_id);
+        if(empty($schedQuery)) {
             print "No data available in Schedules for $schedule_id";
             $return['result']['error']="Not data in Schedules for $schedule_id";
             return $return;
         }
 
-        if (isset($schedQuery->campaign)) {
-            // Access the auto_inject property
-            $autoInject = $schedQuery->campaign->auto_inject;
-           
-        } else {
-            // Handle the case when there's no associated campaign
-            $autoInject = null; // or any other default value you want
-        }
-       // debug(schedQuery);
-        //debug($schedQuery->toArray());
+   
 
         $contact_array = $this->create_contact_array($schedQuery->contact_csv);
 
@@ -1374,7 +1371,7 @@ class JobsController extends AppController
         $record->total_contact = count($contact_array);
         $schedTable->save($record);
 
-        //debug($schedQuery->account_id);
+ 
 
         $sendarray['api_key'] = $this->getMyAPIKey($schedQuery->account_id);
         $sendarray['schedule_name'] = $schedQuery->name;
@@ -1382,10 +1379,7 @@ class JobsController extends AppController
         $template_id = $schedQuery->_matchingData['Campaigns']['template_id'];
         $campaign_id = $schedQuery->campaign_id;
         $templatetable = $this->getTableLocator()->get('Templates');
-        $templateQuery = $templatetable->find()
-            ->where(['id' => $template_id])
-            ->first();
-        //  debug($templateQuery);
+
 
         $CampaignFormstable = $this->getTableLocator()->get('CampaignForms');
         $form = $CampaignFormstable->find()
@@ -1394,8 +1388,7 @@ class JobsController extends AppController
 
         foreach ($form as $key => $val) {
           //  debug($val);
-            $component = [];
-            $param = [];
+         
             $field_name = $val['field_name'];
             $keyarray = explode("-", $field_name);
     //           debug($keyarray);
@@ -1416,6 +1409,8 @@ class JobsController extends AppController
                     $autoInject = $scheduleArray['_matchingData']['Campaigns']['auto_inject'];
                     if ($autoInject == true) {
                         $inject_json = $scheduleArray['_matchingData']['Campaigns']['inject_text']; //this data will be modified to repalce real user data in next loop with contact numbers. 
+                        
+                    //    debug($inject_json);
                     }
                 } else {
                     // Handle the case when auto_inject is not set
@@ -1425,23 +1420,73 @@ class JobsController extends AppController
         }
 
      //   debug($sendarray);
-
-        foreach ($contact_array as $contact_id => $contact_number) {
+        $totalSchedules=0;
+        $return['result']['duplicate']=0;
+        foreach ($contact_array as $contact_number_id => $contact_number) {
             $sendarray['mobile_number'] = $contact_number;
-            if($autoInject == true){ //replace the variables in json data with real value. 
-                $modifiedinject_json = str_replace('{{mobile}}', $contact_number, $inject_json);
-                //TODO: add more replicements here based on future plans. 
-                $sendarray['button_var']=base64_encode($modifiedinject_json);
+            if ($autoInject == true) { //replace the variables in json data with real value. 
+
+
+                $modifiedinject_json = str_replace('##mobile##', $contact_number, $inject_json); //can repeate the same for repacing all VARs.
+
+                $injectarray = json_decode($modifiedinject_json, true);
+                
             }
-            //  debug($sendarray);
+         //   debug($scheduleArray);
+            if ($scheduleArray['_matchingData']['Campaigns']['auto_inject']) { //auto_inject will enabled track by default. 
+
+                $tableCampsTracker = $this->getTableLocator()->get('CampsTrackers');
+                //duplicate checking for existing same contact ID and Campaign ID.
+                $duplicate = $tableCampsTracker->find()
+                    ->where([
+                        'campaign_id' =>$schedQuery->_matchingData['Campaigns']['id'],
+                        'contact_number_id' => $contact_number_id
+                    ])
+                    ->first();
+
+                // debug($duplicate);
+
+                if ($duplicate) {
+                    //Update blocked count. 
+                    $duplicate->duplicate_blocked += 1; // Increment the duplicate_blocked field
+                    $tableCampsTracker->save($duplicate); // Save the changes
+                    $return['result']['duplicate_list'][]=$contact_number;
+                    $return['result']['duplicate']= $return['result']['duplicate']+1;
+                }
+                
+                // updating tracker table. 
+                $RowCampsTracker=$tableCampsTracker->newEmptyEntity();
+                $RowCampsTracker->contact_number_id=$contact_number_id;
+           
+                $RowCampsTracker->campaign_id=$schedQuery->_matchingData['Campaigns']['id'];
+                
+                if(!$tableCampsTracker->save($RowCampsTracker)){
+                    debug($RowCampsTracker->getErrors()); 
+                }else{
+                    $injectarray['camps_tracker_id']=$RowCampsTracker->id;
+                    $injectarray['account_id']=$schedQuery->account_id; //account id must be immutable. Dont accept from inject var of attachment form.
+                    $sendarray['button_var'] = base64_encode(json_encode($injectarray));
+                    $RowCampsTracker->hashvalue=$this->createSHAHash($sendarray['button_var']); //adding hashvalue to validate when the user submit  the camp.
+                    $tableCampsTracker->save($RowCampsTracker);
+                }
+            }else{
+                debug("Track not enabled");
+            }
+        //    debug($injectarray);
             $json = json_encode($sendarray);
+         //   debug($sendarray);
             $sendTable = $this->getTableLocator()->get('SendQueues');
             $newsendQ = $sendTable->newEmptyEntity();
             $newsendQ->form_data = $json;
             $newsendQ->type = "camp";
             $newsendQ->status = "queued";
-            $sendTable->save($newsendQ);
+
+            if($sendTable->save($newsendQ)){
+                $totalSchedules++;
+            }
         }
+        $return['result']['total']= $totalSchedules;
+        return  $return;
     }
 
 
@@ -1460,16 +1505,23 @@ class JobsController extends AppController
                     'ContactsContactNumbers.contact_id',
                     'ContactsContactNumbers.contact_number_id',
                     'ContactNumbers.mobile_number',
-                    'ContactNumbers.blocked'
+                    'ContactNumbers.blocked',
+                    'ContactNumbers.id'
                 ])
                 ->toArray();
+                
             foreach ($query as $key => $val) {
+              //  debug($val);
                 $blocked = $val->_matchingData['ContactNumbers']['blocked'];
                 if ($blocked == false) {
-                    $contact_array[] = $val->_matchingData['ContactNumbers']['mobile_number'];
+       //             debug($val);
+                    $concatctNumberID= $val->_matchingData['ContactNumbers']['id'];
+                    $contactNumber= $val->_matchingData['ContactNumbers']['mobile_number'];
+                    $contact_array[$concatctNumberID] = $contactNumber;
                 }
             }
         }
+      //  debug($contact_array);
         return array_unique($contact_array);
     }
 

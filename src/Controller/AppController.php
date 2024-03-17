@@ -470,15 +470,6 @@ class AppController extends Controller
         fclose($handle);
     }
 
-    //     function writeinteractive($data, $type ) {
-    //         $file = LOGS . 'GrandInt' . '.log';
-    // #  $data =json_encode($event)."\n";  
-    //         $time = date("Y-m-d H:i:s", time());
-    //         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
-    //         fwrite($handle, print_r("\n========================$type : $time============================= \n", true));
-    //         fwrite($handle, print_r($data, true));
-    //         fclose($handle);
-    //     }
 
 
     function writeinteractive($data, $type)
@@ -1090,5 +1081,23 @@ class AppController extends Controller
         }
 
         $this->set('result', $result);
+    }
+
+
+    function createSHAHash($data){
+        $privateKey="bW9oYW1tZWQ";
+        $dataWithPrivateKey = $data . $privateKey;
+        $shaHash = hash('sha256', $dataWithPrivateKey);
+     //   debug($shaHash);
+        return $shaHash;
+
+    }
+
+    function validateSHAHash($data, $hashToValidate) {
+        $privateKey="bW9oYW1tZWQ";
+        // Generate SHA hash using the provided data and private key
+        $generatedHash = $this->createSHAHash($data, $privateKey);
+        // Compare generated hash with the hash to validate
+        return hash_equals($generatedHash, $hashToValidate);
     }
 }

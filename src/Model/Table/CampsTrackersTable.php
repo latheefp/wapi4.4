@@ -11,7 +11,8 @@ use Cake\Validation\Validator;
 /**
  * CampsTrackers Model
  *
- * @property \App\Model\Table\ContactStreamsTable&\Cake\ORM\Association\BelongsTo $ContactStreams
+ * @property \App\Model\Table\CampaignsTable&\Cake\ORM\Association\BelongsTo $Campaigns
+ * @property \App\Model\Table\ContactNumbersTable&\Cake\ORM\Association\BelongsTo $ContactNumbers
  *
  * @method \App\Model\Entity\CampsTracker newEmptyEntity()
  * @method \App\Model\Entity\CampsTracker newEntity(array $data, array $options = [])
@@ -47,8 +48,12 @@ class CampsTrackersTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('ContactStreams', [
-            'foreignKey' => 'contact_stream_id',
+        $this->belongsTo('Campaigns', [
+            'foreignKey' => 'campaign_id',
+            'joinType' => 'INNER',
+        ]);
+        $this->belongsTo('ContactNumbers', [
+            'foreignKey' => 'contact_number_id',
             'joinType' => 'INNER',
         ]);
     }
@@ -62,17 +67,28 @@ class CampsTrackersTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('campain_id')
-            ->requirePresence('campain_id', 'create')
-            ->notEmptyString('campain_id');
+            ->integer('campaign_id')
+            ->notEmptyString('campaign_id');
 
         $validator
-            ->integer('contact_stream_id')
-            ->notEmptyString('contact_stream_id');
+            ->integer('contact_number_id')
+            ->notEmptyString('contact_number_id');
 
         $validator
             ->boolean('lead')
             ->notEmptyString('lead');
+
+        $validator
+            ->dateTime('leadtime')
+            ->allowEmptyDateTime('leadtime');
+
+        $validator
+            ->scalar('hashvalue')
+            ->allowEmptyString('hashvalue');
+
+        $validator
+            ->integer('duplicate_blocked')
+            ->notEmptyString('duplicate_blocked');
 
         return $validator;
     }
@@ -86,7 +102,8 @@ class CampsTrackersTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn('contact_stream_id', 'ContactStreams'), ['errorField' => 'contact_stream_id']);
+        $rules->add($rules->existsIn('campaign_id', 'Campaigns'), ['errorField' => 'campaign_id']);
+        $rules->add($rules->existsIn('contact_number_id', 'ContactNumbers'), ['errorField' => 'contact_number_id']);
 
         return $rules;
     }

@@ -20,11 +20,14 @@ class CampsTrackersFixture extends TestFixture
         $this->records = [
             [
                 'id' => 1,
-                'campain_id' => 1,
-                'contact_stream_id' => 1,
-                'created' => '2024-03-15 09:49:24',
+                'campaign_id' => 1,
+                'contact_number_id' => 1,
+                'created' => '2024-03-17 21:45:57',
                 'lead' => 1,
-                'modified' => '2024-03-15 09:49:24',
+                'leadtime' => '2024-03-17 21:45:57',
+                'modified' => '2024-03-17 21:45:57',
+                'hashvalue' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+                'duplicate_blocked' => 1,
             ],
         ];
         parent::init();

@@ -11,7 +11,7 @@ $this->Breadcrumbs->add([
             <?php
             foreach ($feildsType as $key => $val) {
                 if ($val['viewable'] == true) {
-//                             print '<th>'.$key.'</th>';
+                    //                             print '<th>'.$key.'</th>';
                     print '<th>' . $val['title'] . '</th>';
                 }
             }
@@ -27,50 +27,52 @@ $this->Breadcrumbs->add([
 
 <?php $this->Html->scriptStart(['block' => true]); ?>
 //<script>
-    $(function () {
+    $(function() {
 
 
         var table = $('#tabletemplates').DataTable({
             "ajax": {
                 "url": "/templates/gettemplates",
                 "type": "POST",
-                beforeSend: function (xhr) { // Add this line
+                beforeSend: function(xhr) { // Add this line
                     xhr.setRequestHeader('X-CSRF-Token', csrfToken);
                 },
             },
             //        lengthChange: false,        
             "stateSave": true,
-            "lengthMenu": [[5, 10, 15, 25, 50, 100], [5, 10, 15, 25, 50, 100]],
-            // "processing": true,
+            "lengthMenu": [
+                [5, 10, 15, 25, 50, 100],
+                [5, 10, 15, 25, 50, 100]
+            ],
+             "processing": true,
             "serverSide": true,
             "pageLength": <?php print $PageLength; ?>,
             scrollX: "300px",
             scrollCollapse: true,
             processing: true,
-            "language":
-                    {
-                        "processing": "<i class='fa fa-refresh fa-spin'></i>",
-                    },
+            "language": {
+                "processing": "<i class='fa fa-refresh fa-spin'></i>",
+            },
 
             select: true,
             "columns": [
-    <?php
-    foreach ($feildsType as $key => $val) {
-        if ($val['viewable'] == true) {
-            if ($val['searchable'] == 1) {
-                $searchable = "true";
-            } else {
-                $searchable = "false";
-            }
-            print '{"data":"' . $val['title'] . '", "name":"' . $val['fld_name'] . '", "width":"' . $val['width'] . '%",' . '"searchable":' . $searchable . '},' . "\n";
-        }
-    }
-    ?>
+                <?php
+                foreach ($feildsType as $key => $val) {
+                    if ($val['viewable'] == true) {
+                        if ($val['searchable'] == 1) {
+                            $searchable = "true";
+                        } else {
+                            $searchable = "false";
+                        }
+                        print '{"data":"' . $val['title'] . '", "name":"' . $val['fld_name'] . '", "width":"' . $val['width'] . '%",' . '"searchable":' . $searchable . '},' . "\n";
+                    }
+                }
+                ?>
             ],
         }); //End of dT.
 
         var table = $('#tabletemplates').DataTable();
-        $('#tabletemplates tbody').on('click', 'tr', function () {
+        $('#tabletemplates tbody').on('click', 'tr', function() {
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected');
             } else {
@@ -78,8 +80,7 @@ $this->Breadcrumbs->add([
                 $(this).addClass('selected');
             }
         });
-        new $.fn.dataTable.Buttons(table, [
-            {
+        new $.fn.dataTable.Buttons(table, [{
                 extend: 'copyHtml5',
                 text: '<i class="fas fa-copy"></i>',
                 titleAttr: 'Copy Selected',
@@ -106,35 +107,53 @@ $this->Breadcrumbs->add([
             {
                 text: '<i class="fas fa-refresh">Refresh</i>',
                 titleAttr: 'Refresh',
-                action: function (e, dt, node, config) {
+                action: function(e, dt, node, config) {
                     refreshtemplate();
                 },
                 enabled: true
             }
         ]);
         table.buttons().container()
-                .appendTo($('.col-md-6:eq(0)', table.table().container()));
-        table.on('select deselect', function () {
+            .appendTo($('.col-md-6:eq(0)', table.table().container()));
+        table.on('select deselect', function() {
             table.buttons(['.showonSelect']).enable(
-                    table.rows({selected: true}).indexes().length === 0 ?
-                    false :
-                    true
-                    );
+                table.rows({
+                    selected: true
+                }).indexes().length === 0 ?
+                false :
+                true
+            );
         }) //end of DT
 
 
 
         function refreshtemplate() {
-             $("body").addClass("loading");
+             var table = $('#tabletemplates').DataTable();
             $.ajax({
-                url: "/templates/refreshtemplates",
-                method: "GET"
-            })
-                    .done(function (data) {
-                        var table = $('#tabletemplates').DataTable();
-                         $("body").removeClass("loading");
+                    url: "/templates/refreshtemplates",
+                    method: "GET"
+                })
+                .done(function(data) {
+                    var obj = JSON.parse(data); // Parse data, not msg
+                    var status = obj.status;
+                    var msg = obj.msg;
+                    if (status == "success") {
+                        toastr.success(msg);
+                        
                         table.ajax.reload();
-                    });
+                    } else {
+                        toastr.warning(msg);
+                    }
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    // Handle AJAX error here
+                    console.error("AJAX Error:", textStatus, errorThrown);
+                    toastr.error("An error occurred during the AJAX request.");
+
+                    // Hide DataTables loading indicator
+                    $('#tabletemplates').DataTable().processing(false);
+                   // $("body").removeClass("loading");
+                });
         }
 
 
@@ -144,4 +163,4 @@ $this->Breadcrumbs->add([
 
     });
     <?php $this->Html->scriptEnd(); ?>
-    
+

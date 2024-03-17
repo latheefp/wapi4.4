@@ -20,7 +20,9 @@ use Cake\ORM\Entity;
  *
  * @property \App\Model\Entity\User $user
  * @property \App\Model\Entity\Template $template
- * @property \App\Model\Entity\CampainForm[] $campain_forms
+ * @property \App\Model\Entity\CampaignForm[] $campaign_forms
+ * @property \App\Model\Entity\ScheduleView[] $schedule_views
+ * @property \App\Model\Entity\Schedule[] $schedules
  */
 class Campaign extends Entity
 {
@@ -44,6 +46,8 @@ class Campaign extends Entity
         'template_id' => true,
         'user' => true,
         'template' => true,
-        'campain_forms' => true,
+        'campaign_forms' => true,
+        'schedule_views' => true,
+        'schedules' => true,
     ];
 }

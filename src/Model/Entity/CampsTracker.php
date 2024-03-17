@@ -9,13 +9,17 @@ use Cake\ORM\Entity;
  * CampsTracker Entity
  *
  * @property int $id
- * @property int $campain_id
- * @property int $contact_stream_id
+ * @property int $campaign_id
+ * @property int $contact_number_id
  * @property \Cake\I18n\FrozenTime $created
  * @property bool $lead
+ * @property \Cake\I18n\FrozenTime|null $leadtime
  * @property \Cake\I18n\FrozenTime $modified
+ * @property string|null $hashvalue
+ * @property int $duplicate_blocked
  *
- * @property \App\Model\Entity\ContactStream $contact_stream
+ * @property \App\Model\Entity\Campaign $campaign
+ * @property \App\Model\Entity\ContactNumber $contact_number
  */
 class CampsTracker extends Entity
 {
@@ -29,11 +33,15 @@ class CampsTracker extends Entity
      * @var array<string, bool>
      */
     protected $_accessible = [
-        'campain_id' => true,
-        'contact_stream_id' => true,
+        'campaign_id' => true,
+        'contact_number_id' => true,
         'created' => true,
         'lead' => true,
+        'leadtime' => true,
         'modified' => true,
-        'contact_stream' => true,
+        'hashvalue' => true,
+        'duplicate_blocked' => true,
+        'campaign' => true,
+        'contact_number' => true,
     ];
 }

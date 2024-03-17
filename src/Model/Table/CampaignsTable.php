@@ -13,6 +13,9 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
  * @property \App\Model\Table\TemplatesTable&\Cake\ORM\Association\BelongsTo $Templates
+ * @property \App\Model\Table\CampaignFormsTable&\Cake\ORM\Association\HasMany $CampaignForms
+ * @property \App\Model\Table\ScheduleViewsTable&\Cake\ORM\Association\HasMany $ScheduleViews
+ * @property \App\Model\Table\SchedulesTable&\Cake\ORM\Association\HasMany $Schedules
  *
  * @method \App\Model\Entity\Campaign newEmptyEntity()
  * @method \App\Model\Entity\Campaign newEntity(array $data, array $options = [])
@@ -57,6 +60,9 @@ class CampaignsTable extends Table
             'joinType' => 'INNER',
         ]);
         $this->hasMany('CampaignForms', [
+            'foreignKey' => 'campaign_id',
+        ]);
+        $this->hasMany('CampsTrackers', [
             'foreignKey' => 'campaign_id',
         ]);
         $this->hasMany('ScheduleViews', [

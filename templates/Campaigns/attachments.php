@@ -1,5 +1,5 @@
 <?php
-//debug($data['account_id']);
+//debug($data);
 $formarray = [];
 foreach ($formdata as $key => $val) {
     $formarray[$val['field_name']] = $val;
@@ -60,7 +60,7 @@ $varcount = 1;
                 );
 
                 $json_array = (json_decode($data['template_details'], true));
-                //  debug($json_array);
+                //    debug($json_array);
                 $count = count($json_array['data']);
                 foreach ($json_array['data'] as $dkey => $dval) {
                     $lang = $dval['language'];
@@ -211,7 +211,7 @@ $varcount = 1;
                                                     </div>
                                                     <div class="checkbox">
                                                         <label>
-                                                            <input type="checkbox" name="auto_inject" value="1" id="auto_inject" <?= $camp->auto_inject == 1 ? 'checked' : '' ?>> Auto inject with custom encoded array.
+                                                            <input type="checkbox" name="auto_inject" value="1" id="auto_inject" <?= $camp->auto_inject == 1 ? 'checked' : '' ?>> Enable tracking Auto inject with custom encoded JSON. 
                                                         </label>
                                                         <div id="injectContainer" style="display: none;">
                                                             <textarea class="col-md-12" id="jsonTextArea" rows="10" cols="50" name="inject_text"><?= $camp->inject_text ?></textarea>
@@ -219,7 +219,10 @@ $varcount = 1;
                                                                 <!-- Change input to textarea for multiline placeholder -->
                                                                 <textarea class="form-control input-group-lg" readonly placeholder="You can replace the value with known fields. Currently it supports only {{mobile}}"></textarea>
                                                             </div>
-                                                            <a href="#" class="link-primary" onclick="beautifyJson(event)">Beautify JSON</a>
+                                                            <div class="link-container" style="display: flex;  justify-content: space-between;">
+                                                                <a href="#" class="link-primary" onclick="beautifyJson(event)">Beautify JSON</a>
+                                                                <a href="#" class="link-primary" onclick="loadsample(event)">Load Sample JSON</a>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -302,9 +305,9 @@ $varcount = 1;
                                 foreach ($dval as $cdkey => $cdval) {
                                     if ($cdkey == "components") {
                                         foreach ($cdval as $key => $val) {
-                                           
+
                                             switch ($val['type']) {
-                                               
+
                                                 case "HEADER":
                                                     switch ($val['format']) {
                                                         case "TEXT":
@@ -328,7 +331,7 @@ $varcount = 1;
                                                         <?php
                                                             break;
                                                         case "IMAGE":
-                                                         //   debug($val);
+                                                            //   debug($val);
                                                             $fname = "file-" . $lang . "-header-image";
                                                             // debug($fname);
                                                             // debug($formarray);
@@ -338,7 +341,7 @@ $varcount = 1;
                                                                 <div class="col-sm-4">
                                                                     <?php if (isset($formarray[$fname])) {
                                                                     ?>
-                                                                        <a href="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] . "/".$data['account_id']."/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox" data-gallery="gallery">
+                                                                        <a href="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] . "/" . $data['account_id'] . "/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox" data-gallery="gallery">
                                                                             <img class="img-fluid mb-2" src="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] ?>" id="<?= $fname ?>-prev">
                                                                         <?php } else {
                                                                         ?>
@@ -615,6 +618,20 @@ $varcount = 1;
         const jsonTextArea = document.getElementById("jsonTextArea");
         try {
             const parsedJson = JSON.parse(jsonTextArea.value);
+            const beautifiedJson = JSON.stringify(parsedJson, null, 4); // 4 is the number of spaces for indentation
+            jsonTextArea.value = beautifiedJson;
+        } catch (error) {
+            alert("Invalid JSON");
+        }
+    }
+
+    //  loadsample(event)
+
+    function loadsample() {
+        const jsonTextArea = document.getElementById("jsonTextArea");
+        var sample = '{"issue":"Ac Service","mobile":"##mobile##","campaign_id":56,"service_type_id":14,"account_id":1,"action":"camps","backend":true}'
+        try {
+            const parsedJson = JSON.parse(sample);
             const beautifiedJson = JSON.stringify(parsedJson, null, 4); // 4 is the number of spaces for indentation
             jsonTextArea.value = beautifiedJson;
         } catch (error) {

@@ -47,12 +47,35 @@ class CampsController extends AppController
     function camps(){ //this function is maily for sendign data to default ticket function. 
         $this->viewBuilder()->setLayout('ajax');
         $queryParams = $this->getRequest()->getQueryParams();
-        $cdata=$queryParams['cdata'];
-        $cdataArray=json_decode(base64_decode($cdata),true);
+        $cdatabase64=$queryParams['cdata'];
+        $cdataArray=json_decode(base64_decode($cdatabase64),true);
      //   debug($cdataArray);
 
-        //$cdataArray['action']="camps";
+        //validate hash.
 
+        $camps_tracker_id=$cdataArray['camps_tracker_id'];
+        $camps_trackerTable=$this->getTableLocator()->get('CampsTrackers');
+        $camps_trackerrow=$camps_trackerTable->get($camps_tracker_id);
+      //  debug($camps_trackerrow->hashvalue);
+        if(!$this->validateSHAHash($cdatabase64, $camps_trackerrow->hashvalue) ){
+            $this->response = $this->response->withStatus(403); // Unauthorized
+            $response['error'] = 'Application error,  Validation failed';
+            $this->set('response', $response);
+            return;
+        }
+        //debug("Validated");
+
+        //updating lead status. 
+        $currentDateTime = new DateTime();
+        $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
+        $camps_trackerrow->lead=true;
+        $camps_trackerrow->leadtime=$formattedDateTime;
+        $camps_trackerTable->save($camps_trackerrow);
+
+
+     //   debug($camps_trackerrow);
+
+        
 
 
         $FBSettings=$this->_getFBsettings($cdataArray);
@@ -70,7 +93,7 @@ class CampsController extends AppController
         $URL = $FBSettings['interactive_webhook'];
         $APIKEY = $FBSettings['interactive_api_key'];
      //   debug($URL);
-      //  $URL="http://help_egrand/apis/wapi"; //temporary URL
+        $URL="http://help_egrand/apis/wapi"; //temporary URL
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -101,12 +124,12 @@ class CampsController extends AppController
         $this->response = $this->response->withStatus(200); // Unauthorized
         $response['msg'] = $responsearray;
         $this->set('response', $response);
-       // return;
+        return;
 
     }
 
 
-    function campskeyval(){ //this function is maily for sendign data to default ticket function. 
+    function campskeyval(){ //this function is maily for sendign data to default ticket function. can be deleted.
         $this->viewBuilder()->setLayout('ajax');
         $queryParams = $this->getRequest()->getQueryParams();
         $FBSettings=$this->_getFBsettings(['account_id'=>$queryParams['account_id']]);

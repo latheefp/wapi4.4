@@ -453,7 +453,7 @@ class CampaignsController extends AppController {
         if ($this->request->is('post')) {
             $this->viewBuilder()->setLayout('ajax');
             $data = $this->request->getData();
-         //   debug($data);
+        //    debug($data);
             $files = $_FILES;
             $id = $data['id'];
             unset($data['id']);
@@ -528,7 +528,7 @@ class CampaignsController extends AppController {
                     $row->field_value = $val; //file Name
                     $row->language = $keyarray[2];
                     if ($table->save($row)) {
-//                        print "Variable saved\n";
+                     //  print "Variable saved\n";
                     } else {
                         //     print "File Save failed \n";
                         //   $error = $row->getErrors();
@@ -537,16 +537,20 @@ class CampaignsController extends AppController {
                 }
             }
             $this->redirect('/campaigns/');
-        }
+        } //post end here. 
+
         $tableCampaigns = $this->getTableLocator()->get('Campaigns');
         $camp = $tableCampaigns->findById($id)->firstOrFail();
+        $this->set('camp', $camp);
         $template_id = $camp->template_id;
         $tableTemplates = $this->getTableLocator()->get('Templates');
-        $this->set('camp', $camp);
-
+        
+     //   debug($template_id);
         $tableTemplatesquery = $tableTemplates->query()
                 ->where(['id' => $template_id])
                 ->first();
+
+    //  debug($tableTemplatesquery->toSql());      
 
         $this->set('data', $tableTemplatesquery->toArray());
         $tableCampaignForms = $this->getTableLocator()->get('CampaignForms');
@@ -558,86 +562,86 @@ class CampaignsController extends AppController {
         $this->set('formdata', $queryCampaignForms->toArray());
     }
 
-    function attachment($id = null) {
-        if ($this->request->is('post')) {
-            $this->viewBuilder()->setLayout('ajax');
-            $data = $this->request->getData();
-            $files = $_FILES;
-            $id = $data['id'];
-            unset($data['id']);
-            $table = $this->getTableLocator()->get('CampaignForms');
-            foreach ($files as $key => $val) {
-                // 
-                $table->deleteAll(['field_name' => $key, 'campaign_id' => $id]);
-                if (($val == "undefined") || empty($val['tmp_name'])) {
-                    unset($data[$key]);
-                    continue;
-                }
-                //             debug($val);
-                $keyarray = explode("-", $key);
-                $row = $table->newEmptyEntity();
-                $row->campaign_id = $id;
-                $row->field_type = 'file';
-                $row->field_name = $key; //File Field name
-                $row->field_value = $val['name']; //file Name
-                // $imagePath = $asset_path . "/" . ($this->_genrand(8));
-                unset($data[$key]); //remove filename from post data array
-                //   rename($val['tmp_name'], $imagePath);
-                //  $row->file_path = $imagePath;
-                $row->file_type = $val['type'];
-                $row->file_size = $val['size'];
-                $row->language = $keyarray[1];
+    // function attachment($id = null) {
+    //     if ($this->request->is('post')) {
+    //         $this->viewBuilder()->setLayout('ajax');
+    //         $data = $this->request->getData();
+    //         $files = $_FILES;
+    //         $id = $data['id'];
+    //         unset($data['id']);
+    //         $table = $this->getTableLocator()->get('CampaignForms');
+    //         foreach ($files as $key => $val) {
+    //             // 
+    //             $table->deleteAll(['field_name' => $key, 'campaign_id' => $id]);
+    //             if (($val == "undefined") || empty($val['tmp_name'])) {
+    //                 unset($data[$key]);
+    //                 continue;
+    //             }
+    //             //             debug($val);
+    //             $keyarray = explode("-", $key);
+    //             $row = $table->newEmptyEntity();
+    //             $row->campaign_id = $id;
+    //             $row->field_type = 'file';
+    //             $row->field_name = $key; //File Field name
+    //             $row->field_value = $val['name']; //file Name
+    //             // $imagePath = $asset_path . "/" . ($this->_genrand(8));
+    //             unset($data[$key]); //remove filename from post data array
+    //             //   rename($val['tmp_name'], $imagePath);
+    //             //  $row->file_path = $imagePath;
+    //             $row->file_type = $val['type'];
+    //             $row->file_size = $val['size'];
+    //             $row->language = $keyarray[1];
 
-                if ($table->save($row)) {
-                    if($this->_uploadtofb($row->id, $val['tmp_name'])){
-                        print "Upload success";
-                    }else{
-                        print "Upload failed";
-                    }
-                } else {
-                    print "File Save failed\n";
-                    $error = $row->getErrors();
-                    dd($error);
-                }
-            }
-            if (!empty($data)) {
-                foreach ($data as $key => $val) {
-                    $keyarray = explode("-", $key);
-                    $row = $table->newEmptyEntity();
-                    $row->campaign_id = $id;
-                    $row->field_type = 'variable';
-                    $row->field_name = $key; //File Field name
-                    $row->field_value = $val; //file Name
-                    $row->language = $keyarray[2];
-                    if ($table->save($row)) {
-                        print "Variable saved\n";
-                    } else {
-                        print "File Save failed \n";
-                        $error = $row->getErrors();
-                        dd($error);
-                    }
-                }
-            }
-            $this->redirect('/campaigns/');
-        }
-        $table = $this->getTableLocator()->get('Campaigns');
-        $camp = $table->findById($id)->firstOrFail();
-        $template_id = $camp->template_id;
-        $table = $this->getTableLocator()->get('Templates');
-        $this->set('camp', $camp);
+    //             if ($table->save($row)) {
+    //                 if($this->_uploadtofb($row->id, $val['tmp_name'])){
+    //                     print "Upload success";
+    //                 }else{
+    //                     print "Upload failed";
+    //                 }
+    //             } else {
+    //                 print "File Save failed\n";
+    //                 $error = $row->getErrors();
+    //                 dd($error);
+    //             }
+    //         }
+    //         if (!empty($data)) {
+    //             foreach ($data as $key => $val) {
+    //                 $keyarray = explode("-", $key);
+    //                 $row = $table->newEmptyEntity();
+    //                 $row->campaign_id = $id;
+    //                 $row->field_type = 'variable';
+    //                 $row->field_name = $key; //File Field name
+    //                 $row->field_value = $val; //file Name
+    //                 $row->language = $keyarray[2];
+    //                 if ($table->save($row)) {
+    //                     print "Variable saved\n";
+    //                 } else {
+    //                     print "File Save failed \n";
+    //                     $error = $row->getErrors();
+    //                     dd($error);
+    //                 }
+    //             }
+    //         }
+    //         $this->redirect('/campaigns/');
+    //     }
+    //     $table = $this->getTableLocator()->get('Campaigns');
+    //     $camp = $table->findById($id)->firstOrFail();
+    //     $template_id = $camp->template_id;
+    //     $table = $this->getTableLocator()->get('Templates');
+    //     $this->set('camp', $camp);
 
-        $query = $table->query()
-                ->where(['id' => $template_id])
-                ->first();
+    //     $query = $table->query()
+    //             ->where(['id' => $template_id])
+    //             ->first();
 
-        $this->set('data', $query->toArray());
-        $table = $this->getTableLocator()->get('CampaignForms');
-        $query = $table->query()
-                ->find('all')
-                ->where(['campaign_id' => $id]);
+    //     $this->set('data', $query->toArray());
+    //     $table = $this->getTableLocator()->get('CampaignForms');
+    //     $query = $table->query()
+    //             ->find('all')
+    //             ->where(['campaign_id' => $id]);
 
-        $this->set('formdata', $query->toArray());
-    }
+    //     $this->set('formdata', $query->toArray());
+    // }
 
     function _uploadtofb($id, $path) {
        // debug($data);
@@ -776,7 +780,7 @@ class CampaignsController extends AppController {
                      exec($cmd);
                  //   system($cmd, $return_var);
                   //  debug($return_var);
-                  $result['msg'] = "Scheduleling is success";
+                  $result['msg'] = "Scheduleling is success with $id";
                 } else {
                     $result['status'] = "failed";
                     $result['msg'] = "Not able to save the the Contact group";

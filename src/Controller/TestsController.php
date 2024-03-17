@@ -23,25 +23,17 @@ class TestsController extends AppController
     function test()
     {
         $this->viewBuilder()->setLayout('ajax');
-        //        $query = TableRegistry::getTableLocator()->get('RcvQueues')
-        //                ->find();
-        //        $query->where(function (QueryExpression $exp, Query $q) {
-        //            return $exp
-        //                    ->eq('status', 'processing')
-        //                    ->gt('process_start_time', $q->func()->dateSub('NOW()', 'INTERVAL 10 MINUTE'));
-        //        });
+        $tableTemplates = $this->getTableLocator()->get('Templates');
+        
+        $template_id=713394727345835;
+        $tableTemplatesquery = $tableTemplates->query()
+                ->where(['id' => $template_id])
+                ->first();
 
-        $query = TableRegistry::getTableLocator()->get('RcvQueues')
-            ->find();
-        // Add the WHERE clause
-        $query->where([
-            'STATUS' => 'processing',
-            'process_start_time >' => Time::now()->subMinutes(10),
-        ]);
-
-        $count = $query->count();
-        debug($query->sql());
-        debug($count);
+                $data=$tableTemplatesquery->toArray();
+                debug($data);
+                $json_array = (json_decode($data['template_details'], true));
+                debug($json_array);
     }
 
     function redistest()
@@ -558,6 +550,7 @@ class TestsController extends AppController
 
 
 
+
     //     $data['account_id'] = $this->getMyAccountID();
     //   //  debug($data);
     //     $FBSettings = $this->_getFBsettings($data);
@@ -578,4 +571,8 @@ class TestsController extends AppController
 
 // Now, $msgArray contains the JSON data as a PHP array
     }
+
+
+
+    
 }
