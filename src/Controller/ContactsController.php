@@ -56,7 +56,7 @@ class ContactsController extends AppController {
 //            $session = $this->request->getSession();
             $account_id = $this->getMyAccountID();
 
-            $data['user_id'] = $this->Auth->user('id');
+            $data['user_id'] = $this->getMyUID();
             $data['account_id'] = $account_id;
          //   debug($data);
             $row = $table->newEntity($data);

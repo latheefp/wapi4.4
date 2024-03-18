@@ -43,7 +43,7 @@ class AjaxesController extends AppController {
         ));
 
 
-        $this->Authentication->allowUnauthenticated(['runjob', 'sendcamp']);
+
     }
 
     public function isAuthorized($user) {
