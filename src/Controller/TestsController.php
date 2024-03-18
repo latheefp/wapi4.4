@@ -23,17 +23,15 @@ class TestsController extends AppController
     function test()
     {
         $this->viewBuilder()->setLayout('ajax');
-        $tableTemplates = $this->getTableLocator()->get('Templates');
-        
-        $template_id=713394727345835;
-        $tableTemplatesquery = $tableTemplates->query()
-                ->where(['id' => $template_id])
-                ->first();
+        $cmd = ROOT . DS . "bin/cake upload -i 33 > /dev/null 2>&1 &";
+        debug($cmd);
+        $cmd = ROOT . DS . "bin/contactupload.sh 33 > /dev/null 2>&1 &";
+        debug($cmd);
+        exec($cmd);
+  
+        $output = shell_exec($cmd);
 
-                $data=$tableTemplatesquery->toArray();
-                debug($data);
-                $json_array = (json_decode($data['template_details'], true));
-                debug($json_array);
+        debug($output);
     }
 
     function redistest()

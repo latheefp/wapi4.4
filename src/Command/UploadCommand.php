@@ -16,7 +16,7 @@ use Cake\ORM\TableRegistry;
 /**
  * Upload command.
  */
-class UploadCommand extends Command {
+class UploadCommand extends Command { 
 
     /**
      * Hook method for defining this command's option parser.
@@ -34,17 +34,7 @@ class UploadCommand extends Command {
                         'short' => 'i',
                         'help' => 'The upload ID of the from uploads table',
                         'required' => true,
-                    ],
-//                    'author' => [
-//                        'short' => 'a',
-//                        'help' => 'The ID of the author for which to execute the operation.',
-//                        'required' => false,
-//                    ],
-//                    'product' => [
-//                        'short' => 'p',
-//                        'help' => 'The ID of the product for which to execute the operation.',
-//                        'required' => false,
-//                    ],
+                    ]
                 ]
         );
 
@@ -113,7 +103,9 @@ class UploadCommand extends Command {
         $table = $this->getTableLocator()->get('ContactNumbers');
         $existing = $table->find()
                 ->where(['mobile_number' => $data['mobile_number']])
-                ->toList();
+                ->all()
+                ->toList()
+                ;
         // debug($data);
         if (!empty($existing)) { //updating existing. 
             $this->output("Number available in Global Contact table");
@@ -185,6 +177,7 @@ class UploadCommand extends Command {
         foreach ($groups as $key => $val) {
             $query = $table->find()
                     ->where(['contact_number_id' => $id, 'contact_id' => $val])
+                    ->all()
                     ->toList();
             if (empty($query)) {
                 $this->output("Number Not available this group");

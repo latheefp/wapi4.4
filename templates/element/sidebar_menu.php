@@ -79,11 +79,20 @@
                     <i class="fas fa-angle-left right"></i>
                 </p>
             </a>
-            <ul class="nav nav-treeview">
+            <!-- <ul class="nav nav-treeview">
                 <li class="nav-item">
                     <a href="/contacts/index" class="nav-link">
                         <i class="fas fa-address-card nav-icon"></i>
                         <p>Contacts</p>
+                    </a>
+                </li>
+            </ul> -->
+
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                <a href="/contacts/index" class="nav-link">
+                        <i class="fas fa-file-alt nav-icon"></i>
+                        <p>Saved Lists</p>
                     </a>
                 </li>
             </ul>
@@ -92,22 +101,22 @@
 
 
         <li class="nav-item menu-open">
-    <a href="#" class="nav-link">
-        <i class="nav-icon fas fa-money-bill-alt"></i>
-        <p>
-            Invoice and Payment
-            <i class="fas fa-angle-left right"></i>
-        </p>
-    </a>
-    <ul class="nav nav-treeview">
-        <li class="nav-item">
-            <a href="/invoices/" class="nav-link">
-                <i class="fas fa-file-invoice-dollar nav-icon"></i>
-                <p>Invoices</p>
+            <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-money-bill-alt"></i>
+                <p>
+                    Invoice and Payment
+                    <i class="fas fa-angle-left right"></i>
+                </p>
             </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="/invoices/" class="nav-link">
+                        <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                        <p>Invoices</p>
+                    </a>
+                </li>
+            </ul>
         </li>
-    </ul>
-</li>
 
 
 
