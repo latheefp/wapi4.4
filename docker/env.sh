@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 DB_PASS="rootPassword"
 DB_USERNAME="root"
-DB_HOST="db"
+DB_HOST=192.168.8.191
 DB_DATABASE="waapi"
 SEND_MSG=1
 LOG=1

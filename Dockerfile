@@ -20,9 +20,23 @@ LABEL commit_hash="${COMMIT_HASH}"
 # Install required PHP extensions
 RUN docker-php-ext-install mysqli pdo pdo_mysql pcntl 
 
+
+# RUN apt-get update && apt-get install -y \
+#     unzip \
+#     libpng-dev libjpeg-dev \
+#         libzip-dev \
+#         zip  wkhtmltopdf 
+
+
 #installing required packags.
-RUN apt-get update && apt-get install -y  unzip vim libicu-dev  libicu-dev iputils-ping libhiredis-dev &&  docker-php-ext-install intl  \
-    && rm -rf /var/lib/apt/lists/* 
+RUN apt-get update && apt-get install -y  unzip libpng-dev libjpeg-dev \
+        libzip-dev \
+        zip vim libicu-dev \
+        libicu-dev iputils-ping \
+        libhiredis-dev &&  docker-php-ext-install intl  \
+        && docker-php-ext-install gd && \
+        docker-php-ext-install zip \
+        && rm -rf /var/lib/apt/lists/* 
     
 #RUN pecl install redis && docker-php-ext-enable redis;
 
