@@ -14,6 +14,12 @@ use DateTime;
 use Cake\Mailer\Mailer;
 use Cake\Core\Configure;
 
+
+use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\ServerRequest;
+use Cake\Cache\Cache;
+use Cake\Datasource\Exception\RecordNotFoundException;
+
 /**
  * Bookmarks Controller
  *
@@ -27,10 +33,17 @@ class AjaxesController extends AppController {
         $this->loadComponent('FormProtection');
     }
 
-    public function beforeFilter(EventInterface $event): void {
+    public function beforeFilter(EventInterface $event): void
+    {
         parent::beforeFilter($event);
-        $this->Authentication->allowUnauthenticated(['getrate']);
-        $this->FormProtection->setConfig('unlockedActions', ['getrate','validate']);
+        $formaction = $this->request->getParam('action');
+
+        $this->FormProtection->setConfig('unlockedActions', array(
+            $formaction
+        ));
+
+
+        $this->Authentication->allowUnauthenticated(['runjob', 'sendcamp']);
     }
 
     public function isAuthorized($user) {
