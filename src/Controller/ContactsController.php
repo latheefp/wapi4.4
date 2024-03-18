@@ -312,7 +312,7 @@ class ContactsController extends AppController {
             $table = $this->getTableLocator()->get('Uploads');
             $row = $table->newEmptyEntity();
             $row->postdata = json_encode($postData);
-            $row->user_id = $this->Auth->user('id');
+            $row->user_id = $this->getMyUID();
             $table->save($row);
             $cmd = ROOT . DS . "bin/cake upload -i $row->id > /dev/null 2>&1 &";
             exec($cmd);
