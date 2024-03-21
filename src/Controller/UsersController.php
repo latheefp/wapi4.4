@@ -24,8 +24,14 @@ class UsersController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
+
+        $formaction = $this->request->getParam('action');
+
+        $this->FormProtection->setConfig('unlockedActions', array(
+            $formaction
+        ));
         $this->Authentication->allowUnauthenticated(['login', 'logout']);
-        $this->FormProtection->setConfig('unlockedActions', ['login']);
+
 
     }
 

@@ -23,9 +23,9 @@ class TestsController extends AppController
     function test()
     {
         $this->viewBuilder()->setLayout('ajax');
-        $cmd = ROOT . DS . "bin/cake upload -i 33 > /dev/null 2>&1 &";
+        $cmd = ROOT . DS . "bin/cake upload -i 34 > /dev/null 2>&1 &";
         debug($cmd);
-        $cmd = ROOT . DS . "bin/contactupload.sh 33 > /dev/null 2>&1 &";
+        $cmd = ROOT . DS . "bin/contactupload.sh 34 > /dev/null 2>&1 &";
         debug($cmd);
         exec($cmd);
   
