@@ -56,10 +56,10 @@ class SettingsController extends AppController {
 
         if ($this->request->is('post')) {
             $data = $this->request->getData();
-            $session = $this->request->getSession();
-            $data['account_id'] = $session->read('Auth.User.account_id');
-            $admin_id = $session->read('Auth.User.ugroup_id');
-            //    debug($data);
+     
+            $data['account_id'] = $this->getMyAccountID();
+            $admin_id = $this->getMyGID();
+          //      debug($data);
             //if AdminID=1, Super user can be added. else no.
             if (($admin_id != 1) && ($data['ugroup_id'] == 1)) {
                 $result['status'] = "failed";
@@ -142,7 +142,7 @@ class SettingsController extends AppController {
             $query['conditions']['OR'][] = array('Users.email LIKE' => '%' . $querydata['search']['value'] . '%');
         }
 
-        $session = $this->request->getSession();
+     //   $session = $this->request->getSession();
         $query['conditions']['AND'][] = array('Users.account_id' => $this->getMyAccountID());
 
         // debug($query);
