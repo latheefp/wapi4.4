@@ -164,7 +164,8 @@ if (isset($titleforlayout)) {
                                     echo $this->Flash->render();
                                     echo $this->fetch('content');
                                     ?>
-                                </div></div>
+                                </div>
+                            </div>
                         </div>
                 </section>
 

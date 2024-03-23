@@ -211,8 +211,6 @@ $this->Breadcrumbs->add([
         }); //End of dT.
 
 
-
-
         new $.fn.dataTable.Buttons(table, [
 
             {
@@ -249,25 +247,62 @@ $this->Breadcrumbs->add([
             .appendTo($('.col-md-6:eq(0)', table.table().container()));
 
 
+         $('#tablecampaign_filter').append(' <button id="customSearchBtn" class="btn btn-info btn-sm">Go</button>');
 
-        
-            // var table = $('#tableschedule').DataTable();
-                $('#tablecampaign tbody').on('click', 'tr', function() {
-                    if ($(this).hasClass('selected')) {
-                        $(this).removeClass('selected');
-                        table.button(1).disable();
-                        table.button(2).disable();
-                    } else {
-                        table.$('tr.selected').removeClass('selected');
-                        $(this).addClass('selected');
-                        table.button(1).enable();
-                        table.button(2).enable();
-                        //    loaddetails();
 
-                    }
-                });
 
-    
+
+        document.getElementById("customSearchInput").addEventListener("keydown", function(event) {
+            // Check if the pressed key is not the Enter key
+            if (event.key !== "Enter") {
+                // Prevent default behavior for all keys except Enter
+                event.preventDefault();
+            }
+        });
+
+        // JavaScript to handle search action when Enter key is pressed
+        document.getElementById("customSearchInput").addEventListener("keyup", function(event) {
+            // Check if the pressed key is the Enter key
+            if (event.key === "Enter") {
+                // Trigger the search action
+                triggerSearch();
+            }
+        });
+
+        // JavaScript to handle search action when the "Go" button is clicked
+        document.getElementById("customSearchBtn").addEventListener("click", function() {
+            // Trigger the search action
+            triggerSearch();
+        });
+
+        // Function to trigger search action
+        function triggerSearch() {
+            var searchTerm = document.getElementById("customSearchInput").value;
+            table.search(searchTerm).draw();
+        }
+
+
+
+
+
+
+        // var table = $('#tableschedule').DataTable();
+        $('#tablecampaign tbody').on('click', 'tr', function() {
+            if ($(this).hasClass('selected')) {
+                $(this).removeClass('selected');
+                table.button(1).disable();
+                table.button(2).disable();
+            } else {
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+                table.button(1).enable();
+                table.button(2).enable();
+                //    loaddetails();
+
+            }
+        });
+
+
 
 
 
@@ -330,36 +365,36 @@ $this->Breadcrumbs->add([
     }); //end of DR.
 
 
-    function togglercv(){
+    function togglercv() {
 
 
     }
 
 
     function forwardme() {
-                    var table = $('#tablecampaign').DataTable();
-                    var id = table.row('.selected').id();
-                    $.ajax({
-                        beforeSend: function(xhr) { // Add this line
-                            xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                        },
-                        url: "/campaigns/forwarderq/" + id,
-                        method: "GET",
-                        success: function(data) {
-                            var obj = JSON.parse(data);
-                            var status = obj.status;
-                            var msg = obj.msg;
-                            if (status == "success") {
-                                toastr.success(msg);
-                              
-                            } else {
-                                toastr.error(msg);
-                            }
-                        }
-                    })
-            }
+        var table = $('#tablecampaign').DataTable();
+        var id = table.row('.selected').id();
+        $.ajax({
+            beforeSend: function(xhr) { // Add this line
+                xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+            },
+            url: "/campaigns/forwarderq/" + id,
+            method: "GET",
+            success: function(data) {
+                var obj = JSON.parse(data);
+                var status = obj.status;
+                var msg = obj.msg;
+                if (status == "success") {
+                    toastr.success(msg);
 
-    function forwardany(){
+                } else {
+                    toastr.error(msg);
+                }
+            }
+        })
+    }
+
+    function forwardany() {
 
     }
 
@@ -436,6 +471,16 @@ $this->Breadcrumbs->add([
         });
     }
 
+    //
+</script>
+
+<?php $this->Html->scriptEnd(); ?>
 
 
-    <?php $this->Html->scriptEnd(); ?>
+
+<style>
+    /* CSS to hide the second input element */
+    #tablecampaign_filter input:nth-of-type(2) {
+        display: none;
+    }
+</style>
