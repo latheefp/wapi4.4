@@ -1011,6 +1011,8 @@ class CampaignsController extends AppController {
                 $model . '.id' => 'desc'
             ]
         ];
+
+        //debug($querydata);
         if (isset($querydata['length'])) {
             $query['limit'] = intval($querydata['length']);
         } else {
@@ -1029,6 +1031,13 @@ class CampaignsController extends AppController {
         if (!empty($querydata['columns'][$querydata['order']['0']['column']]['name'])) {
             $query['order'] = array($querydata['columns'][$querydata['order']['0']['column']]['name'] . ' ' . $querydata['order']['0']['dir']);
         }
+
+
+
+        if($querydata['show_recv']=="true"){
+            $query['conditions']['AND'][] = array($model.'.type'=>'receive');
+        }
+
 //        $session = $this->request->getSession();
         $query['conditions']['AND'][] = array($model . ".account_id" => $this->getMyAccountID());
 

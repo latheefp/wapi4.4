@@ -25,6 +25,7 @@ $this->Breadcrumbs->add([
     </tfoot>
 </table>
 
+<Input type="hidden" id="show-recieve-only" value="false">
 
 <div class="modal fade bs-example-modal-lg table-responsive" id="contactmodel" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -149,6 +150,9 @@ $this->Breadcrumbs->add([
             "ajax": {
                 "url": "/campaigns/getstreams",
                 "type": "POST",
+                "data": function(d) {
+                    d.show_recv = $('#show-recieve-only').val();
+                },
                 beforeSend: function(xhr) { // Add this line
                     xhr.setRequestHeader('X-CSRF-Token', csrfToken);
                 },
@@ -214,7 +218,7 @@ $this->Breadcrumbs->add([
             {
                 text: '<i class="fas fa-eye-slash"></i>',
                 className: 'btn btn-info btn-sm',
-                titleAttr: 'Show only Recive',
+                titleAttr: 'Show only Receive',
                 action: function(e, dt, node, config) {
                     togglercv();
                 },
@@ -245,7 +249,7 @@ $this->Breadcrumbs->add([
             .appendTo($('.col-md-6:eq(0)', table.table().container()));
 
 
-         $('#tablecampaign_filter').append('<input id="customSearchInput"> <button id="customSearchBtn" class="btn btn-info btn-sm">Go</button>');
+        $('#tablecampaign_filter').append('<input id="customSearchInput"> <button id="customSearchBtn" class="btn btn-info btn-sm">Go</button>');
 
 
 
@@ -367,6 +371,31 @@ $this->Breadcrumbs->add([
 
 
     }
+
+    function togglercv() {
+        var table = $('#tablecampaign').DataTable();
+        const showRecieveOnlyInput = document.getElementById("show-recieve-only");
+        let newValue;
+
+        // Get the current value (considering it might be a string representation of true/false)
+        const currentValue = showRecieveOnlyInput.value;
+        if (currentValue === "true") {
+            newValue = "false";
+          //  table.ajax.reload();
+        } else if (currentValue === "false") {
+            newValue = "true";
+          //  table.ajax.reload();
+        } else {
+            // Handle unexpected values (set to true by default)
+            console.warn("Unexpected value in show-recieve-only input. Setting to true.");
+            newValue = "true";
+        }
+
+        // Set the new value
+        table.ajax.reload();
+        showRecieveOnlyInput.value = newValue;
+    }
+
 
 
     function forwardme() {
