@@ -168,8 +168,6 @@ $this->Breadcrumbs->add([
                     $(row).addClass('table-success');
                 }
 
-
-
             },
             //        lengthChange: false,        
             "stateSave": true,
@@ -247,7 +245,7 @@ $this->Breadcrumbs->add([
             .appendTo($('.col-md-6:eq(0)', table.table().container()));
 
 
-         $('#tablecampaign_filter').append(' <button id="customSearchBtn" class="btn btn-info btn-sm">Go</button>');
+         $('#tablecampaign_filter').append('<input id="customSearchInput"> <button id="customSearchBtn" class="btn btn-info btn-sm">Go</button>');
 
 
 
@@ -475,12 +473,3 @@ $this->Breadcrumbs->add([
 </script>
 
 <?php $this->Html->scriptEnd(); ?>
-
-
-
-<style>
-    /* CSS to hide the second input element */
-    #tablecampaign_filter input:nth-of-type(2) {
-        display: none;
-    }
-</style>
