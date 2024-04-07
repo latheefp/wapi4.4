@@ -13,7 +13,6 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\ContactStreamsTable&\Cake\ORM\Association\BelongsTo $ContactStreams
  * @property \App\Model\Table\SchedulesTable&\Cake\ORM\Association\BelongsTo $Schedules
- * @property \App\Model\Table\ContactsTable&\Cake\ORM\Association\BelongsTo $Contacts
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
  * @property \App\Model\Table\RatingViewsTable&\Cake\ORM\Association\HasMany $RatingViews
  * @property \App\Model\Table\RatingsTable&\Cake\ORM\Association\HasMany $Ratings
@@ -59,9 +58,6 @@ class StreamsTable extends Table
         ]);
         $this->belongsTo('Schedules', [
             'foreignKey' => 'schedule_id',
-        ]);
-        $this->belongsTo('Contacts', [
-            'foreignKey' => 'contact_id',
         ]);
         $this->belongsTo('Accounts', [
             'foreignKey' => 'account_id',
@@ -121,11 +117,6 @@ class StreamsTable extends Table
             ->scalar('lang')
             ->maxLength('lang', 8)
             ->notEmptyString('lang');
-
-        $validator
-            ->scalar('contact_id')
-            ->maxLength('contact_id', 32)
-            ->allowEmptyString('contact_id');
 
         $validator
             ->scalar('message_context_from')
@@ -304,7 +295,6 @@ class StreamsTable extends Table
     {
         $rules->add($rules->existsIn('contact_stream_id', 'ContactStreams'), ['errorField' => 'contact_stream_id']);
         $rules->add($rules->existsIn('schedule_id', 'Schedules'), ['errorField' => 'schedule_id']);
-        $rules->add($rules->existsIn('contact_id', 'Contacts'), ['errorField' => 'contact_id']);
         $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
 
         return $rules;

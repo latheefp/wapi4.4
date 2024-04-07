@@ -6,7 +6,7 @@ namespace App\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * ContactForm Entity
+ * Contactform Entity
  *
  * @property int $id
  * @property string $first_name
@@ -20,7 +20,7 @@ use Cake\ORM\Entity;
  * @property string|null $details
  * @property \Cake\I18n\FrozenTime $created
  */
-class ContactForm extends Entity
+class Contactform extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -29,7 +29,7 @@ class ContactForm extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'first_name' => true,

@@ -51,6 +51,9 @@ class RatingsTable extends Table
             'foreignKey' => 'stream_id',
             'joinType' => 'INNER',
         ]);
+        $this->belongsTo('Invoices', [
+            'foreignKey' => 'invoice_id',
+        ]);
     }
 
     /**
@@ -62,8 +65,8 @@ class RatingsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
+            ->integer('stream_id')
+            ->notEmptyString('stream_id');
 
         $validator
             ->numeric('old_balance')
@@ -112,6 +115,10 @@ class RatingsTable extends Table
             ->numeric('rate_with_tax')
             ->notEmptyString('rate_with_tax');
 
+        $validator
+            ->integer('invoice_id')
+            ->allowEmptyString('invoice_id');
+
         return $validator;
     }
 
@@ -124,8 +131,9 @@ class RatingsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['conversation']), ['errorField' => 'conversation']);
-        $rules->add($rules->existsIn(['stream_id'], 'Streams'), ['errorField' => 'stream_id']);
+        $rules->add($rules->isUnique(['conversation'], ['allowMultipleNulls' => true]), ['errorField' => 'conversation']);
+        $rules->add($rules->existsIn('stream_id', 'Streams'), ['errorField' => 'stream_id']);
+        $rules->add($rules->existsIn('invoice_id', 'Invoices'), ['errorField' => 'invoice_id']);
 
         return $rules;
     }

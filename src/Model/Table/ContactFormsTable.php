@@ -9,25 +9,25 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
- * ContactForms Model
+ * Contactforms Model
  *
- * @method \App\Model\Entity\ContactForm newEmptyEntity()
- * @method \App\Model\Entity\ContactForm newEntity(array $data, array $options = [])
- * @method \App\Model\Entity\ContactForm[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\ContactForm get($primaryKey, $options = [])
- * @method \App\Model\Entity\ContactForm findOrCreate($search, ?callable $callback = null, $options = [])
- * @method \App\Model\Entity\ContactForm patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\ContactForm[] patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\ContactForm|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\ContactForm saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\ContactForm[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\ContactForm[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
- * @method \App\Model\Entity\ContactForm[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\ContactForm[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Contactform newEmptyEntity()
+ * @method \App\Model\Entity\Contactform newEntity(array $data, array $options = [])
+ * @method \App\Model\Entity\Contactform[] newEntities(array $data, array $options = [])
+ * @method \App\Model\Entity\Contactform get($primaryKey, $options = [])
+ * @method \App\Model\Entity\Contactform findOrCreate($search, ?callable $callback = null, $options = [])
+ * @method \App\Model\Entity\Contactform patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \App\Model\Entity\Contactform[] patchEntities(iterable $entities, array $data, array $options = [])
+ * @method \App\Model\Entity\Contactform|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Contactform saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Contactform[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Contactform[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Contactform[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
+ * @method \App\Model\Entity\Contactform[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
  *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class ContactFormsTable extends Table
+class ContactformsTable extends Table
 {
     /**
      * Initialize method
@@ -39,7 +39,7 @@ class ContactFormsTable extends Table
     {
         parent::initialize($config);
 
-        $this->setTable('contact_forms');
+        $this->setTable('contactforms');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
 
@@ -54,10 +54,6 @@ class ContactFormsTable extends Table
      */
     public function validationDefault(Validator $validator): Validator
     {
-        $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
         $validator
             ->scalar('first_name')
             ->maxLength('first_name', 18)

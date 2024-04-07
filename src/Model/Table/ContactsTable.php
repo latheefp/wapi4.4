@@ -11,8 +11,8 @@ use Cake\Validation\Validator;
 /**
  * Contacts Model
  *
+ * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
- * @property \App\Model\Table\StreamsTable&\Cake\ORM\Association\HasMany $Streams
  * @property \App\Model\Table\ContactNumbersTable&\Cake\ORM\Association\BelongsToMany $ContactNumbers
  *
  * @method \App\Model\Entity\Contact newEmptyEntity()
@@ -57,24 +57,10 @@ class ContactsTable extends Table
             'foreignKey' => 'user_id',
             'joinType' => 'INNER',
         ]);
-        $this->hasMany('StreamViews', [
-            'foreignKey' => 'contact_id',
-        ]);
-        $this->hasMany('Streams', [
-            'foreignKey' => 'contact_id',
-        ]);
-        $this->hasMany('Streams-backup-jun-12', [
-            'foreignKey' => 'contact_id',
-        ]);
         $this->belongsToMany('ContactNumbers', [
             'foreignKey' => 'contact_id',
             'targetForeignKey' => 'contact_number_id',
             'joinTable' => 'contacts_contact_numbers',
-        ]);
-        $this->belongsToMany('Schedules', [
-            'foreignKey' => 'contact_id',
-            'targetForeignKey' => 'schedule_id',
-            'joinTable' => 'contacts_schedules',
         ]);
     }
 
@@ -86,10 +72,6 @@ class ContactsTable extends Table
      */
     public function validationDefault(Validator $validator): Validator
     {
-        $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
         $validator
             ->scalar('name')
             ->maxLength('name', 32)
@@ -108,6 +90,14 @@ class ContactsTable extends Table
             ->integer('blocked_count')
             ->notEmptyString('blocked_count');
 
+        $validator
+            ->integer('account_id')
+            ->notEmptyString('account_id');
+
+        $validator
+            ->integer('user_id')
+            ->notEmptyString('user_id');
+
         return $validator;
     }
 
@@ -120,8 +110,8 @@ class ContactsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['account_id'], 'Accounts'), ['errorField' => 'account_id']);
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
+        $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
+        $rules->add($rules->existsIn('user_id', 'Users'), ['errorField' => 'user_id']);
 
         return $rules;
     }

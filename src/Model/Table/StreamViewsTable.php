@@ -13,8 +13,7 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\ContactStreamsTable&\Cake\ORM\Association\BelongsTo $ContactStreams
  * @property \App\Model\Table\SchedulesTable&\Cake\ORM\Association\BelongsTo $Schedules
- * @property \App\Model\Table\ContactsTable&\Cake\ORM\Association\BelongsTo $Contacts
- * @property \App\Model\Table\CompaignsTable&\Cake\ORM\Association\BelongsTo $Compaigns
+ * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
  *
  * @method \App\Model\Entity\StreamView newEmptyEntity()
  * @method \App\Model\Entity\StreamView newEntity(array $data, array $options = [])
@@ -54,15 +53,9 @@ class StreamViewsTable extends Table
         $this->belongsTo('Schedules', [
             'foreignKey' => 'schedule_id',
         ]);
-        $this->belongsTo('Contacts', [
-            'foreignKey' => 'contact_id',
-        ]);
         $this->belongsTo('Accounts', [
             'foreignKey' => 'account_id',
             'joinType' => 'INNER',
-        ]);
-        $this->belongsTo('Compaigns', [
-            'foreignKey' => 'compaign_id',
         ]);
     }
 
@@ -97,6 +90,14 @@ class StreamViewsTable extends Table
             ->scalar('phonenumberid')
             ->maxLength('phonenumberid', 32)
             ->allowEmptyString('phonenumberid');
+
+        $validator
+            ->integer('contact_stream_id')
+            ->allowEmptyString('contact_stream_id');
+
+        $validator
+            ->integer('schedule_id')
+            ->allowEmptyString('schedule_id');
 
         $validator
             ->scalar('lang')
@@ -220,8 +221,12 @@ class StreamViewsTable extends Table
             ->allowEmptyString('pricing_model');
 
         $validator
-            ->numeric('cost')
-            ->allowEmptyString('cost');
+            ->numeric('costed')
+            ->allowEmptyString('costed');
+
+        $validator
+            ->boolean('rated')
+            ->notEmptyString('rated');
 
         $validator
             ->scalar('category')
@@ -246,6 +251,10 @@ class StreamViewsTable extends Table
             ->allowEmptyString('conversationid');
 
         $validator
+            ->integer('account_id')
+            ->notEmptyString('account_id');
+
+        $validator
             ->dateTime('conversation_expiration_timestamp')
             ->allowEmptyDateTime('conversation_expiration_timestamp');
 
@@ -264,13 +273,17 @@ class StreamViewsTable extends Table
             ->allowEmptyString('schedule_name');
 
         $validator
+            ->integer('compaign_id')
+            ->allowEmptyString('compaign_id');
+
+        $validator
             ->scalar('campaign_name')
             ->maxLength('campaign_name', 128)
             ->allowEmptyString('campaign_name');
 
         $validator
             ->scalar('contact_number')
-            ->maxLength('contact_number', 12)
+            ->maxLength('contact_number', 18)
             ->allowEmptyString('contact_number');
 
         $validator
@@ -295,11 +308,9 @@ class StreamViewsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['contact_stream_id'], 'ContactStreams'), ['errorField' => 'contact_stream_id']);
-        $rules->add($rules->existsIn(['schedule_id'], 'Schedules'), ['errorField' => 'schedule_id']);
-        $rules->add($rules->existsIn(['contact_id'], 'Contacts'), ['errorField' => 'contact_id']);
-        $rules->add($rules->existsIn(['account_id'], 'Accounts'), ['errorField' => 'account_id']);
-        $rules->add($rules->existsIn(['compaign_id'], 'Compaigns'), ['errorField' => 'compaign_id']);
+        $rules->add($rules->existsIn('contact_stream_id', 'ContactStreams'), ['errorField' => 'contact_stream_id']);
+        $rules->add($rules->existsIn('schedule_id', 'Schedules'), ['errorField' => 'schedule_id']);
+        $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
 
         return $rules;
     }

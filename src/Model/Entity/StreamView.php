@@ -16,7 +16,6 @@ use Cake\ORM\Entity;
  * @property int|null $contact_stream_id
  * @property int|null $schedule_id
  * @property string $lang
- * @property string|null $contact_id
  * @property string|null $message_context_from
  * @property string|null $message_from
  * @property \Cake\I18n\FrozenTime|null $message_timestamp
@@ -42,7 +41,8 @@ use Cake\ORM\Entity;
  * @property string|null $result
  * @property bool|null $billable
  * @property string|null $pricing_model
- * @property float|null $cost
+ * @property float|null $costed
+ * @property bool $rated
  * @property string|null $category
  * @property bool|null $success
  * @property string|null $errors
@@ -64,6 +64,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\ContactStream $contact_stream
  * @property \App\Model\Entity\Schedule $schedule
  * @property \App\Model\Entity\Contact $contact
+ * @property \App\Model\Entity\Account $account
  * @property \App\Model\Entity\Compaign $compaign
  */
 class StreamView extends Entity
@@ -75,7 +76,7 @@ class StreamView extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'id' => true,
@@ -86,7 +87,6 @@ class StreamView extends Entity
         'contact_stream_id' => true,
         'schedule_id' => true,
         'lang' => true,
-        'contact_id' => true,
         'message_context_from' => true,
         'message_from' => true,
         'message_timestamp' => true,
@@ -112,7 +112,8 @@ class StreamView extends Entity
         'result' => true,
         'billable' => true,
         'pricing_model' => true,
-        'cost' => true,
+        'costed' => true,
+        'rated' => true,
         'category' => true,
         'success' => true,
         'errors' => true,
@@ -133,6 +134,7 @@ class StreamView extends Entity
         'contact_stream' => true,
         'schedule' => true,
         'contact' => true,
+        'account' => true,
         'compaign' => true,
     ];
 }

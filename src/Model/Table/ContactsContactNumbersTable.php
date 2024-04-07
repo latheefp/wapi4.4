@@ -52,14 +52,6 @@ class ContactsContactNumbersTable extends Table
             'foreignKey' => 'contact_id',
             'joinType' => 'INNER',
         ]);
-        $this->hasMany('Contacts', [
-            'foreignKey' => 'contact_id',
-            'joinType' => 'INNER',
-        ]);
-        
-          $this->addBehavior('CounterCache', [
-            'Contacts' => ['contact_count']
-        ]);
     }
 
     /**
@@ -71,8 +63,12 @@ class ContactsContactNumbersTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
+            ->integer('contact_number_id')
+            ->notEmptyString('contact_number_id');
+
+        $validator
+            ->integer('contact_id')
+            ->notEmptyString('contact_id');
 
         return $validator;
     }
@@ -86,8 +82,8 @@ class ContactsContactNumbersTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['contact_number_id'], 'ContactNumbers'), ['errorField' => 'contact_number_id']);
-        $rules->add($rules->existsIn(['contact_id'], 'Contacts'), ['errorField' => 'contact_id']);
+        $rules->add($rules->existsIn('contact_number_id', 'ContactNumbers'), ['errorField' => 'contact_number_id']);
+        $rules->add($rules->existsIn('contact_id', 'Contacts'), ['errorField' => 'contact_id']);
 
         return $rules;
     }

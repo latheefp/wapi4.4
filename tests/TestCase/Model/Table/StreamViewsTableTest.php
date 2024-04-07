@@ -3,20 +3,20 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use App\Model\Table\SchedulesTable;
+use App\Model\Table\StreamViewsTable;
 use Cake\TestSuite\TestCase;
 
 /**
- * App\Model\Table\SchedulesTable Test Case
+ * App\Model\Table\StreamViewsTable Test Case
  */
-class SchedulesTableTest extends TestCase
+class StreamViewsTableTest extends TestCase
 {
     /**
      * Test subject
      *
-     * @var \App\Model\Table\SchedulesTable
+     * @var \App\Model\Table\StreamViewsTable
      */
-    protected $Schedules;
+    protected $StreamViews;
 
     /**
      * Fixtures
@@ -24,14 +24,12 @@ class SchedulesTableTest extends TestCase
      * @var array<string>
      */
     protected $fixtures = [
-        'app.Schedules',
-        'app.Campaigns',
-        'app.Users',
-        'app.Accounts',
-        'app.Schedulestreamsviews',
         'app.StreamViews',
-        'app.Streams',
+        'app.ContactStreams',
+        'app.Schedules',
         'app.Contacts',
+        'app.Accounts',
+        'app.Compaigns',
     ];
 
     /**
@@ -42,8 +40,8 @@ class SchedulesTableTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $config = $this->getTableLocator()->exists('Schedules') ? [] : ['className' => SchedulesTable::class];
-        $this->Schedules = $this->getTableLocator()->get('Schedules', $config);
+        $config = $this->getTableLocator()->exists('StreamViews') ? [] : ['className' => StreamViewsTable::class];
+        $this->StreamViews = $this->getTableLocator()->get('StreamViews', $config);
     }
 
     /**
@@ -53,7 +51,7 @@ class SchedulesTableTest extends TestCase
      */
     protected function tearDown(): void
     {
-        unset($this->Schedules);
+        unset($this->StreamViews);
 
         parent::tearDown();
     }
@@ -62,7 +60,7 @@ class SchedulesTableTest extends TestCase
      * Test validationDefault method
      *
      * @return void
-     * @uses \App\Model\Table\SchedulesTable::validationDefault()
+     * @uses \App\Model\Table\StreamViewsTable::validationDefault()
      */
     public function testValidationDefault(): void
     {
@@ -73,7 +71,7 @@ class SchedulesTableTest extends TestCase
      * Test buildRules method
      *
      * @return void
-     * @uses \App\Model\Table\SchedulesTable::buildRules()
+     * @uses \App\Model\Table\StreamViewsTable::buildRules()
      */
     public function testBuildRules(): void
     {

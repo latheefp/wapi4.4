@@ -16,7 +16,6 @@ use Cake\ORM\Entity;
  * @property int|null $contact_stream_id
  * @property int|null $schedule_id
  * @property string $lang
- * @property string|null $contact_id
  * @property string|null $message_context_from
  * @property string|null $message_from
  * @property \Cake\I18n\FrozenTime|null $message_timestamp
@@ -84,7 +83,6 @@ class Stream extends Entity
         'contact_stream_id' => true,
         'schedule_id' => true,
         'lang' => true,
-        'contact_id' => true,
         'message_context_from' => true,
         'message_from' => true,
         'message_timestamp' => true,

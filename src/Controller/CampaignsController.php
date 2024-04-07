@@ -876,7 +876,7 @@ class CampaignsController extends AppController {
 
     function deletesched($id) {
         $this->viewBuilder()->setLayout('ajax');
-        $contacts_schedules = $this->getTableLocator()->get('ContactsSchedules');
+        $contacts_schedules = $this->getTableLocator()->get('ContactSchedules');
         $contacts_schedules->deleteAll(['schedule_id' => $id]);
         $table_schedule = $this->getTableLocator()->get('Schedules');
         if ($table_schedule->deleteAll(['id' => $id])) {

@@ -17,8 +17,8 @@ use Cake\ORM\Entity;
  * @property int $account_id
  * @property int $user_id
  *
+ * @property \App\Model\Entity\Account $account
  * @property \App\Model\Entity\User $user
- * @property \App\Model\Entity\Stream[] $streams
  * @property \App\Model\Entity\ContactNumber[] $contact_numbers
  */
 class Contact extends Entity
@@ -30,7 +30,7 @@ class Contact extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'name' => true,
@@ -40,8 +40,8 @@ class Contact extends Entity
         'created' => true,
         'account_id' => true,
         'user_id' => true,
+        'account' => true,
         'user' => true,
-        'streams' => true,
         'contact_numbers' => true,
     ];
 }

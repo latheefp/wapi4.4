@@ -91,23 +91,37 @@ class ContactsController extends AppController {
         $this->set('result', $result);
     }
 
-    function getmygroups() {
+//     function getmygroups() {
+//         $this->viewBuilder()->setLayout('ajax');
+// //        $session = $this->request->getSession();
+//         $account_id = $this->getMyAccountID();
+
+//         $this->loadModel('Contacts');
+
+//         $query = $this->Contacts->find('all', [
+//             'keyField' => 'id',
+//             'valueField' => ['name', 'id', 'contact_count'],
+//             'conditions' => ['Contacts.account_id' => $account_id],
+//         ]);
+
+//         //    $query->order(['ContactNumbersViews.created' => 'DESC']);
+//         //   debug($query);
+//         $this->set('groups', $query); //table row data
+//         // $this->set('groups', $query->all()->toArray()); //table row data
+//     }
+
+
+    function getlist() {
         $this->viewBuilder()->setLayout('ajax');
 //        $session = $this->request->getSession();
         $account_id = $this->getMyAccountID();
 
-        $this->loadModel('Contacts');
+        $contactTable=$this->getTableLocator()->get('Contacts');
 
-        $query = $this->Contacts->find('all', [
-            'keyField' => 'id',
-            'valueField' => ['name', 'id', 'contact_count'],
-            'conditions' => ['Contacts.account_id' => $account_id],
-        ]);
-
-        //    $query->order(['ContactNumbersViews.created' => 'DESC']);
-        //   debug($query);
-        $this->set('groups', $query); //table row data
-        // $this->set('groups', $query->all()->toArray()); //table row data
+        $query = $contactTable->find()
+        ->where(['Contacts.account_id' => $account_id]);
+         
+        $this->set('data', $this->paginate($query));
     }
 
     function getcontacts($id = null) {
@@ -122,7 +136,7 @@ class ContactsController extends AppController {
     }
 
     function _set_contact_number_query($querydata, $model, $base_table) {
-        //   debug($querydata);
+       //    debug($querydata);
         if (isset($querydata['length'])) {
             $limit = intval($querydata['length']);
         } else {
@@ -137,6 +151,8 @@ class ContactsController extends AppController {
 
         $fields = $this->_fieldtypes($base_table);
         $qarray = [];
+
+      //  debug($fields);
 
         foreach ($fields as $title => $props) {
             if (($props['viewable'] == true) && ($props['searchable'] == true)) {
@@ -159,7 +175,7 @@ class ContactsController extends AppController {
         $start = intval($querydata['start']);
         $query->page($start / $limit + 1);
         $query->order($querydata['columns'][$querydata['order']['0']['column']]['name'] . ' ' . $querydata['order']['0']['dir']);
-//         echo debug($query);
+ //        echo debug($query);
         return $query;
     }
 
@@ -424,48 +440,25 @@ class ContactsController extends AppController {
     function deletecontact($id) {
         $result = [];
         $this->viewBuilder()->setLayout('ajax');
-        $tablecontacts = $this->getTableLocator()->get('Contacts');
-        $tablecontactContactnumber = $this->getTableLocator()->get('ContactsContactNumbers');
-        $ccnquery = $tablecontactContactnumber->find();
-        $ccnquery->where(['contact_id' => $id])
-                ->toArray();
+        $tablecontacts = $this->getTableLocator()->get('Contacts'); //the group table
 
-        foreach ($ccnquery as $ccnkey => $ccnval) {
-//            debug("contact number entries relaed to $id");
-//            debug($ccnval);
-            $contact_number_id = $ccnval->contact_number_id;
-            $ccountquery = $tablecontactContactnumber->find();
+        $deleterecord = $tablecontacts->find()
+                ->where(['account_id'=>$this->getMyAccountID(),'id'=>$id]);
 
-            //get all related records in ccn array for $id with count
-            $ccountquery->select(['contact_id', 'contact_number_id', 'id', 'count' => $ccountquery->func()->count('ContactsContactNumbers.contact_number_id')])
-                    ->where(['contact_number_id' => $contact_number_id])
-                    ->group(['contact_number_id'])
-                    ->toArray();
+        $recordCount = $deleterecord->count(); 
 
-            //   debug($ccountquery);
-            foreach ($ccountquery as $countkey => $countval) {
-                $count = $countval->count;
-                // debug($countval);
-                //   debug("contact number id: $contact_number_id has $count match");
-                #if only one match, delete both number and ccn else delete only ccn.
-                if ($count == 1) {
-                    $deleterecod = $tablecontactContactnumber->get($ccnval->id);
-                    $tablecontactContactnumber->delete($deleterecod);
-                    $contact_numberstable = $this->getTableLocator()->get('ContactNumbers');
-                    $deleterecod = $contact_numberstable->get($ccnval->contact_number_id);
-                    $contact_numberstable->delete($deleterecod);
-                    //   $tablecontactContactnumber->Delete($countval);
-                } else {
-                    //delete only from ccn table. 
-                    $deleterecod = $tablecontactContactnumber->get($ccnval->id);
-                    $tablecontactContactnumber->delete($deleterecod);
-                }
+        if ($recordCount > 0) {
+            foreach ($deleterecord as $record) {
+                $tablecontacts->delete($record);
             }
+        
+            $result['status'] = "success";
+            $result['msg'] = "Group has been deleted.";
+        } else {
+            $result['status'] = "error";
+            $result['msg'] = "No records found to delete.";
         }
-        $deleterecod = $tablecontacts->get($id);
-        $tablecontacts->delete($deleterecod);
-        $result['status'] = "success";
-        $result['msg'] = "Group has been deleted.";
+        
         $this->set('result', $result);
     }
 

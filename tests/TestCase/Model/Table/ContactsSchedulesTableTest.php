@@ -3,20 +3,20 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use App\Model\Table\SchedulesTable;
+use App\Model\Table\ContactsSchedulesTable;
 use Cake\TestSuite\TestCase;
 
 /**
- * App\Model\Table\SchedulesTable Test Case
+ * App\Model\Table\ContactsSchedulesTable Test Case
  */
-class SchedulesTableTest extends TestCase
+class ContactsSchedulesTableTest extends TestCase
 {
     /**
      * Test subject
      *
-     * @var \App\Model\Table\SchedulesTable
+     * @var \App\Model\Table\ContactsSchedulesTable
      */
-    protected $Schedules;
+    protected $ContactsSchedules;
 
     /**
      * Fixtures
@@ -24,14 +24,8 @@ class SchedulesTableTest extends TestCase
      * @var array<string>
      */
     protected $fixtures = [
+        'app.ContactsSchedules',
         'app.Schedules',
-        'app.Campaigns',
-        'app.Users',
-        'app.Accounts',
-        'app.Schedulestreamsviews',
-        'app.StreamViews',
-        'app.Streams',
-        'app.Contacts',
     ];
 
     /**
@@ -42,8 +36,8 @@ class SchedulesTableTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $config = $this->getTableLocator()->exists('Schedules') ? [] : ['className' => SchedulesTable::class];
-        $this->Schedules = $this->getTableLocator()->get('Schedules', $config);
+        $config = $this->getTableLocator()->exists('ContactsSchedules') ? [] : ['className' => ContactsSchedulesTable::class];
+        $this->ContactsSchedules = $this->getTableLocator()->get('ContactsSchedules', $config);
     }
 
     /**
@@ -53,7 +47,7 @@ class SchedulesTableTest extends TestCase
      */
     protected function tearDown(): void
     {
-        unset($this->Schedules);
+        unset($this->ContactsSchedules);
 
         parent::tearDown();
     }
@@ -62,7 +56,7 @@ class SchedulesTableTest extends TestCase
      * Test validationDefault method
      *
      * @return void
-     * @uses \App\Model\Table\SchedulesTable::validationDefault()
+     * @uses \App\Model\Table\ContactsSchedulesTable::validationDefault()
      */
     public function testValidationDefault(): void
     {
@@ -73,7 +67,7 @@ class SchedulesTableTest extends TestCase
      * Test buildRules method
      *
      * @return void
-     * @uses \App\Model\Table\SchedulesTable::buildRules()
+     * @uses \App\Model\Table\ContactsSchedulesTable::buildRules()
      */
     public function testBuildRules(): void
     {

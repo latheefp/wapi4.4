@@ -20,6 +20,7 @@ use Cake\ORM\Entity;
  * @property float|null $fb_cost
  * @property string|null $conversation
  * @property float $rate_with_tax
+ * @property int|null $invoice_id
  * @property \Cake\I18n\FrozenTime $created
  *
  * @property \App\Model\Entity\Stream $stream
@@ -33,7 +34,7 @@ class Rating extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'stream_id' => true,
@@ -47,6 +48,7 @@ class Rating extends Entity
         'fb_cost' => true,
         'conversation' => true,
         'rate_with_tax' => true,
+        'invoice_id' => true,
         'created' => true,
         'stream' => true,
     ];

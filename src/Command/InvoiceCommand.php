@@ -20,7 +20,7 @@ class InvoiceCommand extends Command
     public function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
     {
         $parser = parent::buildOptionParser($parser);
-
+        //example invince -a acount_id -m month -y year
         $parser->addOptions(
              [
                 'account_id' => [
@@ -117,12 +117,35 @@ class InvoiceCommand extends Command
                 ->first();
 
 
-      //  debug($existing);    
+      debug($existing);    
         
         if(isset($existing)){
-            debug("Invoice Already existing for customer_id $account_id for $month-$year");
-            return false;
+            debug("Invoice Already existing for customer_id $account_id for $month-$year. No action taken");
+         //   return false; 
+
+         //tmp code.
+         $invoiceTable->delete($existing);
         }
+     
+     //else{
+            $newinvoince = $invoiceTable->newEmptyEntity();
+            $newinvoince->account_id = $account_id;
+            $newinvoince->invoince_number = 123;
+            $newinvoince->year=$year;
+            $newinvoince->month=$month;
+            $newinvoince->invoice_date = FrozenTime::now();
+            $newinvoince->due_date = FrozenTime::now()->modify('+15 days');
+            if ($invoiceTable->save($newinvoince)) {
+                $newinvoince->invoice_number = 'INV-' . str_pad((string)$newinvoince->id, 5, '0', STR_PAD_LEFT);
+                $invoiceTable->save($newinvoince);
+                debug($newinvoince->invoice_number . " Has been created");
+            } else {
+                debug("Failed to save invoice ". $newinvoince->invoice_number);
+                return  false;
+            }
+
+      //  }
+      //  debug($newinvoince);
 
                 
 
@@ -143,31 +166,23 @@ class InvoiceCommand extends Command
         // 2. Update the `invoiced` field for all matching records:
         $totalCost=0;
         foreach ($matchingRecords as $record) {
-            $record->invoiced = true;
+            $record->invoince_id = $newinvoince->id;
             $ratingsTable->save($record);
             $totalCost=$totalCost+$record->cost;
         }
 
        
-        $newinvoince = $invoiceTable->newEmptyEntity();
-        $newinvoince->account_id = $account_id;
-        $newinvoince->invoince_number = 123;
+      
         $newinvoince->total_amount = $totalCost;
-        $newinvoince->year=$year;
-        $newinvoince->month=$month;
         if ($totalCost < 1) {
             $newinvoince->status = "Paid";
         } else {
             $newinvoince->status = "Unpaid";
         }
-        $newinvoince->invoice_date = FrozenTime::now();
-        $newinvoince->due_date = FrozenTime::now()->modify('+15 days');
         if ($invoiceTable->save($newinvoince)) {
-            $newinvoince->invoice_number = 'INV-' . str_pad((string)$newinvoince->id, 5, '0', STR_PAD_LEFT);
-            $invoiceTable->save($newinvoince);
-          //  debug($invoice);
+          debug("Invoice Amount updated as  $totalCost");
         } else {
-            debug("Failed to save invoice");
+            debug("Failed to save  the amount $totalCost invoice");
         }
         debug($totalCost);
     }

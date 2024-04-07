@@ -91,6 +91,19 @@ class InvoicesController extends AppController
         return $query;
     }
 
+    function details($invoice_id){
+        $ratingsTable=$this->getTableLocator()->get('Ratings');
+        $matchingRecords = $ratingsTable
+            ->find()
+            ->where([
+                'MONTH(Ratings.created)' => $month,
+                'YEAR(Ratings.created)' => $year,
+                'Streams.account_id' => $account_id
+            ])
+            ->contain(['Streams']);
+
+    }
+
     
 
    

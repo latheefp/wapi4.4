@@ -6,9 +6,9 @@ namespace App\Test\Fixture;
 use Cake\TestSuite\Fixture\TestFixture;
 
 /**
- * StreamsFixture
+ * StreamViewsFixture
  */
-class StreamsFixture extends TestFixture
+class StreamViewsFixture extends TestFixture
 {
     /**
      * Init method
@@ -41,9 +41,9 @@ class StreamsFixture extends TestFixture
                 'type' => 'Lorem ipsum dolor sit amet',
                 'has_wa' => 1,
                 'message_format_type' => 'Lorem ipsum dolor sit amet',
-                'read_time' => '2024-03-27 00:12:54',
-                'delivered_time' => '2024-03-27 00:12:54',
-                'sent_time' => '2024-03-27 00:12:54',
+                'read_time' => '2024-03-27 00:13:19',
+                'delivered_time' => '2024-03-27 00:13:19',
+                'sent_time' => '2024-03-27 00:13:19',
                 'button_payload' => 'Lorem ipsum dolor sit amet',
                 'button_text' => 'Lorem ipsum dolor sit amet',
                 'sendarray' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
@@ -58,13 +58,19 @@ class StreamsFixture extends TestFixture
                 'success' => 1,
                 'errors' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
                 'commented' => 1,
-                'created' => '2024-03-27 00:12:54',
-                'modified' => '2024-03-27 00:12:54',
+                'created' => '2024-03-27 00:13:19',
+                'modified' => '2024-03-27 00:13:19',
                 'conversationid' => 'Lorem ipsum dolor sit amet',
                 'account_id' => 1,
-                'conversation_expiration_timestamp' => '2024-03-27 00:12:54',
+                'conversation_expiration_timestamp' => '2024-03-27 00:13:19',
                 'conversation_origin_type' => 'Lorem ipsum dolor sit amet',
                 'tmp_upate_json' => 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+                'schedule_name' => 'Lorem ipsum dolor sit amet',
+                'compaign_id' => 1,
+                'campaign_name' => 'Lorem ipsum dolor sit amet',
+                'contact_number' => 'Lorem ipsum dolo',
+                'profile_name' => 'Lorem ipsum dolor sit amet',
+                'contact_name' => 'Lorem ipsum dolor sit amet',
             ],
         ];
         parent::init();

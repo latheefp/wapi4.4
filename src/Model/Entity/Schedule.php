@@ -26,7 +26,6 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Schedulestreamsview[] $schedulestreamsviews
  * @property \App\Model\Entity\StreamView[] $stream_views
  * @property \App\Model\Entity\Stream[] $streams
- * @property \App\Model\Entity\Streams-aug-30[] $streams_aug_30
  * @property \App\Model\Entity\Contact[] $contacts
  */
 class Schedule extends Entity
@@ -57,7 +56,6 @@ class Schedule extends Entity
         'schedulestreamsviews' => true,
         'stream_views' => true,
         'streams' => true,
-        'streams_aug_30' => true,
         'contacts' => true,
     ];
 }

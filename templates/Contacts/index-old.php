@@ -6,26 +6,30 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title load_numbers">Contacts Groups</h3>
-
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table id="contact_table" class="table table-bordered mb-0 " style="width: 100%" ;>
-                        <colgroup>
-                            <col style="width: 75%;">
-                            <col style="width: 25%;">
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Count</th>
-                            </tr>
-                        </thead>
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item active">
+                        <div class="input-group mb-3" style="padding: .5rem 1rem;">
+                            <a href="#" onclick="newgroup()" id="groupaddbutton" class="btn btn-primary btn-block mb-3">New Contact Group</a>
+                            <div class="input-group input-group-sm" id="contactaddinputdiv">
+                                <input type="text" class="form-control" id="newgrouptxt">
+                                <span class="input-group-append">
+                                    <button type="button" class="btn btn-info btn-flat" onclick="addnewgroup();"><i class="fas fa-check"></i></button>
+                                    <button type="button" class="btn btn-info btn-flat" onclick="cancelgroup();"><i class="fas fa-window-close"></i></button>
+                                </span>
+                            </div>
+                        </div>
+                    </li>
+                    <div id="grouplist" class="load_numbers">
 
-
-                    </table>
-                </div>
-
+                    </div>
+                </ul>
             </div>
 
         </div>
@@ -78,6 +82,7 @@
                                     <?php
                                     foreach ($feildsType as $key => $val) {
                                         if ($val['viewable'] == true) {
+//                             print '<th>'.$key.'</th>';
                                             print '<th>' . $val['title'] . '</th>';
                                         }
                                     }
@@ -103,7 +108,7 @@
 
 
 
-<div class="modal fade bs-example-modal-lg" id="contactmodel" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade bs-example-modal-lg" id="contactmodel"  tabindex="-1" role="dialog"  aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -131,19 +136,18 @@
                             <div class="card-body">
                                 <?php
                                 $products = null;
-                                echo $this->Form->create(
-                                    $products,
-                                    [
-                                        'type' => 'post',
-                                        'class' => 'form-horizontal',
-                                        'url' => '/contacts/newcontactlist',
-                                        'idPrefix' => 'newcontactlist',
-                                        'id' => 'newcontactlist',
-                                        'defaction' => null,
-                                        'class' => ["form-horizontal", "needs-validation"],
-                                        "novalidate",
-                                        'enctype' => 'multipart/form-data'
-                                    ]
+                                echo $this->Form->create($products,
+                                        [
+                                            'type' => 'post',
+                                            'class' => 'form-horizontal',
+                                            'url' => '/contacts/newcontactlist',
+                                            'idPrefix' => 'newcontactlist',
+                                            'id' => 'newcontactlist',
+                                            'defaction' => null,
+                                            'class' => ["form-horizontal", "needs-validation"],
+                                            "novalidate",
+                                            'enctype' => 'multipart/form-data'
+                                        ]
                                 );
                                 ?>
                                 <input type="hidden" id="" name="id">
@@ -156,7 +160,7 @@
                                         </div>
                                         <div tabindex="1" class="form-group col-xl-12">
                                             <label>Mobile Number *</label>
-                                            <input type="text" class="form-control" name="mobile_number" id="mobile_number" required="" placeholder="Mobile Number">
+                                            <input type="text" class="form-control"  name="mobile_number" id="mobile_number" required="" placeholder="Mobile Number">
                                         </div>
                                         <div class="form-group">
                                             <label>Groups </label>
@@ -167,13 +171,13 @@
                                         <div class="col-sm-6">
                                             <div class="form-group">
                                                 <label>Gender</label>
-                                                <select class="form-control" name="gender" , id="gender">
+                                                <select class="form-control" name="gender", id="gender">
                                                     <option value="M">Male</option>
                                                     <option value="F">Female</option>
                                                 </select>
                                             </div>
                                         </div>
-                                        <div tabindex="2" class="form-group">
+                                        <div  tabindex="2" class="form-group">
                                             <label>Expiry Date *</label>
                                             <div>
                                                 <input type="date" class="form-control" name="expiry" id="expiry" required="" placeholder="Expiry date">
@@ -191,7 +195,7 @@
                                             <button type="button" name="submit" id="newcontact-btn" class="btn btn-primary waves-effect waves-light mr-1">
                                                 Submit
                                             </button>
-                                            <button type="button" data-dismiss="modal" id="cancle-btn" class="btn btn-secondary waves-effect">
+                                            <button type="button"  data-dismiss="modal" id="cancle-btn" class="btn btn-secondary waves-effect">
                                                 Cancel
                                             </button>
                                         </div>
@@ -214,13 +218,13 @@
                                     </form>
                                 </div>
                                 <br>
-                                <div id="contendsubmitform" class="col-md-12" style="overflow-y: scroll; height:400px;">
+                                <div id="contendsubmitform" class="col-md-12"  style="overflow-y: scroll; height:400px;">
                                     <form class="" id="submitselecteddata_form" enctype="multipart/form-data">
                                         <div class="form-group">
                                             <label>Groups </label>
                                             <?php echo $this->element('Select2Ajaxelement', array('token' => '88975478KLU96C32', 'name' => "contact_id[]", 'id' => "group_ids2")); ?>
                                         </div>
-                                        <div id="listtablecontent" class="col-md-12">
+                                        <div id="listtablecontent" class="col-md-12" >
                                         </div>
                                         <br>
                                         <div class="form-inline mt-2">
@@ -246,124 +250,24 @@
         <!-- /.modal-content -->
     </div>
     <!-- /.modal-dialog -->
-</div>
+</div>  
 
 
 
-<input type="hidden" id="current_contact_id">
+<input  type="hidden" id="current_contact_id">
 <input type="hidden" id="action">
 
 <?php $this->Html->scriptStart(['block' => true]); ?>
 //<script>
-    $(function() {
-
-
-
-        var contact_group_table = $('#contact_table').DataTable({
-            "ajax": {
-                "url": "/contacts/getlist",
-                "type": "POST",
-                "data": function(d) {
-                    d.show_recv = $('#show-recieve-only').val();
-                },
-                beforeSend: function(xhr) { // Add this line
-                    xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                },
-            },
-            "stateSave": true,
-            "processing": true,
-            "serverSide": true,
-            "paging": true,
-            "select": true,
-
-            "pageLength": 20,
-            "lengthChange": false, // Disable the length menu completely
-            //   "dom": "lfrtip", // Display all elements except length dropdown
-            scrollX: "300px",
-            order: [
-                [0, 'desc']
-            ],
-            scrollCollapse: true,
-            "columns": [
-
-                {
-                    data: "Name",
-                    name: "name",
-                    searchable: true
-
-                },
-                {
-                    data: "Count",
-                    name: "count",
-                    searchable: false
-
-                }
-
-            ],
-
-        }); //End of dT.
-
-        new $.fn.dataTable.Buttons(contact_group_table, [
-
-            {
-
-                text: '<i class="fa fa-trash"></i>',
-                className: 'btn btn-danger btn-sm',
-                action: function(e, dt, node, config) {
-                    var rowData = contact_group_table.row('.selected').data();
-                    if (rowData) {
-                        var name = rowData.Name; // Assuming 'Name' is the key for the name field, replace it with the actual key
-                    }
-                    id = contact_group_table.row('.selected').id();
-                    deletecontact(id, name);
-                   
-                },
-                enable: false
-            },
-
-            {
-                text: '<i class="far fa-plus-square"></i>',
-                className: 'btn btn-default btn-sm',
-                titleAttr: 'Add New Contact',
-                action: function(e, dt, node, config) {
-                    addcontact();
-                },
-                enabled: true
-            }
-        ]);
-
-        contact_group_table.buttons().container()
-            .appendTo($('.col-md-6:eq(0)', contact_group_table.table().container()));
-
-
-        contact_group_table.on('select deselect', function() {
-            var selectedRows = contact_group_table.rows({
-                selected: true
-            }).count();
-            var button0 = contact_group_table.button(0); // Assuming the first button
-
-            if (selectedRows > 0) {
-                button0.enable(); // Enable the button
-            } else {
-                button0.disable(); // Disable the button
-            }
-
-            var id = contact_group_table.row('.selected').id();
-            $('#current_contact_id').val(id);
-            $('#numberlist').DataTable().draw();
-        });
-
-
-
-        $('.custom-file input').change(function(e) {
+    $(function () {
+        $('.custom-file input').change(function (e) {
             if (e.target.files.length) {
                 $(this).next('.custom-file-label').html(e.target.files[0].name);
             }
         });
-
         $('#contendsubmitform').hide();
 
-        $('#submitdatabutton').click(function(event) {
+        $('#submitdatabutton').click(function (event) {
             //  alert("you are submitting form.")
             document.getElementById("submitdatabutton").hidden = true;
             document.getElementById("submitspin").hidden = false;
@@ -373,128 +277,128 @@
             data = form.serialize();
             console.log(data);
             $.ajax({
-                    url: "/contacts/imporfromexcel",
-                    method: "POST",
-                    data: data,
-                    beforeSend: function(xhr) { // Add this line
-                        xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                    }
-                })
-                .done(function(data) {
-                    var jsonData = JSON.parse(data);
-                    status = jsonData.status;
-                    msg = jsonData.msg;
-                    if (status == "success") {
-                        toastr['success'](msg);
-                        $('#groupaddbutton').show();
-                        $('#contactaddinputdiv').hide();
-                        //   loadcontactlist();
-                    } else {
-                        toastr['error'](msg);
-                    }
-                    document.getElementById("submitdatabutton").hidden = false;
-                    document.getElementById("submitspin").hidden = true;
+                url: "/contacts/imporfromexcel",
+                method: "POST",
+                data: data,
+                beforeSend: function (xhr) { // Add this line
+                    xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+                }
+            })
+                    .done(function (data) {
+                        var jsonData = JSON.parse(data);
+                        status = jsonData.status;
+                        msg = jsonData.msg;
+                        if (status == "success") {
+                            toastr['success'](msg);
+                            $('#groupaddbutton').show();
+                            $('#contactaddinputdiv').hide();
+                            loadcontactlist();
+                        } else {
+                            toastr['error'](msg);
+                        }
+                        document.getElementById("submitdatabutton").hidden = false;
+                        document.getElementById("submitspin").hidden = true;
 
 
-                });
+                    });
 
 
         })
 
-        $('#fileupload-btn').click(function(event) {
+        $('#fileupload-btn').click(function (event) {
             event.preventDefault();
 
             var form = $("#newcontactupload");
             formData = new FormData(),
-                params = form.serializeArray(),
-                file = form.find('[name="contactfile"]')[0].files;
-            $.each(file, function(i, file) {
+                    params = form.serializeArray(),
+                    file = form.find('[name="contactfile"]')[0].files;
+            $.each(file, function (i, file) {
                 //  console.log(file);
                 formData.append('file[]', file);
             });
-            $.each(params, function(i, val) {
+            $.each(params, function (i, val) {
                 formData.append(val.name, val.value);
             });
             formData.append('id', Math.random());
 
             $.ajax({
-                    beforeSend: function(xhr) { // Add this line
-                        xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                    },
-                    url: '/contacts/newcontactupload',
-                    type: 'POST',
-                    data: formData,
-                    async: false,
-                    cache: false,
-                    contentType: false,
-                    enctype: 'multipart/form-data',
-                    processData: false,
-                    xhr: function() {
-                        myXhr = $.ajaxSettings.xhr();
-                        console.log('XHR: ', myXhr);
-                        if (myXhr.upload) {
-                            myXhr.upload.addEventListener('progress', function(e) {
-                                var loaded = e.loaded;
-                                var total = e.total;
-                                var percentComplete = Math.round((e.loaded / e.total) * 100);
+                beforeSend: function (xhr) { // Add this line
+                    xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+                },
+                url: '/contacts/newcontactupload',
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                enctype: 'multipart/form-data',
+                processData: false,
+                xhr: function () {
+                    myXhr = $.ajaxSettings.xhr();
+                    console.log('XHR: ', myXhr);
+                    if (myXhr.upload) {
+                        myXhr.upload.addEventListener('progress', function (e) {
+                            var loaded = e.loaded;
+                            var total = e.total;
+                            var percentComplete = Math.round((e.loaded / e.total) * 100);
 
-                                // Quantity of bytes per second
-                                var leftover_bytes = total - loaded;
-                                var leftover_bytes = leftover_bytes / 1048576;
-                                $('p#response').html(leftover_bytes.toFixed(2) + ' MB');
+                            // Quantity of bytes per second
+                            var leftover_bytes = total - loaded;
+                            var leftover_bytes = leftover_bytes / 1048576;
+                            $('p#response').html(leftover_bytes.toFixed(2) + ' MB');
 
-                                // Progress bar function
-                                $('.progress .progress-bar').css('width', percentComplete + '%');
-                                $('.progress .progress-bar').html(percentComplete + '%');
+                            // Progress bar function
+                            $('.progress .progress-bar').css('width', percentComplete + '%');
+                            $('.progress .progress-bar').html(percentComplete + '%');
 
-                            }, false);
-                            myXhr.upload.addEventListener('load', function(e) {
-                                // After upload cant reset progrees bar
-                                //$('.progress .progress-bar').css('width', '0%');
-                                //$('.progress .progress-bar').html( '');
-                            }, false);
+                        }, false);
+                        myXhr.upload.addEventListener('load', function (e) {
+                            // After upload cant reset progrees bar
+                            //$('.progress .progress-bar').css('width', '0%');
+                            //$('.progress .progress-bar').html( '');
+                        }, false);
+                    }
+                    return myXhr;
+                }
+            })
+                    .done(function (data, textStatus, jqXHR) { // Before success
+                        //  alert("before success");
+                        // $('#listtablecontent').html(data);
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) { // Before error
+                        //  alert(jqXHR.status);
+
+                        switch (jqXHR.status) {
+                            case 0:
+                                $('p#response').html('Timeout exceeded.');
+                                break;
+
+                            case 403:
+                                $('p#response').html('The session has expired.');
+                                break;
+
+                            case 404:
+                                $('p#response').html('The requested page does not exist.');
+                                break;
+
+                            default:
+                                if (jqXHR.status != 200) {
+                                    $('p#response').html('Error please try again has occurred.');
+                                }
+                                break;
                         }
-                        return myXhr;
-                    }
-                })
-                .done(function(data, textStatus, jqXHR) { // Before success
-                    //  alert("before success");
-                    // $('#listtablecontent').html(data);
-                })
-                .fail(function(jqXHR, textStatus, errorThrown) { // Before error
-                    //  alert(jqXHR.status);
-
-                    switch (jqXHR.status) {
-                        case 0:
-                            $('p#response').html('Timeout exceeded.');
-                            break;
-
-                        case 403:
-                            $('p#response').html('The session has expired.');
-                            break;
-
-                        case 404:
-                            $('p#response').html('The requested page does not exist.');
-                            break;
-
-                        default:
-                            if (jqXHR.status != 200) {
-                                $('p#response').html('Error please try again has occurred.');
-                            }
-                            break;
-                    }
 
 
-                    console.log(jqXHR);
+                        console.log(jqXHR);
 
-                }).done(function(logs) {
+                    }).done(function (logs) {
 
-                    $('#fileupload_form').hide();
-                    $('#listtablecontent').html(logs)
-                    $('#contendsubmitform').show();
+                $('#fileupload_form').hide();
+                $('#listtablecontent').html(logs)
+                $('#contendsubmitform').show();
 
 
-                });
+            });
 
             return false;
 
@@ -502,22 +406,22 @@
 
 
         $('#contactaddinputdiv').hide();
-        //  loadcontactlist();
-        // $(".load_numbers").click(function(event) {
-        //     type = event.target.getAttribute('type');
-        //     if (type == "delete") {
-        //         gname = event.target.getAttribute('gname');
-        //         deletecontact(event.target.id, gname)
-        //     } else {
-        //         getcontacts(event.target.id);
-        //         const selected = document.querySelectorAll('.navselected');
-        //         selected.forEach(select => {
-        //             select.classList.remove('navselected');
-        //         });
-        //         event.target.classList.add('navselected');
-        //     }
+        loadcontactlist();
+        $(".load_numbers").click(function (event) {
+            type = event.target.getAttribute('type');
+            if (type == "delete") {
+                gname = event.target.getAttribute('gname');
+                deletecontact(event.target.id, gname)
+            } else {
+                getcontacts(event.target.id);
+                const selected = document.querySelectorAll('.navselected');
+                selected.forEach(select => {
+                    select.classList.remove('navselected');
+                });
+                event.target.classList.add('navselected');
+            }
 
-        // });
+        });
 
 
 
@@ -527,20 +431,17 @@
             "ajax": {
                 "url": "/contacts/getcontacts",
                 "type": "POST",
-                //                "type": "GET",
-                "data": function(d) {
+//                "type": "GET",
+                "data": function (d) {
                     d.contact_id = $('#current_contact_id').val();
                 },
-                beforeSend: function(xhr) { // Add this line
+                beforeSend: function (xhr) { // Add this line
                     xhr.setRequestHeader('X-CSRF-Token', csrfToken);
                 },
             },
             //        lengthChange: false,        
             "stateSave": true,
-            "lengthMenu": [
-                [5, 10, 15, 25, 50, 100],
-                [5, 10, 15, 25, 50, 100]
-            ],
+            "lengthMenu": [[5, 10, 15, 25, 50, 100], [5, 10, 15, 25, 50, 100]],
             "processing": true,
             "serverSide": true,
             "pageLength": <?php print $PageLength; ?>,
@@ -548,23 +449,24 @@
             scrollCollapse: true,
             select: true,
             "columns": [
-                <?php
-                foreach ($feildsType as $key => $val) {
-                    if ($val['viewable'] == true) {
-                        if ($val['searchable'] == 1) {
-                            $searchable = "true";
-                        } else {
-                            $searchable = "false";
-                        }
-                        print '{"data":"' . $val['title'] . '", "name":"' . $val['fld_name'] . '", "width":"' . $val['width'] . '%",' . '"searchable":' . $searchable . '},' . "\n";
-                    }
-                }
-                ?>
+    <?php
+    foreach ($feildsType as $key => $val) {
+        if ($val['viewable'] == true) {
+            if ($val['searchable'] == 1) {
+                $searchable = "true";
+            } else {
+                $searchable = "false";
+            }
+            print '{"data":"' . $val['title'] . '", "name":"' . $val['fld_name'] . '", "width":"' . $val['width'] . '%",' . '"searchable":' . $searchable . '},' . "\n";
+        }
+    }
+    ?>
             ],
-        }); //End of dT.
+        }
+        ); //End of dT.
 
         var table = $('#numberlist').DataTable();
-        $('#tabletemplates tbody').on('click', 'tr', function() {
+        $('#tabletemplates tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected');
             } else {
@@ -587,46 +489,26 @@
                 text: '<i class="far fa-plus-square"></i>',
                 className: 'btn btn-default btn-sm',
                 titleAttr: 'Add New Contact',
-                action: function(e, dt, node, config) {
+                action: function (e, dt, node, config) {
                     addcontact();
-                },
-                enabled: true
-            },
-            {
-                text: '<i class="fa fa-ban"></i>',
-                className: 'btn btn-default btn-sm',
-                titleAttr: 'Block',
-                action: function(e, dt, node, config) {
-                    block();
-                },
-                enabled: true
-            },
-            {
-                text: '<i class="fa fa-trash"></i>',
-                className: 'btn btn-default btn-sm',
-                titleAttr: 'Delete',
-                action: function(e, dt, node, config) {
-                    deletecontactnumber();
                 },
                 enabled: true
             }
         ]);
         table.buttons().container()
-            .appendTo($('.col-md-6:eq(0)', table.table().container()));
-        table.on('select deselect', function() {
+                .appendTo($('.col-md-6:eq(0)', table.table().container()));
+        table.on('select deselect', function () {
             table.buttons(['.showonSelect']).enable(
-                table.rows({
-                    selected: true
-                }).indexes().length === 0 ?
-                false :
-                true
-            );
+                    table.rows({selected: true}).indexes().length === 0 ?
+                    false :
+                    true
+                    );
         })
 
 
 
-        $("#newcontact-btn").click(function(event) {
-            $('#newcontactlist input, #newproduct_form select').each(function(key, value) {
+        $("#newcontact-btn").click(function (event) {
+            $('#newcontactlist input, #newproduct_form select').each(function (key, value) {
                 this.classList.remove('is-invalid');
                 this.setCustomValidity("");
             });
@@ -654,15 +536,13 @@
         var r = confirm("Do you want to delete Contact Group" + gname + " " + rowid + " ?");
         if (r == true) {
             var url = "/contacts/deletecontact/" + rowid;
-            $.ajax({
-                url: url
-            }).done(function(msg) {
+            $.ajax({url: url}).done(function (msg) {
                 var obj = JSON.parse(msg);
                 var status = obj.status;
                 var msg = obj.msg;
                 if (status == "success") {
                     toastr.success(msg);
-                    //   loadcontactlist();
+                    loadcontactlist();
                 } else {
                     toastr.error(msg);
                 }
@@ -671,11 +551,8 @@
 
     }
 
-    function addcontact() {
-        $('#contactmodel').modal({
-            backdrop: 'static',
-            keyboard: false
-        });
+    function  addcontact() {
+        $('#contactmodel').modal({backdrop: 'static', keyboard: false});
         //  $('#newccount_form').get(0).reset(); 
         $('#newcontactlist').attr('defaction', '/contacts/newcontactnumber');
         $('#action').val("add");
@@ -695,29 +572,27 @@
     function addnewgroup() {
         group = $('#newgrouptxt').val();
         $.ajax({
-                url: "/contacts/newcontacts",
-                method: "POST",
-                data: {
-                    'name': group
-                },
-                beforeSend: function(xhr) { // Add this line
-                    xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                }
-            })
-            .done(function(data) {
-                var jsonData = JSON.parse(data);
-                status = jsonData.status;
-                msg = jsonData.msg;
-                if (status == "success") {
-                    toastr['success'](msg);
-                    $('#groupaddbutton').show();
-                    $('#contactaddinputdiv').hide();
-                    //      loadcontactlist();
-                } else {
-                    toastr['error'](msg);
-                }
+            url: "/contacts/newcontacts",
+            method: "POST",
+            data: {'name': group},
+            beforeSend: function (xhr) { // Add this line
+                xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+            }
+        })
+                .done(function (data) {
+                    var jsonData = JSON.parse(data);
+                    status = jsonData.status;
+                    msg = jsonData.msg;
+                    if (status == "success") {
+                        toastr['success'](msg);
+                        $('#groupaddbutton').show();
+                        $('#contactaddinputdiv').hide();
+                        loadcontactlist();
+                    } else {
+                        toastr['error'](msg);
+                    }
 
-            });
+                });
     }
 
     function cancelgroup() {
@@ -725,23 +600,23 @@
         $('#contactaddinputdiv').hide();
     }
 
-    // function loadcontactlist() {
-    //     $.ajax({
-    //         url: "/contacts/getmygroups/",
-    //         method: "GET",
-    //         //   data:{customer:query},  
-    //         success: function (data)
-    //         {
-    //             $('#grouplist').html(data);
-    //         }
-    //     });
-    // }
+    function loadcontactlist() {
+        $.ajax({
+            url: "/contacts/getmygroups/",
+            method: "GET",
+            //   data:{customer:query},  
+            success: function (data)
+            {
+                $('#grouplist').html(data);
+            }
+        });
+    }
 
-    // function getcontacts(id) {
-    //     $('#current_contact_id').val(id);
-    //     //   console.log("Redrawing table " + id)
-    //     $('#numberlist').DataTable().draw();
-    // }
+    function getcontacts(id) {
+        $('#current_contact_id').val(id);
+        //   console.log("Redrawing table " + id)
+        $('#numberlist').DataTable().draw();
+    }
 
 
     function ajaxvalidate(event) {
@@ -749,41 +624,41 @@
         data = form.serialize();
         console.log(data);
         $.ajax({
-                beforeSend: function(xhr) { // Add this line
-                    xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                },
-                url: "/ajaxes/validate/ContactNumbers/" + $('#action').val(),
-                method: "POST",
-                //  async:false,
-                data: data,
+            beforeSend: function (xhr) { // Add this line
+                xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+            },
+            url: "/ajaxes/validate/ContactNumbers/" + $('#action').val(),
+            method: "POST",
+            //  async:false,
+            data: data,
 
-                //success: successCallBack
-            })
-            .done(function(data) {
-                var jsonData = JSON.parse(data);
-                var validStatus = true;
-                for (var i = 0; i < jsonData.length; i++) {
-                    var counter = jsonData[i];
-                    var inputID = counter.field;
-                    if (inputID.endsWith("_id")) {
-                        inputID = inputID.substring(0, inputID.length - 3);
+            //success: successCallBack
+        })
+                .done(function (data) {
+                    var jsonData = JSON.parse(data);
+                    var validStatus = true;
+                    for (var i = 0; i < jsonData.length; i++) {
+                        var counter = jsonData[i];
+                        var inputID = counter.field;
+                        if (inputID.endsWith("_id")) {
+                            inputID = inputID.substring(0, inputID.length - 3);
+                        }
+                        var msg = counter.error;
+                        console.log(inputID);
+                        var input = document.getElementById(inputID);
+                        input.classList.add('is-invalid');
+                        input.setCustomValidity(msg);
+                        input.reportValidity();
+                        validStatus = false;
+                        input.reportValidity();
                     }
-                    var msg = counter.error;
-                    console.log(inputID);
-                    var input = document.getElementById(inputID);
-                    input.classList.add('is-invalid');
-                    input.setCustomValidity(msg);
-                    input.reportValidity();
-                    validStatus = false;
-                    input.reportValidity();
-                }
-                if (validStatus == false) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                } else {
-                    submitform();
-                }
-            });
+                    if (validStatus == false) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    } else {
+                        submitform();
+                    }
+                });
     }
 
 
@@ -798,13 +673,13 @@
         var url = $('#newcontactlist').attr('defaction');
         console.log(url);
         $.ajax({
-            beforeSend: function(xhr) { // Add this line
+            beforeSend: function (xhr) { // Add this line
                 xhr.setRequestHeader('X-CSRF-Token', csrfToken);
             },
             type: "POST",
             url: url,
             data: form.serialize(), // serializes the form's elements.
-            success: function(data) {
+            success: function (data) {
                 var obj = JSON.parse(data);
                 var status = obj.status;
                 var msg = obj.msg;

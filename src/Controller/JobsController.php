@@ -469,6 +469,8 @@ class JobsController extends AppController
         // debug(getenv('LOG'));
         $input = json_decode($record->json, true);
 
+       
+
 
         $this->writelog($input, "Post Data from Process Job");
 
@@ -512,11 +514,11 @@ class JobsController extends AppController
             $return['result']['msg_type'] = $msgtype;
             $adminforward=true;
             $isCmd=false;
+            // debug($input);
+            // debug($FBSettings);
             switch ($msgtype) {
                 case "text":
                     $dataarray['message_txt_body'] = $message['text']['body'];
-
-
                     $isCmd=$this->processCMd($dataarray, $FBSettings);  //process CMD and set cmd is true or false.
                     //if cme is true, we will use this status to skip this msg forwarding.  
                     break;
@@ -542,6 +544,7 @@ class JobsController extends AppController
                     $this->readmsg($messageid, $FBSettings); //existing interactive communcatoin. 
                     break;
             }
+//            debug($input);
             $dataarray['delivered_time'] = date("Y-m-d h:i:s", time());
             $dataarray['type'] = "receive";
             $this->writelog($message, "message");
@@ -577,6 +580,7 @@ class JobsController extends AppController
                     $notification_numbers = (explode(',', $FBSettings['interactive_notification_numbers']));
                     $notification_numbers[] = $dataarray['contact_waid'];
                     $this->writelog($notification_numbers, "Iteractive Menu notification array");
+               //     debug($input);
                     foreach ($notification_numbers as $key => $contact_number) {
                         if (!empty($contact_number)) {
                             $this->writelog($contact_number, "Sending Interactive Menu to $contact_number for customer id: " . $dataarray['contact_waid']);
@@ -614,14 +618,6 @@ class JobsController extends AppController
         // sleep(2);
     }
 
-    // function test(){
-    //     $FBSettings['account_id']=1;
-    //    # $this->processCMd("bill 2024 01",$FBSettings);
-    //     $this->processCMd("register",$FBSettings);
-    //      $this->processCMd("svc",$FBSettings);
-    //     // $this->processCMd("sale",$FBSettings);
-       
-    // }
 
 
     function processCMd($dataarray,$FBSettings){
@@ -684,7 +680,7 @@ class JobsController extends AppController
     function adminforwarder($stream_id,$FBSettings, $sender){ //this function will be called from rcv array to formward this all receving message to admins
         //    $this->viewBuilder()->setLayout('ajax');
             //find all users under this account to notify.
-            debug("Running admin fowader");
+      //      debug("Running admin fowader");
             $UserTable=$this->getTableLocator()->get('Users');
             $users=$UserTable->find()
             ->where(['account_id'=>$FBSettings['account_id']])
@@ -754,6 +750,7 @@ class JobsController extends AppController
         $this->writeinteractive($get_array, "Reply ID Array to send to Grand");
 
         $URL = $FBSettings['interactive_webhook'];
+//        debug($URL);
         $APIKEY = $FBSettings['interactive_api_key'];
 
         $curl = curl_init();
@@ -776,23 +773,32 @@ class JobsController extends AppController
         ));
 
         $response = curl_exec($curl);
-        //        print($response);
+  //              print($response);
         $this->writeinteractive($response, "Response json from Grand");
         $responsearray = json_decode($response, true);
-        //   debug($responsearray);
+     //      debug($responsearray);
         $this->writeinteractive($responsearray, "Response Array from Grand");
         //  $notification_numbers=$this->_getAccountSettings('interactive_notification_numbers');
         curl_close($curl);
         $notification_numbers = (explode(',', $FBSettings['interactive_notification_numbers']));
         $notification_numbers[] = $wa_id;
-        if (!empty($responsearray)) {
-            foreach ($notification_numbers as $key => $contact_number) {
-                $this->_sendIntToCustomer($responsearray, $contact_number, $FBSettings);
+
+      //  return false; //to be removed. 
+
+        //if result has intereactive=false, dont send menu again. 
+        if( $responsearray['interactive']==true){
+            if (!empty($responsearray)) {
+                foreach ($notification_numbers as $key => $contact_number) {
+                    $this->_sendIntToCustomer($responsearray, $contact_number, $FBSettings);
+                }
+            } else {
+                $this->writeinteractive($response, "Failed to send response array as its empty");
+                $this->writelog($response, "Failed to send response array as its empty");
             }
-        } else {
-            $this->writeinteractive($response, "Failed to send response array as its empty");
-            $this->writelog($response, "Failed to send response array as its empty");
+        }else{
+            $this->writeinteractive($response, "No more menu to send. ");
         }
+       
     }
 
     function _sendIntToCustomer($list, $wa_id, $FBSettings)
@@ -1461,7 +1467,7 @@ class JobsController extends AppController
                 $RowCampsTracker->campaign_id=$schedQuery->_matchingData['Campaigns']['id'];
                 
                 if(!$tableCampsTracker->save($RowCampsTracker)){
-                    debug($RowCampsTracker->getErrors()); 
+                //    debug($RowCampsTracker->getErrors()); 
                 }else{
                     $injectarray['camps_tracker_id']=$RowCampsTracker->id;
                     $injectarray['account_id']=$schedQuery->account_id; //account id must be immutable. Dont accept from inject var of attachment form.
@@ -1470,7 +1476,7 @@ class JobsController extends AppController
                     $tableCampsTracker->save($RowCampsTracker);
                 }
             }else{
-                debug("Track not enabled");
+         //       debug("Track not enabled");
             }
         //    debug($injectarray);
             $json = json_encode($sendarray);

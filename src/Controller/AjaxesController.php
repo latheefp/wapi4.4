@@ -262,7 +262,7 @@ class AjaxesController extends AppController {
     function contact() {
         $this->viewBuilder()->setLayout('ajax');
         $data = $this->request->getData();
-        $ContactformTable = $this->getTableLocator()->get('ContactForms');
+        $ContactformTable = $this->getTableLocator()->get('Contactforms');
         $row = $ContactformTable->newEmptyEntity();
         $$row = $ContactformTable->patchEntity($row, $data);
         if ($ContactformTable->save($row)) {
