@@ -554,7 +554,9 @@ class JobsController extends AppController
             $dataarray['contacts_profile_name'] = $input['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name'];
            
             $Timeout = $this->_checktimeout($dataarray['contact_waid']); //dont move this function from here , it should be 
-            if (isset($input['entry'][0]['changes'][0]['value']['messages'][0]['context'])) {  //reply of existing msg
+          //  debug($input);
+            if (isset($input['entry'][0]['changes'][0]['value']['messages'][0]['context']['from'])) {  //reply of existing msg
+              //  debug("Reply");
                 $return['result']['msg_context'] = "reply";
                 $return['result']['status'] = "success";
                 $return['result']['message'] = "Not charged for reply";
@@ -563,7 +565,18 @@ class JobsController extends AppController
                 $dataarray['message_context_rom'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['from'];
                 $this->writelog($dataarray, "Save data for new Reply message");
                 //    $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
-            } else { //new msg
+            } elseif(isset($input['entry'][0]['changes'][0]['value']['messages'][0]['context']['forwarded'])){ //Forwarded msg.
+          //      debug("Forward");
+                $return['result']['msg_context'] = "Forward";
+                $return['result']['status'] = "success";
+                $return['result']['message'] = "Not charged for forward";
+                $dataarray['message_context'] = "forward";
+            //    $dataarray['message_contextId'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['id'];
+             //   $dataarray['message_context_rom'] = $input['entry'][0]['changes'][0]['value']['messages'][0]['context']['from'];
+                $this->writelog($dataarray, "Save data for new Reply message");
+                //    $save_status = $this->_savedata($dataarray, $FBSettings);  // no default reply needed for 
+            }else{ //new msg
+          //      debug("New msg");
                 $return['result']['msg_context'] = "New message received, No need of rating";
                 $return['result']['status'] = "success";
                 $dataarray['message_context'] = "new";
@@ -602,7 +615,6 @@ class JobsController extends AppController
                 $this->adminforwarder($save_status['id'], $FBSettings,$sender); //passing stream ID and Account id.
             }
            
-
             // $result = array("success" => true);
             // return $this->response->withType("application/json")->withStringBody(json_encode($result));
         }elseif (isset($input['entry'][0]['changes'][0]['value']['statuses'])) {  //type ie status update.
