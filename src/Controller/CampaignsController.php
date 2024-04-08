@@ -475,9 +475,12 @@ class CampaignsController extends AppController {
                     }
                     
                 }
-                unset($data['auto_inject']);
-                unset($data['inject_text']);
+               
+                
+           //     debug($data);
             }
+            unset($data['inject_text']);
+            unset($data['auto_inject']);
 
             $deleteresult = $table->deleteAll($conditions);
             foreach ($files as $key => $val) { //loop to process the file upload if any. 
@@ -512,7 +515,7 @@ class CampaignsController extends AppController {
             }
             if (!empty($data)) {
 
-         //       debug($data);
+           //     debug($data);
                 //process auto inject values params from form and delete it from array.
 
               
@@ -520,7 +523,7 @@ class CampaignsController extends AppController {
 
                 foreach ($data as $key => $val) {
                     $keyarray = explode("-", $key);
-                 //   debug($keyarray);
+                 //  debug($keyarray);
                     $row = $table->newEmptyEntity();
                     $row->campaign_id = $id;
                     $row->field_type = 'variable';
