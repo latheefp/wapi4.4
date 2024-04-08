@@ -86,6 +86,7 @@ class JobsController extends AppController
 
                 // $table = TableRegistry::getTableLocator()->get('SendQueues');
                 // $sendQrecord = $table->get($qid);
+              //  debug ("Type is send");
 
                 try {
                     $table = TableRegistry::getTableLocator()->get('SendQueues');
@@ -109,9 +110,12 @@ class JobsController extends AppController
                     $this->set('response', $response);
                     return;
                 }
+         //       debug($sendQrecord);
                 if ($sendQrecord->type == "forward") {
+               //     debug("Type is forward");
                     $return = $this->_forwardmsg($sendQrecord, $FBSettings);
                 } else {
+             //       debug("Type is send to customers");
                     $return = $this->_send_schedule($qid, $FBSettings);
                 }
 
@@ -200,8 +204,8 @@ class JobsController extends AppController
                 $sendarray['to'] = $form_data['mobile_number'];
                 $payload = [];
                 // debug($sendarray);
-                // debug($type);
-             //   debug($message);
+                //  debug($type);
+                // debug($message);
                // debug($message[$type]['id']);
                if(isset($message[$type]['caption'])){
                 $caption=$message[$type]['caption'] ." from $sender_profile($sender)";
@@ -230,9 +234,9 @@ class JobsController extends AppController
                     case "sticker":
                         $payload['id'] = $message[$type]['id'];
                         break;
-                    case "interactive":
-                        $payload['id'] = $message[$type]['id'];
-                        break;
+                    // case "interactive":  //dont Foward interactive.
+                    //     $payload['id'] = $message[$type]['id'];
+                    //     break;
                     case "audio":
   
                         $payload['id'] = $message[$type]['id'];
@@ -250,30 +254,35 @@ class JobsController extends AppController
                 break;
         }
 
-      //  debug($FBsettings);
-        $streams_table = $this->getTableLocator()->get('Streams');
-        $streamrow = $streams_table->newEmptyEntity();
-     //   $streamrow->schedule_id = $sched_id;
-        $streamrow->contact_stream_id = $this->getWastreamsContactId( $form_data['mobile_number'], $FBsettings);
-        $streamrow->initiator = "API";
-        $streamrow->type = "forward";
-        $streamrow->postdata = json_encode($sendarray);
-        $streamrow->account_id = $FBsettings['account_id'];
-        if (!$streams_table->save($streamrow)) {
-            debug($streamrow);
-            debug($streamrow->getErrors()); // Print save errors
-            $return['result']['error'] = "Failed to upate streams";
-            return $return;
-        }
-      //  return false;
+        //  debug($FBsettings);
+        if (isset($sendarray[$type])) {
+            $streams_table = $this->getTableLocator()->get('Streams');
+            $streamrow = $streams_table->newEmptyEntity();
+            //   $streamrow->schedule_id = $sched_id;
+            $streamrow->contact_stream_id = $this->getWastreamsContactId($form_data['mobile_number'], $FBsettings);
+            $streamrow->initiator = "API";
+            $streamrow->type = "forward";
+            $streamrow->postdata = json_encode($sendarray);
+            $streamrow->account_id = $FBsettings['account_id'];
+            if (!$streams_table->save($streamrow)) {
+                debug($streamrow);
+                debug($streamrow->getErrors()); // Print save errors
+                $return['result']['error'] = "Failed to upate streams";
+                return $return;
+            }
+            //  return false;
 
-     //   debug($streamrow);
-        $contact = $streams_table->get($streamrow->id);
-        $templateQuery=[];
-        $return['result'] = $this->_despatch_msg($contact, $sendarray, $templateQuery, $FBsettings,$type="forward");
-      //  debug($return);
-        return $return;
-        
+            //   debug($streamrow);
+            $contact = $streams_table->get($streamrow->id);
+            $templateQuery = [];
+            $return['result'] = $this->_despatch_msg($contact, $sendarray, $templateQuery, $FBsettings, $type = "forward");
+            //  debug($return);
+
+        } else {
+            $return['result'] = array("message" => "Nothing to forward for type $type");
+        }
+       
+      return $return;
        
     }
 
@@ -632,7 +641,7 @@ class JobsController extends AppController
 
 
 
-    function processCMd($dataarray,$FBSettings){
+    function processCMd($dataarray,$FBSettings){ //this command is for processing and checking the if the message is a command. now, only "register" is added.
         $CMDarray = explode(' ', $dataarray['message_txt_body']);
      //   debug($CMDarray);
         $cmd = strtolower($CMDarray[0]);
