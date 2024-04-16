@@ -32,7 +32,7 @@ use App\Controller\AppController; //(path to your controller).
 /**
  * Upload command.
  */
-class TestloadCommand extends Command {
+class WholebillingCommand extends Command {
 
     /**
      * Hook method for defining this command's option parser.
