@@ -51,10 +51,6 @@ class PriceCardsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->scalar('country')
             ->maxLength('country', 128)
             ->requirePresence('country', 'create')
@@ -62,7 +58,7 @@ class PriceCardsTable extends Table
 
         $validator
             ->scalar('country_code')
-            ->maxLength('country_code', 5)
+            ->maxLength('country_code', 11)
             ->requirePresence('country_code', 'create')
             ->notEmptyString('country_code');
 

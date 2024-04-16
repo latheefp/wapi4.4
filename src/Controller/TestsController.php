@@ -178,7 +178,7 @@ class TestsController extends AppController
         $existingPaidConvID = $streamTable->find()
             ->where([
                 'conversationid' => $record->conversationid,
-                'cost > ' => 0,
+                'costed > ' => 0,
                 'delivered_time IS NOT NULL'
             ])
             ->count();
@@ -203,7 +203,7 @@ class TestsController extends AppController
             case "send":
                 $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
                 $cost['cost'] = round($cost['cost'], 2);
-                $row->cost = $cost['cost'];
+                $row->costed = $cost['cost'];
                 if ($StreamsTable->save($row)) {
                     $result = $this->_updatebalance($row->account_id, $cost['cost']);
                     //             debug($cost);

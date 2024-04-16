@@ -356,6 +356,7 @@ class JobsController extends AppController
         // $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
         $data = json_decode($record->form_data, true);
+      //  debug($data);
         if (!isset($data['mobile_number'])) {
             $return['result']['error'] = "No mobile number provided";
             return $return;
@@ -419,7 +420,7 @@ class JobsController extends AppController
             foreach ($CampaignForm as $key => $val) {
                 $newval = array();
                 $vararray = explode('-', $val['field_name']);
-           //     debug($vararray);
+             //   debug($vararray);
                 $newval['field_name'] = $val->field_name;
                 $newval['field_value'] = $val->field_value;
                 switch ($vararray[0]) {
@@ -453,7 +454,7 @@ class JobsController extends AppController
                 $formarray[] = $newval;
             }
 
-//            debug($formarray);
+       //     debug($formarray);
             $return['result'] = $this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings);
             return $return;
         }

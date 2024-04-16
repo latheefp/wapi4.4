@@ -275,6 +275,7 @@
             "serverSide": true,
             "paging": true,
             "select": true,
+            "bInfo": false,
 
             "pageLength": 20,
             "lengthChange": false, // Disable the length menu completely
