@@ -245,7 +245,7 @@ class WholebillingCommand extends Command {
         debug("Running Rating on $total Records");    
         $i=0;
         foreach ($row as $key => $val) {
-            debug($val);
+       //     debug($val);
             $i++;
             $perc=round($i/$total*100);
             debug("Completed $perc %");
