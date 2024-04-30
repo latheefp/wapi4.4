@@ -140,7 +140,7 @@ class JobsController extends AppController
                 // debug($return);
                 if (isset($return['status'])) {
                     //   debug($return);
-                    $return = $this->_update_status($return);
+                    $return = $this->_update_status($return,$FBSettings);
                     http_response_code(200); // Good Request
                     $this->_update_http_code($qid, '200', $type);
                     $this->set('response', $return);
@@ -1013,7 +1013,7 @@ class JobsController extends AppController
         return $result;
     }
 
-    function _update_status($return)
+    function _update_status($return,$FBSetting)
     {
         $statuses = $return['status'];
 
@@ -1101,7 +1101,7 @@ class JobsController extends AppController
                     $ratingResults = $ratingquery->all();
                     //Billing is needed only for Uniq conversation IDS. 
                     if ($ratingResults->isEmpty()) {
-                        $return = $this->_rateMe($status);
+                        $return = $this->_rateMe($status,$FBSetting); //rating.
                         // $return['result']['rating'] = "new";
                     } else {
                         $return['result']['rating'] = "existing rating " . $status['conversation']['id'];

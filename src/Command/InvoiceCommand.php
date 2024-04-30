@@ -117,17 +117,12 @@ class InvoiceCommand extends Command
                 ->first();
 
 
-      debug($existing);    
+      #debug($existing);    
         
         if(isset($existing)){
             debug("Invoice Already existing for customer_id $account_id for $month-$year. No action taken");
-         //   return false; 
-
-         //tmp code.
-         $invoiceTable->delete($existing);
-        }
-     
-     //else{
+            return false;
+        } else{
             $newinvoince = $invoiceTable->newEmptyEntity();
             $newinvoince->account_id = $account_id;
             $newinvoince->invoince_number = 123;
@@ -143,10 +138,9 @@ class InvoiceCommand extends Command
                 debug("Failed to save invoice ". $newinvoince->invoice_number);
                 return  false;
             }
-
-      //  }
-      //  debug($newinvoince);
-
+            debug($newinvoince);
+       }
+       
                 
 
 
@@ -157,13 +151,14 @@ class InvoiceCommand extends Command
         $matchingRecords = $ratingsTable
             ->find()
             ->where([
-                'MONTH(Ratings.created)' => $month,
-                'YEAR(Ratings.created)' => $year,
+                'MONTH(Streams.created)' => $month,
+                'YEAR(Streams.created)' => $year,
                 'Streams.account_id' => $account_id
             ])
             ->contain(['Streams']);
 
         // 2. Update the `invoiced` field for all matching records:
+        debug($matchingRecords);    
         $totalCost=0;
         foreach ($matchingRecords as $record) {
             $record->invoince_id = $newinvoince->id;
@@ -190,6 +185,30 @@ class InvoiceCommand extends Command
     function getn_inovice_number(){
         
 
+    }
+
+
+    function all()
+    {
+        // Define starting and ending dates
+        $start_date = new DateTime('2022-12-01');
+        $end_date = new DateTime('2024-03-31');
+
+        // Loop through each month
+        $current_date = clone $start_date;
+        while ($current_date <= $end_date) {
+            $year = $current_date->format('Y');
+            $month = $current_date->format('m');
+
+            // Loop through account IDs from 1 to 6
+            for ($account_id = 1; $account_id <= 6; $account_id++) {
+                // Use the $year, $month, and $account_id to create your invoice or perform other operations
+                echo "bin/cake Invoice -a $account_id -m $month -y $year\n";
+            }
+
+            // Move to the next month
+            $current_date->modify('+1 month');
+        }
     }
 
     

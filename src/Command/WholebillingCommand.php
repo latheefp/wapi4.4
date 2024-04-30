@@ -62,16 +62,223 @@ class WholebillingCommand extends Command {
         return $parser;
     }
 
+    
+    public function initialize(): void {
+        parent::initialize();
+        $this->app = new AppController();
+        
+    }
+
     public function execute(Arguments $args, ConsoleIo $io) {
         print("running with arg\n");
         // debug($args);
        $this->updatebalance();
     }
 
-    public function initialize(): void {
-        parent::initialize();
-        
+    function updatebalance()
+    {
+        $StreamsTable = $this->getTableLocator()->get('Streams');
+        $row = $StreamsTable->find()
+            ->where(
+                function ($exp, $q) {
+                return $exp->isNotNull('tmp_upate_json');
+            }
+            )
+            ->andWhere(['rated' => 0,'success'=>true,'account_id'=>1])
+            ->andWhere(function ($exp, $q) {
+                return $exp->between('created', '2024-01-01', '2024-12-31');
+            })
+            ->andWhere(function ($exp, $q) {
+                return $exp->in('type', ['send', 'api', 'camp']); //isend, welcome, receive and foward is not charced.  select DISTINCT streams.type from streams; 
+            })
+            ->all();
+
+        //   debug($row);
+            $total=$row->count();
+        debug("Running Rating on $total Records");    
+       // return false;
+         sleep (5);
+        $i=0;
+        foreach ($row as $key => $val) {
+           // debug($val);
+            $i++;
+            $perc=round($i/$total*100);
+            debug("Completed $perc %");
+          //  debug("processing " .$val->id);
+            $data = trim($val->tmp_upate_json, ',');
+           
+            $jsonArray = explode("\n", $data);
+            debug($jsonArray);
+         //   debug($val->account_id);
+            $account_info['account_id']=$val->account_id;
+            $fbsettings=$this->app->_getFBsettings($account_info);
+      //      debug($fbsettings);
+            if($fbsettings['status']['code'] != 200){
+                debug("Wrong fbsettings for account id $val->account_id");
+              //  return false;
+                continue;
+            }
+       //     debug($fbsettings);
+            foreach ($jsonArray as $jkey => $jval) {
+                if (!empty($jval)) {
+                    //    debug($jval);
+                    $jval = trim($jval, ',');
+                    $price_array = json_decode($jval, true);
+                    if (isset($price_array['pricing'])) {
+                        debug("Rating price array");
+                     //   debug($price_array);
+                        $this->_rateMe($price_array,$fbsettings);  //function from appController
+                    }else{
+                        debug ("No pricing Array");
+                     //   debug($price_array);
+                    }
+                }
+            }
+           // return false;
+        }
     }
+
+
+
+    function _rateMe($price_array,$fbsettings)
+    {
+     //   debug ("Rating....");
+      //  debug($price_array);
+        $this->writelog($price_array, "Rating from rateme");
+        $streamTable = $this->getTableLocator()->get('Streams');
+        //  debug("Message ID is " . $price_array['id']);
+        $record = $streamTable->find()
+            ->contain('ContactStreams') // Include the related "ContactStreams" records
+            ->where(['messageid' => $price_array['id']])
+            ->first();
+
+        if (!$record) {
+            // Stop code execution or handle the situation as needed
+           debug("Record not found");
+         //   return false;
+            $this->writelog($price_array['id'], "No record found msg id in Streams");
+            $this->_notify("No record found msg id " . $price_array['id'], "Warning");
+            $return['result']['status'] = "warning";
+            $return['result']['message'] = "No record found msg id " . $price_array['id'];
+            return $return; // or return; depending on where this code is located
+        } else {
+            $this->writelog($price_array['id'], "Record Found in streams");
+        }
+
+      //  return false;
+
+
+        // debug($record->conversationid);
+        $alreadyCosted = $streamTable->find()
+            ->where([
+                'conversationid' => $record->conversationid,
+                'rated > ' => false,
+                //  'delivered_time IS NOT NULL',
+                //  'delivered_time >=' => date('Y-m-d H:i:s') // Assuming current date and time
+            ])
+            ->all();
+
+        if ($alreadyCosted->isEmpty()) {
+            //Process charging if not already.
+            debug("Charging $record->conversationid");
+            $this->writelog($record, "Passing to Charging");
+            $return = $this->_chargeMe($record,$fbsettings);
+        } else {
+             debug($alreadyCosted);
+            // debug("Already charged $record->conversationid");
+            $this->writelog($record->conversationid, "Already rated Message ID");
+            $return['result']['status'] = "success";
+            $return['result']['message'] = "$record->conversationid, Already rated Message ID";
+        }
+        return $return;
+    }
+
+    function _chargeMe($record,$fbsettings)
+    {
+        //debug($record);
+        $msgType = $record->type;
+        $ph = $record->contact_stream->contact_number;
+        $ph=$this->app->_format_mobile($ph,$fbsettings);
+     //   debug($ph);
+        $countryinfo = $this->_getCountry($ph);
+        // debug($countryinfo);
+        if (empty($countryinfo)) {
+          //  debug("Exiting due to wrong coutnry phone $ph");
+            // Log::debug("Country info is empty for $ph");
+            $this->_notify("Country info is empty for $ph", "critical");
+            return;
+        } else {
+            // debug($countryinfo->country);
+        }
+        $msgCategory = $record->category;
+        $msgpricing_model = $record->pricing_model;
+        $StreamsTable = $this->getTableLocator()->get('Streams');
+        $row = $StreamsTable->get($record->id);
+        #       debug($msgType);
+        switch ($msgType) {
+            case "send":
+            case "api":
+            case "camp":
+                //    debug("Message type is send");
+                $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
+                $cost['cost'] = round($cost['cost'], 2);
+                $row->costed = $cost['cost'];
+                if ($StreamsTable->save($row)) {
+                    $result = $this->_updatebalance($row->account_id, $cost['cost']);
+                    // debug($cost);
+                    // debug($countryinfo);
+                    $RatingTable = $this->getTableLocator()->get('Ratings');
+                    $rating = $RatingTable->newEmptyEntity();
+                    $rating->stream_id = $record->id;
+                    $rating->old_balance = $result['old_balance']['current_balance'];
+                    $rating->new_balance = $result['new_balance']['current_balance'];
+                    $return['result']['charginginfo']['old_balance'] = $result['old_balance']['current_balance'];
+                    $return['result']['charginginfo']['new_balance'] = $result['new_balance']['current_balance'];
+                    $return['result']['charginginfo']['Country'] = $countryinfo->country;
+                    $rating->cost = $cost['cost'];
+                    $rating->conversation = $record->conversationid;
+                    $rating->country = $countryinfo->country;
+                    $rating->charging_status = $result['status'];
+                    $rating->tax = $cost['tax'];
+                    $rating->p_perc = $cost['p_perc'];
+                    $rating->fb_cost = $cost['fb_cost'];
+                    $rating->rate_with_tax = $cost['rate_with_tax'];
+                    if (!$RatingTable->save($rating)) {
+                        debug($rating->getError);
+                        $this->_notify(json_encode($rating->getError), "critical");
+                        $return['result']['message'] = "Charging failed for message type   $msgType with " . $cost['rate_with_tax'];
+                        $return['result']['status'] = "failed";
+                    } else {
+                        $streamsTable = $this->getTableLocator()->get('Streams');
+                        $streamsTable->updateAll(
+                            ['rated' => true],
+                            ['conversationid' => $record->conversationid]
+                        );
+                        $return['result']['message'] = "Charged message type   $msgType with " . $cost['rate_with_tax'];
+                        $return['result']['status'] = "sucess";
+                        //  debug("Rating save  as true for all  record" . $record->conversationid);
+                    }
+                }
+                break;
+            case "ISend":
+                $return['result']['message'] = "Not Charged for $msgType and updated stream table";
+                $return['result']['status'] = "success";
+                $streamsTable = $this->getTableLocator()->get('Streams');
+                $streamsTable->updateAll(
+                    ['rated' => true],
+                    ['conversationid' => $record->conversationid]
+                );
+                break;
+            default:
+                debug("Not charged for message type $msgType ");
+                $return['result']['message'] = "Not Charged for $msgType";
+                $return['result']['status'] = "success";
+
+                break;
+        }
+        return $return;
+    }
+
     
  
     function _getCountry($ph = null)
@@ -129,88 +336,7 @@ class WholebillingCommand extends Command {
         }
     }
 
-    function _chargeMe($record)
-    {
-        //debug($record);
-        $msgType = $record->type;
-        $ph = $record->contact_stream->contact_number;
-        $countryinfo = $this->_getCountry($ph);
-        // debug($countryinfo);
-        if (empty($countryinfo)) {
-            debug("Exiting due to wrong coutnry phone $ph");
-            // Log::debug("Country info is empty for $ph");
-            $this->_notify("Country info is empty for $ph", "critical");
-            return;
-        } else {
-            // debug($countryinfo->country);
-        }
-        $msgCategory = $record->category;
-        $msgpricing_model = $record->pricing_model;
-        $StreamsTable = $this->getTableLocator()->get('Streams');
-        $row = $StreamsTable->get($record->id);
-        #       debug($msgType);
-        switch ($msgType) {
-            case "send":
-                //    debug("Message type is send");
-                $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
-                $cost['cost'] = round($cost['cost'], 2);
-                $row->costed = $cost['cost'];
-                if ($StreamsTable->save($row)) {
-                    $result = $this->_updatebalance($row->account_id, $cost['cost']);
-                    // debug($cost);
-                    // debug($countryinfo);
-                    $RatingTable = $this->getTableLocator()->get('Ratings');
-                    $rating = $RatingTable->newEmptyEntity();
-                    $rating->stream_id = $record->id;
-                    $rating->old_balance = $result['old_balance']['current_balance'];
-                    $rating->new_balance = $result['new_balance']['current_balance'];
-                    $return['result']['charginginfo']['old_balance'] = $result['old_balance']['current_balance'];
-                    $return['result']['charginginfo']['new_balance'] = $result['new_balance']['current_balance'];
-                    $return['result']['charginginfo']['Country'] = $countryinfo->country;
-                    $rating->cost = $cost['cost'];
-                    $rating->conversation = $record->conversationid;
-                    $rating->country = $countryinfo->country;
-                    $rating->charging_status = $result['status'];
-                    $rating->tax = $cost['tax'];
-                    $rating->p_perc = $cost['p_perc'];
-                    $rating->fb_cost = $cost['fb_cost'];
-                    $rating->rate_with_tax = $cost['rate_with_tax'];
-                    if (!$RatingTable->save($rating)) {
-                        debug($rating->getError);
-                        $this->_notify(json_encode($rating->getError), "critical");
-                        $return['result']['message'] = "Charging failed for message type   $msgType with " . $cost['rate_with_tax'];
-                        $return['result']['status'] = "failed";
-                    } else {
-                        $streamsTable = $this->getTableLocator()->get('Streams');
-                        $streamsTable->updateAll(
-                            ['rated' => true],
-                            ['conversationid' => $record->conversationid]
-                        );
-                        $return['result']['message'] = "Charged message type   $msgType with " . $cost['rate_with_tax'];
-                        $return['result']['status'] = "sucess";
-                        //  debug("Rating save  as true for all  record" . $record->conversationid);
-                    }
-                }
-                break;
-            case "ISend":
-                $return['result']['message'] = "Not Charged for $msgType and updated stream table";
-                $return['result']['status'] = "success";
-                $streamsTable = $this->getTableLocator()->get('Streams');
-                $streamsTable->updateAll(
-                    ['rated' => true],
-                    ['conversationid' => $record->conversationid]
-                );
-
-
-                break;
-            default:
-                $return['result']['message'] = "Not Charged for $msgType";
-                $return['result']['status'] = "success";
-
-                break;
-        }
-        return $return;
-    }
+    
 
     function _calculateCost($countryinfo, $msgCategory, $msgpricing_model)
     {
@@ -230,41 +356,7 @@ class WholebillingCommand extends Command {
         return $cost;
     }
 
-    function updatebalance()
-    {
-        $StreamsTable = $this->getTableLocator()->get('Streams');
-        $row = $StreamsTable->find()
-            ->where(
-                function ($exp, $q) {
-                return $exp->isNotNull('tmp_upate_json');
-            }
-            )
-            ->andWhere(['rated' => 0,'success'=>true])
-            ->all();
-            $total=$row->count();
-        debug("Running Rating on $total Records");    
-        $i=0;
-        foreach ($row as $key => $val) {
-       //     debug($val);
-            $i++;
-            $perc=round($i/$total*100);
-            debug("Completed $perc %");
-          //  debug("processing " .$val->id);
-            $data = trim($val->tmp_upate_json, ',');
-           
-            $jsonArray = explode("\n", $data);
-            foreach ($jsonArray as $jkey => $jval) {
-                if (!empty($jval)) {
-                    //    debug($jval);
-                    $jval = trim($jval, ',');
-                    $price_array = json_decode($jval, true);
-                    if (isset($price_array['pricing'])) {
-                        $this->_rateMe($price_array);  //function from appController
-                    }
-                }
-            }
-        }
-    }
+ 
 
     function _updatebalance($account_id, $cost)
     {
@@ -316,52 +408,7 @@ class WholebillingCommand extends Command {
         return $result;
     }
 
-    function _rateMe($price_array)
-    {
-        $this->writelog($price_array, "Rating from rateme");
-        $streamTable = $this->getTableLocator()->get('Streams');
-        //  debug("Message ID is " . $price_array['id']);
-        $record = $streamTable->find()
-            ->contain('ContactStreams') // Include the related "ContactStreams" records
-            ->where(['messageid' => $price_array['id']])
-            ->first();
-
-        if (!$record) {
-            // Stop code execution or handle the situation as needed
-            $this->writelog($price_array['id'], "No record found msg id in Streams");
-            $this->_notify("No record found msg id " . $price_array['id'], "Warning");
-            $return['result']['status'] = "warning";
-            $return['result']['message'] = "No record found msg id " . $price_array['id'];
-            return $return; // or return; depending on where this code is located
-        } else {
-            $this->writelog($price_array['id'], "Record Found in streams");
-        }
-
-
-        // debug($record->conversationid);
-        $alreadyCosted = $streamTable->find()
-            ->where([
-                'conversationid' => $record->conversationid,
-                'rated > ' => false,
-                //  'delivered_time IS NOT NULL',
-                //  'delivered_time >=' => date('Y-m-d H:i:s') // Assuming current date and time
-            ])
-            ->all();
-
-        if ($alreadyCosted->isEmpty()) {
-            //Process charging if not already.
-            //debug("Charging $record->conversationid");
-            $this->writelog($record, "Passing to Charging");
-            $return = $this->_chargeMe($record);
-        } else {
-            // debug($alreadyCosted);
-            // debug("Already charged $record->conversationid");
-            $this->writelog($record->conversationid, "Already rated Message ID");
-            $return['result']['status'] = "success";
-            $return['result']['message'] = "$record->conversationid, Already rated Message ID";
-        }
-        return $return;
-    }
+    
 
     function writelog($data, $type = null)
     {
