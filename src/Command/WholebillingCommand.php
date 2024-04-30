@@ -84,10 +84,10 @@ class WholebillingCommand extends Command {
                 return $exp->isNotNull('tmp_upate_json');
             }
             )
-            ->andWhere(['rated' => 0,'success'=>true,'account_id'=>1])
-            ->andWhere(function ($exp, $q) {
-                return $exp->between('created', '2024-01-01', '2024-12-31');
-            })
+            ->andWhere(['rated' => 0,'success'=>true])
+            // ->andWhere(function ($exp, $q) {
+            //     return $exp->between('created', '2024-01-01', '2024-12-31');
+            // })
             ->andWhere(function ($exp, $q) {
                 return $exp->in('type', ['send', 'api', 'camp']); //isend, welcome, receive and foward is not charced.  select DISTINCT streams.type from streams; 
             })
