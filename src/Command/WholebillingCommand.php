@@ -120,13 +120,13 @@ class WholebillingCommand extends Command {
 
     function updateSingleBalance($val)
     {
-        debug($val);
+       // debug($val);
 
       #  debug($val->tmp_upate_json);
         $data = trim($val->tmp_upate_json, ',');
 
         $jsonArray = explode("\n", $data);
-        debug($jsonArray);
+      //  debug($jsonArray);
         //   debug($val->account_id);
         $account_info['account_id'] = $val->account_id;
         $fbsettings = $this->app->_getFBsettings($account_info);
@@ -156,7 +156,7 @@ class WholebillingCommand extends Command {
         }
 
         if(!$pricing){
-            debug("No pricing array found in json.");
+        //    debug("No pricing array found in json.");
             
         }
     }

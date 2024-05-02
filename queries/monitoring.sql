@@ -1,12 +1,14 @@
-//unbilled stream.ids count
+//unbilled stream.ids count //should be zero.
 SELECT
-    count(streams.id)
+    COUNT(streams.id)
 FROM
-    streams AS Streams
-WHERE streams.tmp_upate_json LIKE
-    "%%pricing%%" AND id  NOT IN(
-SELECT
-    ratings.stream_id from ratings
+    streams 
+WHERE
+    streams.tmp_upate_json LIKE "%%pricing%%" AND id NOT IN(
+    SELECT
+        ratings.stream_id
+    FROM
+        ratings
 );
 
 
