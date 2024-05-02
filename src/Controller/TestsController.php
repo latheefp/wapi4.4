@@ -189,48 +189,48 @@ class TestsController extends AppController
         }
     }
 
-    function _chargeMe($record)
-    {
-        //  debug($record);
-        $msgType = $record->type;
-        $ph = $record->contact_stream->contact_number;
-        $countryinfo = $this->_getCountry($ph);
-        $msgCategory = $record->category;
-        $msgpricing_model = $record->pricing_model;
-        $StreamsTable = $this->getTableLocator()->get('Streams');
-        $row = $StreamsTable->get($record->id);
-        switch ($msgType) {
-            case "send":
-                $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
-                $cost['cost'] = round($cost['cost'], 2);
-                $row->costed = $cost['cost'];
-                if ($StreamsTable->save($row)) {
-                    $result = $this->_updatebalance($row->account_id, $cost['cost']);
-                    //             debug($cost);
-                    //  debug($countryinfo);
-                    $RatingTable = $this->getTableLocator()->get('Ratings');
-                    $rating = $RatingTable->newEmptyEntity();
-                    $rating->stream_id = $record->id;
-                    $rating->old_balance = $result['old_balance']['current_balance'];
-                    $rating->new_balance = $result['new_balance']['current_balance'];
-                    $rating->cost = $cost['cost'];
-                    $rating->country = $countryinfo->country;
-                    $rating->charging_status = $result['status'];
-                    $rating->tax = $cost['tax'];
-                    $rating->p_perc = $cost['p_perc'];
-                    $rating->fb_cost = $cost['fb_cost'];
-                    $rating->rate_with_tax = $cost['rate_with_tax'];
+    // function _chargeMe($record)
+    // {
+    //     //  debug($record);
+    //     $msgType = $record->type;
+    //     $ph = $record->contact_stream->contact_number;
+    //     $countryinfo = $this->_getCountry($ph);
+    //     $msgCategory = $record->category;
+    //     $msgpricing_model = $record->pricing_model;
+    //     $StreamsTable = $this->getTableLocator()->get('Streams');
+    //     $row = $StreamsTable->get($record->id);
+    //     switch ($msgType) {
+    //         case "send":
+    //             $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
+    //             $cost['cost'] = round($cost['cost'], 2);
+    //             $row->costed = $cost['cost'];
+    //             if ($StreamsTable->save($row)) {
+    //                 $result = $this->_updatebalance($row->account_id, $cost['cost']);
+    //                 //             debug($cost);
+    //                 //  debug($countryinfo);
+    //                 $RatingTable = $this->getTableLocator()->get('Ratings');
+    //                 $rating = $RatingTable->newEmptyEntity();
+    //                 $rating->stream_id = $record->id;
+    //                 $rating->old_balance = $result['old_balance']['current_balance'];
+    //                 $rating->new_balance = $result['new_balance']['current_balance'];
+    //                 $rating->cost = $cost['cost'];
+    //                 $rating->country = $countryinfo->country;
+    //                 $rating->charging_status = $result['status'];
+    //                 $rating->tax = $cost['tax'];
+    //                 $rating->p_perc = $cost['p_perc'];
+    //                 $rating->fb_cost = $cost['fb_cost'];
+    //                 $rating->rate_with_tax = $cost['rate_with_tax'];
 
-                    $RatingTable->save($rating);
-                    //  debug($countryinfo);
-                }
+    //                 $RatingTable->save($rating);
+    //                 //  debug($countryinfo);
+    //             }
 
-                break;
-            default:
-                debug($msgType);
-                break;
-        }
-    }
+    //             break;
+    //         default:
+    //             debug($msgType);
+    //             break;
+    //     }
+    // }
 
     function _calculateCost($countryinfo, $msgCategory, $msgpricing_model)
     {
@@ -570,6 +570,26 @@ class TestsController extends AppController
 // Now, $msgArray contains the JSON data as a PHP array
     }
 
+
+    function unbilled()
+    {
+        // Get the StreamsTable object
+        $streamsTable = TableRegistry::getTableLocator()->get('Streams');
+
+        $query = $streamsTable->find();
+
+        $query->select(['Streams.id'])
+            ->where(function ($exp, $q) {
+                return $exp->like('Streams.tmp_upate_json', '%%pricing%%');
+            })
+            ->notMatching('Ratings');
+        
+        // Execute the query and retrieve the results
+        $results = $query->count();
+        
+        // Extract the IDs from the results
+        debug($results);
+    }
 
 
     

@@ -5,7 +5,7 @@ $this->Breadcrumbs->add([
     ['title' => 'Invoices', 'url' => ['controller' => 'Invoice', 'action' => 'index']]
 ]);
 ?>
-<table id="tablecampaign" class="table table-striped table-bordered dt-responsive nowrap dtselect" style="width:100%">
+<table id="tableinvoice" class="table table-striped table-bordered dt-responsive nowrap dtselect" style="width:100%">
     <thead>
         <tr>
             <?php
@@ -147,7 +147,7 @@ $this->Breadcrumbs->add([
     $(function() {
 
 
-        var table = $('#tablecampaign').DataTable({
+        var table = $('#tableinvoice').DataTable({
             "ajax": {
                 "url": "/invoices/getdata",
                 "type": "POST",
@@ -196,7 +196,7 @@ $this->Breadcrumbs->add([
             ],
         }); //End of dT.
 
-        var table = $('#tablecampaign').DataTable();
+        var table = $('#tableinvoice').DataTable();
         $('#tabletemplates tbody').on('click', 'tr', function() {
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected');
@@ -294,25 +294,19 @@ $this->Breadcrumbs->add([
             }
         });
 
-        $('#tablecampaign tbody').on('click', 'button', function() {
+        $('#tableinvoice tbody').on('click', 'button', function() {
             var rowid = this.id;
             var action = this.name;
             var cname = this.getAttribute("cname");
             //  alert(cname);
             switch (action) {
-                case 'edit':
+                case 'pay':
                     editcamp(rowid, "edit");
                     break;
-                case 'delete':
+                case 'detail':
                     deletecamp(rowid, cname);
                     break;
-                case 'schedule':
-                    window.location.href = '/campaigns/schedule/' + rowid;
-                    break;
-                case 'attachment':
-
-                    window.location.href = '/campaigns/attachments/' + rowid;
-                    break;
+                
                 default:
                     // default code block
             }
@@ -331,7 +325,7 @@ $this->Breadcrumbs->add([
                 var msg = obj.msg;
                 if (status == "success") {
                     toastr.success(msg);
-                    var table = $('#tablecampaign').DataTable();
+                    var table = $('#tableinvoice').DataTable();
                     table.ajax.reload();
                 } else {
                     toastr.error(msg);
@@ -426,7 +420,7 @@ $this->Breadcrumbs->add([
                 if (status == "success") {
                     toastr.success(msg);
                     $('#contactmodel').modal('hide');
-                    var table = $('#tablecampaign').DataTable();
+                    var table = $('#tableinvoice').DataTable();
                     table.ajax.reload();
                 } else {
                     toastr.error(msg);

@@ -46,16 +46,11 @@ class WholebillingCommand extends Command {
 
         $parser->addOptions(
                 [
-//                    'batch' => [
-//                        'short' => 'b',
-//                        'help' => 'Batch with -b',
-//                        'required' => true,
-//                    ],
-//                    'batchsize' => [
-//                        'short' => 's',
-//                        'help' => 'Batch siz with -s',
-//                        'required' => true,
-//                    ]
+                   'stream_id' => [
+                       'short' => 'i',
+                       'help' => 'Stream ID to bill',
+                       'required' => false,
+                   ]
                 ]
         );
 
@@ -69,10 +64,22 @@ class WholebillingCommand extends Command {
         
     }
 
-    public function execute(Arguments $args, ConsoleIo $io) {
-        print("running with arg\n");
-        // debug($args);
-       $this->updatebalance();
+    public function execute(Arguments $args, ConsoleIo $io)
+    {
+        $stream_id = $args->getOption('stream_id');
+        if (isset($stream_id)) {
+            $StreamsTable = $this->getTableLocator()->get('Streams');
+            $val = $StreamsTable->get($stream_id);
+            if($val->rated == true){
+                debug ("$stream_id is alrady rated");
+               // return true;
+            }else{
+                $this->updateSingleBalance($val);
+            }
+           
+        } else {
+            $this->updatebalance();
+        }
     }
 
     function updatebalance()
@@ -81,60 +88,76 @@ class WholebillingCommand extends Command {
         $row = $StreamsTable->find()
             ->where(
                 function ($exp, $q) {
-                return $exp->isNotNull('tmp_upate_json');
-            }
+                    return $exp->isNotNull('tmp_upate_json');
+                }
             )
-            ->andWhere(['rated' => 0,'success'=>true])
+            ->andWhere(['tmp_upate_json LIKE' => "%%pricing%%"])
+            ->andWhere(['rated' => 0, 'success' => true])
             // ->andWhere(function ($exp, $q) {
             //     return $exp->between('created', '2024-01-01', '2024-12-31');
             // })
-            ->andWhere(function ($exp, $q) {
-                return $exp->in('type', ['send', 'api', 'camp']); //isend, welcome, receive and foward is not charced.  select DISTINCT streams.type from streams; 
-            })
+            // ->andWhere(function ($exp, $q) {
+            //     return $exp->in('type', ['send', 'api', 'camp']); //isend, welcome, receive and foward is not charced.  select DISTINCT streams.type from streams; 
+            // })
             ->all();
-
-        //   debug($row);
-            $total=$row->count();
-        debug("Running Rating on $total Records");    
-       // return false;
-         sleep (5);
-        $i=0;
+        $total = $row->count();
+        debug("Running Rating on $total Records");
+        // return false;
+          sleep(10);
+        $i = 0;
         foreach ($row as $key => $val) {
-           // debug($val);
+            //        // debug($val);
             $i++;
-            $perc=round($i/$total*100);
-            debug("Completed $perc %");
-          //  debug("processing " .$val->id);
-            $data = trim($val->tmp_upate_json, ',');
+            $perc = round($i / $total * 100);
+            print("Completed $perc %");
+
+
+            $this->updateSingleBalance($val);
+            // return false;
+        }
+    }
+
+
+    function updateSingleBalance($val)
+    {
+        debug($val);
+
+      #  debug($val->tmp_upate_json);
+        $data = trim($val->tmp_upate_json, ',');
+
+        $jsonArray = explode("\n", $data);
+        debug($jsonArray);
+        //   debug($val->account_id);
+        $account_info['account_id'] = $val->account_id;
+        $fbsettings = $this->app->_getFBsettings($account_info);
+        //      debug($fbsettings);
+        if ($fbsettings['status']['code'] != 200) {
+       #     debug("Wrong fbsettings for account id $val->account_id");
+            return false;
+        }
+        //     debug($fbsettings);
+        $pricing=false;
+        foreach ($jsonArray as $jkey => $jval) {
+            if (!empty($jval)) {
+             //   debug($jval);
+                $jval = trim($jval, ',');
+                $price_array = json_decode($jval, true);
+               // debug($price_array);
+                if (isset($price_array['pricing'])) {
+            //        debug("Rating price array");
+                    //   debug($price_array);
+                    $pricing=true;
+                    $this->_rateMe($price_array, $fbsettings);  //function from appController
+                    continue; #once pricing array found, no more looping needed on json array. 
+                } 
+            }
+
            
-            $jsonArray = explode("\n", $data);
-            debug($jsonArray);
-         //   debug($val->account_id);
-            $account_info['account_id']=$val->account_id;
-            $fbsettings=$this->app->_getFBsettings($account_info);
-      //      debug($fbsettings);
-            if($fbsettings['status']['code'] != 200){
-                debug("Wrong fbsettings for account id $val->account_id");
-              //  return false;
-                continue;
-            }
-       //     debug($fbsettings);
-            foreach ($jsonArray as $jkey => $jval) {
-                if (!empty($jval)) {
-                    //    debug($jval);
-                    $jval = trim($jval, ',');
-                    $price_array = json_decode($jval, true);
-                    if (isset($price_array['pricing'])) {
-                        debug("Rating price array");
-                     //   debug($price_array);
-                        $this->_rateMe($price_array,$fbsettings);  //function from appController
-                    }else{
-                        debug ("No pricing Array");
-                     //   debug($price_array);
-                    }
-                }
-            }
-           // return false;
+        }
+
+        if(!$pricing){
+            debug("No pricing array found in json.");
+            
         }
     }
 
@@ -142,7 +165,7 @@ class WholebillingCommand extends Command {
 
     function _rateMe($price_array,$fbsettings)
     {
-     //   debug ("Rating....");
+      //  debug ("Rating....");
       //  debug($price_array);
         $this->writelog($price_array, "Rating from rateme");
         $streamTable = $this->getTableLocator()->get('Streams');
@@ -154,7 +177,7 @@ class WholebillingCommand extends Command {
 
         if (!$record) {
             // Stop code execution or handle the situation as needed
-           debug("Record not found");
+         //  debug("Record not found");
          //   return false;
             $this->writelog($price_array['id'], "No record found msg id in Streams");
             $this->_notify("No record found msg id " . $price_array['id'], "Warning");
@@ -162,30 +185,39 @@ class WholebillingCommand extends Command {
             $return['result']['message'] = "No record found msg id " . $price_array['id'];
             return $return; // or return; depending on where this code is located
         } else {
+         //   debug("Record found in stream");
             $this->writelog($price_array['id'], "Record Found in streams");
         }
 
       //  return false;
 
 
-        // debug($record->conversationid);
-        $alreadyCosted = $streamTable->find()
-            ->where([
-                'conversationid' => $record->conversationid,
-                'rated > ' => false,
-                //  'delivered_time IS NOT NULL',
-                //  'delivered_time >=' => date('Y-m-d H:i:s') // Assuming current date and time
-            ])
-            ->all();
+      //  debug($record->conversationid);
+        $RatingTable = $this->getTableLocator()->get('Ratings');
 
-        if ($alreadyCosted->isEmpty()) {
+            $ratedfromRatingTable = $RatingTable->find()
+            ->where(['conversation' => $record->conversationid])
+            ->all();    
+
+        if ($ratedfromRatingTable->isEmpty()) {
             //Process charging if not already.
-            debug("Charging $record->conversationid");
+         //   debug("Not already charged: Charging $record->conversationid");
+            
+
+
+
             $this->writelog($record, "Passing to Charging");
             $return = $this->_chargeMe($record,$fbsettings);
         } else {
-             debug($alreadyCosted);
-            // debug("Already charged $record->conversationid");
+         //   debug("Alrady costed");
+        //     debug($ratedfromRatingTable);
+             $streamsTable = $this->getTableLocator()->get('Streams');
+         //    debug('Updating streams table as rated=true');
+             $streamsTable->updateAll(
+                 ['rated' => true],
+                 ['conversationid' => $record->conversationid]
+             );
+
             $this->writelog($record->conversationid, "Already rated Message ID");
             $return['result']['status'] = "success";
             $return['result']['message'] = "$record->conversationid, Already rated Message ID";
@@ -203,18 +235,18 @@ class WholebillingCommand extends Command {
         $countryinfo = $this->_getCountry($ph);
         // debug($countryinfo);
         if (empty($countryinfo)) {
-          //  debug("Exiting due to wrong coutnry phone $ph");
+        //    debug("Exiting due to wrong coutnry phone $ph");
             // Log::debug("Country info is empty for $ph");
             $this->_notify("Country info is empty for $ph", "critical");
             return;
-        } else {
-            // debug($countryinfo->country);
+        }else{
+        //    debug("Contry is $countryinfo->country");
         }
         $msgCategory = $record->category;
         $msgpricing_model = $record->pricing_model;
         $StreamsTable = $this->getTableLocator()->get('Streams');
         $row = $StreamsTable->get($record->id);
-        #       debug($msgType);
+      //  debug("msg type is $msgType");
         switch ($msgType) {
             case "send":
             case "api":
@@ -261,6 +293,7 @@ class WholebillingCommand extends Command {
                 }
                 break;
             case "ISend":
+             //   debug("processing Isend on covid $record->conversationid");
                 $return['result']['message'] = "Not Charged for $msgType and updated stream table";
                 $return['result']['status'] = "success";
                 $streamsTable = $this->getTableLocator()->get('Streams');
@@ -270,9 +303,14 @@ class WholebillingCommand extends Command {
                 );
                 break;
             default:
-                debug("Not charged for message type $msgType ");
+              //  debug("Not charged for message type $msgType ");
                 $return['result']['message'] = "Not Charged for $msgType";
                 $return['result']['status'] = "success";
+                $streamsTable = $this->getTableLocator()->get('Streams');
+                $streamsTable->updateAll(
+                    ['rated' => true],
+                    ['conversationid' => $record->conversationid]
+                );
 
                 break;
         }

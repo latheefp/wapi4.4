@@ -251,7 +251,7 @@
 
 
 <input type="hidden" id="current_contact_id">
-<input type="hidden" id="action">
+<input type="hidden" id="action"> 
 
 <?php $this->Html->scriptStart(['block' => true]); ?>
 //<script>
