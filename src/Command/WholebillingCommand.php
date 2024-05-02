@@ -247,11 +247,11 @@ class WholebillingCommand extends Command {
         $StreamsTable = $this->getTableLocator()->get('Streams');
         $row = $StreamsTable->get($record->id);
       //  debug("msg type is $msgType");
-        switch ($msgType) {
-            case "send":
-            case "api":
-            case "camp":
-                //    debug("Message type is send");
+        // switch ($msgType) {
+        //     case "send":
+        //     case "api":
+        //     case "camp":
+        //         //    debug("Message type is send");
                 $cost = $this->_calculateCost($countryinfo, $msgCategory, $msgpricing_model);
                 $cost['cost'] = round($cost['cost'], 2);
                 $row->costed = $cost['cost'];
@@ -291,29 +291,29 @@ class WholebillingCommand extends Command {
                         //  debug("Rating save  as true for all  record" . $record->conversationid);
                     }
                 }
-                break;
-            case "ISend":
-             //   debug("processing Isend on covid $record->conversationid");
-                $return['result']['message'] = "Not Charged for $msgType and updated stream table";
-                $return['result']['status'] = "success";
-                $streamsTable = $this->getTableLocator()->get('Streams');
-                $streamsTable->updateAll(
-                    ['rated' => true],
-                    ['conversationid' => $record->conversationid]
-                );
-                break;
-            default:
-              //  debug("Not charged for message type $msgType ");
-                $return['result']['message'] = "Not Charged for $msgType";
-                $return['result']['status'] = "success";
-                $streamsTable = $this->getTableLocator()->get('Streams');
-                $streamsTable->updateAll(
-                    ['rated' => true],
-                    ['conversationid' => $record->conversationid]
-                );
+        //         break;
+        //     case "ISend":
+        //      //   debug("processing Isend on covid $record->conversationid");
+        //         $return['result']['message'] = "Not Charged for $msgType and updated stream table";
+        //         $return['result']['status'] = "success";
+        //         $streamsTable = $this->getTableLocator()->get('Streams');
+        //         $streamsTable->updateAll(
+        //             ['rated' => true],
+        //             ['conversationid' => $record->conversationid]
+        //         );
+        //         break;
+        //     default:
+        //       //  debug("Not charged for message type $msgType ");
+        //         $return['result']['message'] = "Not Charged for $msgType";
+        //         $return['result']['status'] = "success";
+        //         $streamsTable = $this->getTableLocator()->get('Streams');
+        //         $streamsTable->updateAll(
+        //             ['rated' => true],
+        //             ['conversationid' => $record->conversationid]
+        //         );
 
-                break;
-        }
+        //         break;
+        // }
         return $return;
     }
 

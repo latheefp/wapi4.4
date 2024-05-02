@@ -1,15 +1,28 @@
-//unbilled stream.ids count //should be zero.
+//unbilled stream.conversation count //should be zero.
 SELECT
     COUNT(streams.id)
 FROM
     streams 
 WHERE
-    streams.tmp_upate_json LIKE "%%pricing%%" AND id NOT IN(
+    streams.tmp_upate_json LIKE "%%pricing%%" AND streams.conversationid NOT IN(
     SELECT
-        ratings.stream_id
+        ratings.conversation
     FROM
         ratings
 );
+
+#fix table to rerun.
+
+update streams set streams.rated=0
+
+WHERE
+    streams.tmp_upate_json LIKE "%%pricing%%" AND streams.conversationid NOT IN(
+    SELECT
+        ratings.conversation
+    FROM
+        ratings
+);
+
 
 
 ///unbilled count.
