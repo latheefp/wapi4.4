@@ -610,6 +610,7 @@ class AppController extends Controller
 
 
         $data['WBAID'] = $result->WBAID;
+        $data['Balance'] = $result->current_balance;
         $data['API_VERSION'] = $result->API_VERSION;
         $data['phone_number_id'] = $result->phone_number_id;
         $data['def_language'] = $result->def_language;
@@ -692,7 +693,7 @@ class AppController extends Controller
     //     return $return;
     // }
 
-    function _rateMe($price_array,$fbsettings)
+    function _rateMedelete($price_array,$fbsettings)
     {
       //  debug ("Rating....");
       //  debug($price_array);
@@ -755,7 +756,7 @@ class AppController extends Controller
     }
 
 
-    function _chargeMe($record,$fbsettings)
+    function _chargeMedelete($record,$fbsettings)
     {
         //debug($record);
         $msgType = $record->type;

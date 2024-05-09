@@ -141,6 +141,7 @@ class JobsController extends AppController
                 if (isset($return['status'])) {
                     //   debug($return);
                     $return = $this->_update_status($return,$FBSettings);
+                    $return['pricingResult']=$this->ratingApi($qid,$apiKey);
                     http_response_code(200); // Good Request
                     $this->_update_http_code($qid, '200', $type);
                     $this->set('response', $return);
@@ -1030,10 +1031,10 @@ class JobsController extends AppController
             //checking any matching with existing 
             if ((!empty($result)) && (isset($result[0]['id']))) {
                 $this->writelog($result, "Reply ID match in Streams table");
-                $id = $result[0]['id'];
+                $stream_id = $result[0]['id'];
                 $this->writelog($result, "is  the result of searching reply ID:" . $status['id']);
-                $Table = $this->getTableLocator()->get('Streams');
-                $editrow = $Table->get($id);
+                $StreamTable = $this->getTableLocator()->get('Streams');
+                $editrow = $StreamTable->get($stream_id);
                 //                debug($status);
                 $return['result']['statustype'] = $status['status'];
                 switch ($status['status']) {
@@ -1081,7 +1082,7 @@ class JobsController extends AppController
                 $editrow->tmp_upate_json = $existing_update . ",\n" . json_encode($status);
                 //End of update. 
 
-                if ($Table->save($editrow)) {
+                if ($StreamTable->save($editrow)) {
                     $this->writelog($editrow, "Save Success");
                     $return['result']['message'] = $return['result']['message'] . "  Data Saved in Streams";
                     $return['result']['status'] = "success";
@@ -1101,7 +1102,16 @@ class JobsController extends AppController
                     $ratingResults = $ratingquery->all();
                     //Billing is needed only for Uniq conversation IDS. 
                     if ($ratingResults->isEmpty()) {
-                        $return = $this->_rateMe($status,$FBSetting); //rating.
+                       // $return = $this->_rateMe($status,$FBSetting); //rating.
+                        //rating api.
+
+                    //    $ths->ratingApi($qid,$api)
+
+                        //add the rating curl url
+
+
+
+
                         // $return['result']['rating'] = "new";
                     } else {
                         $return['result']['rating'] = "existing rating " . $status['conversation']['id'];
@@ -1128,6 +1138,30 @@ class JobsController extends AppController
         }
 
         return $return;
+    }
+
+    function ratingApi($qid, $API_KEY){
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'http://localhost/billings/rating',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array('qid' => $qid),
+            CURLOPT_HTTPHEADER => array(
+                'X-Api-Key: '.$API_KEY
+            ),
+        ));
+
+        $response = curl_exec($curl);
+        return $response;
+
+    //    curl_close($curl);
+    //    echo $response;
     }
 
     function _sendInteractiveMenu($customer_number, $contactToSend, $FBSettings)
@@ -1553,12 +1587,4 @@ class JobsController extends AppController
         return array_unique($contact_array);
     }
 
-
-
-    // function test(){
-    //     $this->resend(185068);
-    //     $this->resend(185085);
-    //     $this->resend(185553);
-    //     $this->resend(186015);        
-    // }
 }

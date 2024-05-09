@@ -2,14 +2,15 @@
 SELECT
     COUNT(streams.id)
 FROM
-    streams 
+    streams
 WHERE
-    streams.tmp_upate_json LIKE "%%pricing%%" AND streams.conversationid NOT IN(
+    streams.success = 1 AND streams.tmp_upate_json LIKE "%%pricing%%" AND streams.conversationid NOT IN(
     SELECT
         ratings.conversation
     FROM
         ratings
 );
+
 
 #fix table to rerun.
 
@@ -25,24 +26,11 @@ WHERE
 
 
 
-///unbilled count.
-
-SELECT
-    COUNT(streams.id)
-FROM
-    streams AS Streams
-WHERE
-    streams.tmp_upate_json LIKE "%%pricing%%" AND id NOT IN(
-    SELECT
-        ratings.stream_id
-    FROM
-        ratings
-) AND streams.type IN('send', 'api', 'camp') AND streams.success = TRUE;
 
 
 //get all rated stream id which missing from ratings table. 
 SELECT count(streams.id)
-FROM streams AS Streams
+FROM streams
 LEFT JOIN ratings ON streams.id = ratings.stream_id
 WHERE streams.tmp_upate_json LIKE '%%pricing%%'
     AND streams.type IN ('send', 'api', 'camp')
