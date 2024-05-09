@@ -188,13 +188,33 @@ $this->Breadcrumbs->add([
                     "render": function(data, type, full, row, index) {
                          console.log(data);
                         return '<div class="btn-group">' +
-                            '<button type="button" name="pay" title="Pay" id="' + data.DT_RowId + '" cname="' + data.Name + '" class="btn btn-outline-primary mr-1 btn-sm" ' + (data.Status === 'Unpaid' ? '' : 'disabled') + ' aria-label="Pay ' + data.Name + '"><i class="fas fa-pencil-alt"></i> Pay</button>' +
+
+                           ' <button type="button" name="pay" title="Pay" id="' + data.DT_RowId + '" cname="' + data.Name + '" class="btn btn-outline-primary mr-1 btn-sm" ' + (data.Status === 'Unpaid' ? '' : 'disabled') + ' aria-label="Pay ' + data.Name + '"><i class="fas fa-pencil-alt"></i> Pay</button>'+
+
                             '<button type="button" name="details" title="View Bill" id="' + data.DT_RowId + '" cname="' + data.Name + '" class="btn btn-outline-info btn-sm" aria-label="View Bill for ' + data.Name + '"><i class="fas fa-paperclip"></i> View Bill</button>' +
                             '</div>';
                     }
                 },
             ],
         }); //End of dT.
+
+        $('#tableinvoice tbody').on('click', 'button', function() {
+            var rowid = this.id;
+            var action = this.name;
+            var cname = this.getAttribute("cname");
+         // alert(this.name);
+            switch (action) {
+                case 'pay':
+                    editcamp(rowid, "edit");
+                    break;
+                case 'details':
+                    window.location.href = "/invoices/details/"+rowid;
+                    break;
+                
+                default:
+                    // default code block
+            }
+        });
 
         var table = $('#tableinvoice').DataTable();
         $('#tabletemplates tbody').on('click', 'tr', function() {
@@ -294,23 +314,7 @@ $this->Breadcrumbs->add([
             }
         });
 
-        $('#tableinvoice tbody').on('click', 'button', function() {
-            var rowid = this.id;
-            var action = this.name;
-            var cname = this.getAttribute("cname");
-            //  alert(cname);
-            switch (action) {
-                case 'pay':
-                    editcamp(rowid, "edit");
-                    break;
-                case 'detail':
-                    deletecamp(rowid, cname);
-                    break;
-                
-                default:
-                    // default code block
-            }
-        });
+
     }); //end of DR.
 
 

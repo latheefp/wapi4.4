@@ -161,7 +161,7 @@ class InvoiceCommand extends Command
         debug($matchingRecords);    
         $totalCost=0;
         foreach ($matchingRecords as $record) {
-            $record->invoince_id = $newinvoince->id;
+            $record->invoice_id = $newinvoince->id;
             $ratingsTable->save($record);
             $totalCost=$totalCost+$record->cost;
         }
