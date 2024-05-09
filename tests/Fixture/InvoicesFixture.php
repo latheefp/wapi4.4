@@ -24,12 +24,12 @@ class InvoicesFixture extends TestFixture
                 'month' => 'Lo',
                 'account_id' => 1,
                 'invoice_number' => 'Lorem ipsum dolor ',
-                'invoice_date' => '2024-01-21',
-                'due_date' => '2024-01-21',
+                'invoice_date' => '2024-05-09',
+                'due_date' => '2024-05-09',
                 'total_amount' => 1.5,
                 'status' => 'Lorem ipsum dolor sit amet',
-                'created' => 1705860723,
-                'modified' => 1705860723,
+                'created' => 1715293073,
+                'modified' => 1715293073,
             ],
         ];
         parent::init();

@@ -138,7 +138,7 @@ class InvoiceCommand extends Command
                 debug("Failed to save invoice ". $newinvoince->invoice_number);
                 return  false;
             }
-            debug($newinvoince);
+      //      debug($newinvoince);
        }
        
                 
@@ -158,11 +158,15 @@ class InvoiceCommand extends Command
             ->contain(['Streams']);
 
         // 2. Update the `invoiced` field for all matching records:
-        debug($matchingRecords);    
+     //   debug($matchingRecords);    
         $totalCost=0;
         foreach ($matchingRecords as $record) {
             $record->invoice_id = $newinvoince->id;
-            $ratingsTable->save($record);
+        //    debug($record);
+            if(!$ratingsTable->save($record)){
+                debug("Failed to save data");
+                return false;
+            }
             $totalCost=$totalCost+$record->cost;
         }
 

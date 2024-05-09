@@ -50,6 +50,9 @@ class InvoicesTable extends Table
         $this->belongsTo('Accounts', [
             'foreignKey' => 'account_id',
         ]);
+        $this->hasMany('Ratings', [
+            'foreignKey' => 'invoice_id',
+        ]);
     }
 
     /**
