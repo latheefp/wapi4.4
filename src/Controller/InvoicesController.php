@@ -96,11 +96,17 @@ class InvoicesController extends AppController
         $matchingRecords = $ratingsTable
             ->find()
             ->where([
-                'MONTH(Ratings.created)' => $month,
-                'YEAR(Ratings.created)' => $year,
-                'Streams.account_id' => $account_id
+                'invoice_id' => $invoice_id
+ 
             ])
-            ->contain(['Streams']);
+            ->contain(['Streams', 'Invoices', 'Streams.ContactStreams','Streams.Schedules']);
+
+           
+            // ->contain(['Streams' ,'Invoices'])
+            // ->contain(['Streams' => ['ContactStreams']]);
+
+
+            $this->set('data',$matchingRecords);
 
     }
 

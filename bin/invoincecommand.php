@@ -8,17 +8,22 @@ $currentMonth = date("n");
 
 // Loop through each account number
 foreach ($accountNumbers as $accountNumber) {
-    // Loop through each year
     foreach ($years as $year) {
-        // Determine the range of months based on the year
-        $startMonth = ($year == 2022) ? 1 : (($year == $currentYear) ? 1 : 12);
-        $endMonth = ($year == $currentYear) ? $currentMonth : 12;
+        if ($year == $currentYear) {
+            $startMonth = 1;
+            $endMonth = $currentMonth;
+        } elseif ($year == 2022) {
+            $startMonth = 1;
+            $endMonth = 12;
+        } else {
+            $startMonth = 1; // For year 2023
+            $endMonth = 12;  // For year 2023
+        }
 
-        // Loop through each month
         for ($month = $startMonth; $month <= $endMonth; $month++) {
-            // Print the command
             echo "bin/cake Invoice -a $accountNumber -m $month -y $year\n";
         }
     }
 }
+?>
 
