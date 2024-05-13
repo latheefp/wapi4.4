@@ -367,10 +367,10 @@ $this->Breadcrumbs->add([
     }); //end of DR.
 
 
-    function togglercv() {
+    // function togglercv() {
 
 
-    }
+    // }
 
     function togglercv() {
         var table = $('#tablecampaign').DataTable();
@@ -379,6 +379,7 @@ $this->Breadcrumbs->add([
 
         // Get the current value (considering it might be a string representation of true/false)
         const currentValue = showRecieveOnlyInput.value;
+        console.log(currentValue);
         if (currentValue === "true") {
             newValue = "false";
           //  table.ajax.reload();
@@ -390,10 +391,11 @@ $this->Breadcrumbs->add([
             console.warn("Unexpected value in show-recieve-only input. Setting to true.");
             newValue = "true";
         }
+        showRecieveOnlyInput.value = newValue;
 
         // Set the new value
         table.ajax.reload();
-        showRecieveOnlyInput.value = newValue;
+        
     }
 
 
