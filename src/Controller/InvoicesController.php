@@ -96,7 +96,8 @@ class InvoicesController extends AppController
         $matchingRecords = $ratingsTable
             ->find()
             ->where([
-                'invoice_id' => $invoice_id
+                'invoice_id' => $invoice_id,
+                'Streams.account_id' =>$this->getMyAccountID()
  
             ])
             ->contain(['Streams', 'Invoices', 'Streams.ContactStreams','Streams.Schedules']);
@@ -110,6 +111,10 @@ class InvoicesController extends AppController
 
     }
 
+
+    function download(){
+        
+    }
     
 
    

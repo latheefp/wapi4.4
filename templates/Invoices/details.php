@@ -15,7 +15,7 @@ $this->Breadcrumbs->add([
             <th>Initiator</th>
             <th>Type</th>
             <th>Schedule</th>
-            <th>Pricing Model</th>
+            <th>Category</th>
             <th>Created</th>
             <th>Cost</th>
             <th>Sub Total</th>
@@ -36,13 +36,11 @@ $this->Breadcrumbs->add([
                 <td><?= $val['stream']['initiator'] ?></td>
                 <td><?= $val['stream']['type'] ?></td>
                 <td><?php if(isset($val['stream']['schedule']['name'])){ echo $val['stream']['schedule']['name']; } ?></td>
-                <td><?= $val['stream']['pricing_model'] ?></td>
+                <td><?= $val['stream']['category'] ?></td>
                 <td><?= $val['stream']['created'] ?></td>
                 <td><?= $val['cost']?></td>
                 <td><?= $total?></td>
             </tr>
-
-
         <?php } ?>
     </tbody>
     <tfoot>
