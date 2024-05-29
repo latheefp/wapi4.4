@@ -238,9 +238,9 @@ TypeFactory::map('time', StringType::class);
 //Inflector::rules('uninflected', ['dontinflectme']);
 
 
-Configure::write('app.name', 'WAStreams');
-Configure::write('app.version', '1.0');
-Configure::write('app.short', 'WAS');
+Configure::write('app.name', 'WAJunction');
+Configure::write('app.version', '1.1');
+Configure::write('app.short', 'WAJ');
 Configure::write('app.description', 'Streamlining Your Messages');
 
 //Configure::write('DebugKit.panels', ['DebugKit.Packages' => false]);

@@ -42,6 +42,7 @@ class AjaxesController extends AppController {
             $formaction
         ));
 
+        $this->Authentication->allowUnauthenticated(['getrate']);
 
 
     }

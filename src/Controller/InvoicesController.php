@@ -98,6 +98,8 @@ class InvoicesController extends AppController
             ->where([
                 'invoice_id' => $invoice_id,
                 'Streams.account_id' =>$this->getMyAccountID()
+                
+
  
             ])
             ->contain(['Streams', 'Invoices', 'Streams.ContactStreams','Streams.Schedules']);
@@ -112,10 +114,18 @@ class InvoicesController extends AppController
     }
 
 
-    function download(){
-        
+    function download($id){
+        $invoiceTable=$this->getTableLocator()->get('Invoices');
+        $selecteInvoice=$invoiceTable->find()
+        ->where(['id'=>$id,'account_id'=>$this->getMyAccountID()])
+    //    ->contain(['Accounts'])
+      //  ->select(['Account.company_name','Account.Address','primary_number','Invoince.*'])
+        ->first();
+        $this->set('selecteInvoice',$selecteInvoice);
+      //  debug($selecteInvoice->account_id);
+        $this->set('account',$this->getTableLocator()->get('Accounts')->get($selecteInvoice->account_id));
     }
     
-
+  
    
 }
