@@ -30,9 +30,7 @@ class UsersController extends AppController {
         $this->FormProtection->setConfig('unlockedActions', array(
             $formaction
         ));
-        $this->Authentication->allowUnauthenticated(['login', 'logout']);
-
-
+        $this->Authentication->allowUnauthenticated(['login', 'logout','newlogin']);
     }
 
     public function listusers() {
@@ -283,28 +281,6 @@ class UsersController extends AppController {
         //  $this->Auth->allow(['logout','resetpass']);
     }
 
-//    public function login() {
-//        $loggeduser = $this->getRequest()->getSession()->read('Auth.User');
-//        // echo debug($loggeduser);
-//        //  echo debug ($this->Auth->redirectUrl());
-//        if (isset($loggeduser)) {
-//            return $this->redirect($this->Auth->redirectUrl());
-//        } else {
-//            $this->viewBuilder()->setLayout('login');
-//            if ($this->request->is('post')) {
-//                $user = $this->Auth->identify($this->request->getData());
-//                //  debug ($user);
-//                if (is_array($user)) {
-//                    $this->Auth->setUser($user);
-//                    $this->_loadsessions();
-//                    return $this->redirect($this->Auth->redirectUrl());
-//                } else {
-//                    $this->Flash->error(__('Invalid username or password, try again'));
-//                }
-//            }
-//        }
-//    }
-
 
     public function login() {
         $this->viewBuilder()->setLayout('login');
@@ -327,17 +303,46 @@ class UsersController extends AppController {
             $ntime = new FrozenTime($time, 'Asia/Riyadh');
             $query = $this->Users->query();
 
-            // $result = $query
-            //         ->update()
-            //         ->set([
-            //             $query->newExpr('login_count = login_count + 1'),
-            //             ['last_logged' => $time]
-            //                 ]
-            //         )
-            //         ->where([
-            //             'id' => $this->getMyUID()
-            //         ])
-            //         ->execute();
+            $usersTable = $this->getTableLocator()->get('Users');
+            $usersTable->query()
+                ->update()
+                ->set(['login_count' => new \Cake\Database\Expression\QueryExpression('login_count + 1')])
+                ->where(['id' => $this->getMyUID()])
+                ->execute();
+
+            //end of sessions.
+            
+            
+            $target = $this->Authentication->getLoginRedirect() ?? '/dashboards';
+            return $this->redirect($target);
+        }
+        if ($this->request->is('post')) {
+            $this->Flash->error('Invalid username or password');
+        }
+    }
+
+
+
+    public function newlogin() {
+        $this->viewBuilder()->setLayout('login');
+        $result = $this->Authentication->getResult();
+        //  debug($result);
+        // If the user is logged in send them away.
+        if ($result->isValid()) {
+       
+            //Load Session info for Views.
+            $session = $this->getRequest()->getSession();
+            $user = $this->Authentication->getIdentity();
+            $session->write('Config.id', $user->ugroup_id);
+            $session->write('Config.account_id', $user->account_id);
+            $account = $this->getTableLocator()->get('Accounts')->get($user->account_id);
+            $session->write('Config.company', $account->company_name);
+
+            
+            //Set last Login Time. 
+            $time = date("Y-m-d h:i:s", time());
+            $ntime = new FrozenTime($time, 'Asia/Riyadh');
+            $query = $this->Users->query();
 
             $usersTable = $this->getTableLocator()->get('Users');
             $usersTable->query()
@@ -356,6 +361,9 @@ class UsersController extends AppController {
             $this->Flash->error('Invalid username or password');
         }
     }
+
+
+
 
     public function _loadsessions() {
 //        debug($this->Auth->user('id'));

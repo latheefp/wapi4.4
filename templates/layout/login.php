@@ -34,6 +34,11 @@
     
     <!-- jQuery -->
     <script src="/plugins/jquery/jquery.min.js"></script>
+
+
+    <script src="/js/facebook.js"></script>
+
+    <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=your-pixel-id&ev=PageView&noscript=1"/>
     <!-- Bootstrap 4 -->
     <script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE App -->
