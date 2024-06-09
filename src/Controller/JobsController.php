@@ -654,7 +654,7 @@ class JobsController extends AppController
             $msgArray = json_decode($dataarray['recievearray'], true);
       //      debug($msgArray);
                 $sender=$msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
-                $sender="00966547237272"; //flood
+                $sender="966547237272"; //flood
             $sendQData['mobile_number'] = $sender;
             $sendQData['type'] = "send";
             $sendQData['var-1'] = $FBSettings['welcome_msg'];
