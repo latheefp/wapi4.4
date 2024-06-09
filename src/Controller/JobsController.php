@@ -549,6 +549,9 @@ class JobsController extends AppController
                     break;
                 case "image":
                     break;
+                case "request_welcome":  // Indicates first time message from WhatsApp user
+                    $this->request_welcome($dataarray, $FBSettings); // FB inbuild welcome msg
+                    break;    
                 case "interactive":
                     $adminforward=false;
                     $this->_processInteractive($record->json, $FBSettings);
@@ -642,6 +645,41 @@ class JobsController extends AppController
     }
 
 
+    function request_welcome($dataarray, $FBSettings)
+    {
+        // debug("Sending welcome msg");
+        if (isset($FBSettings['welcome_msg'])) {
+         //   debug($dataarray['recievearray']);
+
+            $msgArray = json_decode($dataarray['recievearray'], true);
+      //      debug($msgArray);
+                $sender=$msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+                $sender="00966547237272"; //flood
+       //     $sendQData['mobile_number'] = $sender;
+            $sendQData['type'] = "send";
+            $sendQData['var-1'] = $FBSettings['welcome_msg'];
+            $sendQData['schedule_name'] = $FBSettings['rcv_notification_template'];
+            $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
+            $sendQ = $this->getTableLocator()->get('SendQueues');
+            $sendQrow = $sendQ->newEmptyEntity();
+            $sendQrow->form_data = json_encode($sendQData);
+            $sendQrow->status = "queued";
+            $sendQrow->type = "send";
+        //    debug($sendQ);
+          //  $result = [];
+            if ($sendQ->save($sendQrow)) {
+                $result['status'] = "success";
+                $result['msg'] = "Escort Message queued for delivery, $sendQrow->id";
+            } else {
+                $result['status'] = "failed";
+                $result['msg'] = "Failed to forward";
+            }
+
+        //    debug($result);
+        }
+
+    }
+
 
     function processCMd($dataarray,$FBSettings){ //this command is for processing and checking the if the message is a command. now, only "register" is added.
         $CMDarray = explode(' ', $dataarray['message_txt_body']);
@@ -669,9 +707,7 @@ class JobsController extends AppController
                         ->where(['contact_stream_id'=>$contact_stream_id,'type'=>'forward','success'=>0])
                         ->all();
                         if($failedQ->isEmpty()){
-                          
                             $this->writelog($failedQ, "Command: Failed Q is empty for  ".$dataarray['contact_waid'] ." with contact ID contact_stream_id");
-                         
                         }else{
                            foreach($failedQ as $key =>$val){
                                 debug("resending $val->id");

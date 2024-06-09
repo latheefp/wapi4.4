@@ -630,8 +630,10 @@ class AppController extends Controller
 
         $data['def_isd'] = $result->def_isd;
         $data['account_id'] = $result->id;
+        $data['welcome_msg'] = $result->welcome_msg;
         $data['status']['type'] = "Sucess";
         $data['status']['code'] = 200;
+        
         $data['interactive_menu_function'] = $result->interactive_menu_function;
         return $data;
     }
