@@ -164,7 +164,7 @@ class JobsController extends AppController
     }
 
     function _forwardmsg($sendQrecord, $FBsettings)
-    {
+    { //this function to create  stream 
         $retun=[];
         $form_data = json_decode($sendQrecord->form_data, true);
 
@@ -645,40 +645,7 @@ class JobsController extends AppController
     }
 
 
-    function request_welcome($dataarray, $FBSettings)
-    {
-        // debug("Sending welcome msg");
-        if (isset($FBSettings['welcome_msg'])) {
-            //   debug($dataarray['recievearray']);
-
-            $msgArray = json_decode($dataarray['recievearray'], true);
-            //      debug($msgArray);
-            $sender = $msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
-            $sender = "966547237272"; //flood
-            $sendQData['mobile_number'] = $sender;
-            $sendQData['type'] = "send";
-            $sendQData['var-1'] = $FBSettings['welcome_msg'];
-            $sendQData['schedule_name'] = $FBSettings['rcv_notification_template'];
-            $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
-            $sendQ = $this->getTableLocator()->get('SendQueues');
-            $sendQrow = $sendQ->newEmptyEntity();
-            $sendQrow->form_data = json_encode($sendQData);
-            $sendQrow->status = "queued";
-            $sendQrow->type = "send";
-        //    debug($sendQ);
-          //  $result = [];
-            if ($sendQ->save($sendQrow)) {
-                $result['status'] = "success";
-                $result['msg'] = "Escort Message queued for delivery, $sendQrow->id";
-            } else {
-                $result['status'] = "failed";
-                $result['msg'] = "Failed to forward";
-            }
-
-            return $result;
-        }
-
-    }
+    
 
 
     function processCMd($dataarray,$FBSettings){ //this command is for processing and checking the if the message is a command. now, only "register" is added.
@@ -771,6 +738,100 @@ class JobsController extends AppController
     
             }
            
+    }
+
+    function request_welcomeDelete($dataarray, $FBSettings)
+    {
+        // debug("Sending welcome msg");
+        if (isset($FBSettings['welcome_msg'])) {
+            //   debug($dataarray['recievearray']);
+
+            $msgArray = json_decode($dataarray['recievearray'], true);
+            //      debug($msgArray);
+            $sender = $msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+            $sender = "966547237272"; //flood
+            $sendQData['mobile_number'] = $sender;
+            $sendQData['type'] = "send";
+            $sendQData['var-1'] = $FBSettings['welcome_msg'];
+            $sendQData['schedule_name'] = $FBSettings['rcv_notification_template'];
+            $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
+            $sendQ = $this->getTableLocator()->get('SendQueues');
+            $sendQrow = $sendQ->newEmptyEntity();
+            $sendQrow->form_data = json_encode($sendQData);
+            $sendQrow->status = "queued";
+            $sendQrow->type = "send";
+        //    debug($sendQ);
+          //  $result = [];
+            if ($sendQ->save($sendQrow)) {
+                $result['status'] = "success";
+                $result['msg'] = "Escort Message queued for delivery, $sendQrow->id";
+            } else {
+                $result['status'] = "failed";
+                $result['msg'] = "Failed to forward";
+            }
+
+            return $result;
+        }
+
+    }
+
+
+    function request_welcome($dataarray, $FBSettings)
+    {
+        // debug("Sending welcome msg");
+        if (isset($FBSettings['welcome_msg'])) {
+            //   debug($dataarray['recievearray']);
+
+            $msgArray = json_decode($dataarray['recievearray'], true);
+            //      debug($msgArray);
+            $sender = $msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+            $sender = "966547237272"; //flood
+            //     $sendQData['mobile_number'] = $sender;
+            //     $sendQData['type'] = "send";
+            //     $sendQData['var-1'] = $FBSettings['welcome_msg'];
+            //     $sendQData['schedule_name'] = $FBSettings['rcv_notification_template'];
+            //     $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
+            //     $sendQ = $this->getTableLocator()->get('SendQueues');
+            //     $sendQrow = $sendQ->newEmptyEntity();
+            //     $sendQrow->form_data = json_encode($sendQData);
+            //     $sendQrow->status = "queued";
+            //     $sendQrow->type = "send";
+            // //    debug($sendQ);
+            //   //  $result = [];
+            //     if ($sendQ->save($sendQrow)) {
+            //         $result['status'] = "success";
+            //         $result['msg'] = "Escort Message queued for delivery, $sendQrow->id";
+            //     } else {
+            //         $result['status'] = "failed";
+            //         $result['msg'] = "Failed to forward";
+            //     }
+
+            //return $result;
+
+
+            $sendQData['mobile_number'] = $sender;
+            $sendQData['type'] = "send";
+            // $sendQData['var-1'] = "wa.me/".$customer_number;
+            $sendQData['schedule_name'] = $FBSettings['welcome_msg'];
+            $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
+            $sendQ = $this->getTableLocator()->get('SendQueues');
+            $sendQrow = $sendQ->newEmptyEntity();
+            $sendQrow->form_data = json_encode($sendQData);
+            $sendQrow->status = "queued";
+            $sendQrow->type = "send";
+            $result = [];
+            if ($sendQ->save($sendQrow)) {
+                $result['status'] = "success";
+                $result['msg'] = "Escort Message queued for delivery, $sendQrow->id";
+            } else {
+                $result['status'] = "failed";
+                $result['msg'] = "Failed to forward";
+            }
+
+
+            return $result;
+        }
+
     }
 
     function escortadminmsg($admin_mobile, $customer_number,$FBSettings,$sender){ //this function sedna message,  "You have a message from $sender enve ther
