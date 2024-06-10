@@ -398,7 +398,7 @@ class ApisController extends AppController {
         }
     }
 
-/
+
 
     function writeinteractive($data, $type = null) {
         $file = LOGS . 'GrandInt' . '.log';
