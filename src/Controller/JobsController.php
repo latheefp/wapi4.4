@@ -550,7 +550,7 @@ class JobsController extends AppController
                 case "image":
                     break;
                 case "request_welcome":  // Indicates first time message from WhatsApp user
-                    $this->request_welcome($dataarray, $FBSettings); // FB inbuild welcome msg
+                    $return['result']['request_welcome']=$this->request_welcome($dataarray, $FBSettings); // FB inbuild welcome msg
                     break;    
                 case "interactive":
                     $adminforward=false;
@@ -649,12 +649,12 @@ class JobsController extends AppController
     {
         // debug("Sending welcome msg");
         if (isset($FBSettings['welcome_msg'])) {
-         //   debug($dataarray['recievearray']);
+            //   debug($dataarray['recievearray']);
 
             $msgArray = json_decode($dataarray['recievearray'], true);
-      //      debug($msgArray);
-                $sender=$msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
-                $sender="966547237272"; //flood
+            //      debug($msgArray);
+            $sender = $msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
+            $sender = "966547237272"; //flood
             $sendQData['mobile_number'] = $sender;
             $sendQData['type'] = "send";
             $sendQData['var-1'] = $FBSettings['welcome_msg'];
@@ -675,7 +675,7 @@ class JobsController extends AppController
                 $result['msg'] = "Failed to forward";
             }
 
-        //    debug($result);
+            return $result;
         }
 
     }
