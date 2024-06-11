@@ -82,11 +82,8 @@ class JobsController extends AppController
 
         // debug($type);s
         switch ($type) {
-            case "send":
+            case "send":  //message to be send to end user.  
 
-                // $table = TableRegistry::getTableLocator()->get('SendQueues');
-                // $sendQrecord = $table->get($qid);
-              //  debug ("Type is send");
 
                 try {
                     $table = TableRegistry::getTableLocator()->get('SendQueues');
@@ -365,7 +362,7 @@ class JobsController extends AppController
         if (strlen($data['mobile_number']) >= 10 && is_numeric($data['mobile_number'])) {
             // echo "Valid mobile number!";
         } else {
-            $return['result']['error'] = "Invalid mobile number";
+            $return['result']['error'] = "Invalid mobile number ".$data['mobile_number'];
             return $return;
         }
 
@@ -780,35 +777,9 @@ class JobsController extends AppController
     {
         // debug("Sending welcome msg");
         if (isset($FBSettings['welcome_msg'])) {
-            //   debug($dataarray['recievearray']);
-
             $msgArray = json_decode($dataarray['recievearray'], true);
-            //      debug($msgArray);
             $sender = $msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
-            $sender = "966547237272"; //flood
-            //     $sendQData['mobile_number'] = $sender;
-            //     $sendQData['type'] = "send";
-            //     $sendQData['var-1'] = $FBSettings['welcome_msg'];
-            //     $sendQData['schedule_name'] = $FBSettings['rcv_notification_template'];
-            //     $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
-            //     $sendQ = $this->getTableLocator()->get('SendQueues');
-            //     $sendQrow = $sendQ->newEmptyEntity();
-            //     $sendQrow->form_data = json_encode($sendQData);
-            //     $sendQrow->status = "queued";
-            //     $sendQrow->type = "send";
-            // //    debug($sendQ);
-            //   //  $result = [];
-            //     if ($sendQ->save($sendQrow)) {
-            //         $result['status'] = "success";
-            //         $result['msg'] = "Escort Message queued for delivery, $sendQrow->id";
-            //     } else {
-            //         $result['status'] = "failed";
-            //         $result['msg'] = "Failed to forward";
-            //     }
-
-            //return $result;
-
-
+           // $sender = "966547237272"; //flood
             $sendQData['mobile_number'] = $sender;
             $sendQData['type'] = "send";
             // $sendQData['var-1'] = "wa.me/".$customer_number;
@@ -827,8 +798,6 @@ class JobsController extends AppController
                 $result['status'] = "failed";
                 $result['msg'] = "Failed to forward";
             }
-
-
             return $result;
         }
 
