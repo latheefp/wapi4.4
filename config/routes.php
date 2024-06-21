@@ -57,6 +57,11 @@ return static function (RouteBuilder $routes) {
          */
         $builder->connect('/pages/*', 'Pages::display');
 
+
+        ///added for supporting json and xml extensions
+
+        $builder->setExtensions(['json','xml']);
+
         /*
          * Connect catchall routes for all controllers.
          *
@@ -94,7 +99,12 @@ return static function (RouteBuilder $routes) {
 //        $builder->connect('/', ['controller' => 'Dashboards', 'action' => 'index']);
         $builder->connect('/550', ['controller' => 'Error', 'action' => 'page550']);
         $builder->connect('/', ['controller' => 'Publics', 'action' => 'landingpage']);
+        $builder->connect('/chat', ['controller' => 'Chat', 'action' => 'index']);
 
+
+        //API Routes
+
+       // $builder->connect('/api/uiregister', ['controller' => 'Chats', 'action' => 'register', '_method' => 'POST']);
         $builder->fallbacks();
     });
 

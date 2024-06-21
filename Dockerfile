@@ -65,7 +65,7 @@ RUN chown -R www-data:www-data /var/www/html
 #RUN chown -R www-data:www-data app/logs
 
 
-#COPY  docker/000-default.conf /etc/apache2/sites-enabled/000-default.conf 
+COPY  docker/000-default.conf /etc/apache2/sites-enabled/000-default.conf 
 #COPY docker/passenv.conf /etc/apache2/conf-available/passenv.conf
 
 #RUN ln -s conf/env config/.env

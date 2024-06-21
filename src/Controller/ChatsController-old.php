@@ -4,7 +4,6 @@ namespace App\Controller;
 use App\Controller\AppController;
 use Cake\Event\EventInterface;
 use Cake\Http\Client;
-use App\Chat\ChatServer;
 
 class ChatsController extends AppController
 {
@@ -166,43 +165,21 @@ class ChatsController extends AppController
     // }
 
 
-    // public function sendMessage()
-    // {
-    //     $this->request->allowMethod(['post']);
-    //     $data = $this->request->getData();
+    public function sendMessage()
+    {
+        $this->request->allowMethod(['post']);
+        $data = $this->request->getData();
 
-    //     $clientId = $data['client_id'];
-    //     $message = $data['message'];
+        $clientId = $data['client_id'];
+        $message = $data['message'];
 
+        $chatServer = \App\Chat\ChatServer::getInstance();
 
-    //     $this->viewBuilder()->setLayout('ajax');
-    //     $this->autoRender = false; // Disable view rendering
+        $chatServer->sendMessageToClient($clientId, $message);
 
-    //     try {
-    //         $chatServer = ChatServer::getInstance();
-    //         $chatServer->sendMessageToClient($clientId, $message);
-
-
-
-    //         $this->setResponse(
-    //             $this->response->withStatus(200) 
-    //                 ->withType('application/json')
-    //                 ->withStringBody(json_encode([
-    //                     'message' => 'Message sent successfully',
-    //                     '_serialize' => ['message']
-    //                 ]))
-    //         );
-
-    //     } catch (\Exception $e) {
-
-    //         $this->setResponse(
-    //             $this->response->withStatus(500) 
-    //                 ->withType('application/json')
-    //                 ->withStringBody(json_encode([
-    //                     'message' => 'Failed to send message: ' . $e->getMessage(),
-    //                     '_serialize' => ['message']
-    //                 ]))
-    //         );
-    //     }
-    // }
+        $this->set([
+            'message' => 'Message sent successfully',
+            '_serialize' => ['message']
+        ]);
+    }
 }

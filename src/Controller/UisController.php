@@ -1,11 +1,11 @@
 <?php
-
-declare(strict_types=1);
+namespace App\Controller;
+//declare(strict_types=1);
 
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
-namespace App\Controller;
+
 
 use Cake\ORM\TableRegistry;
 use Cake\I18n\FrozenTime;
@@ -31,7 +31,14 @@ class UisController extends AppController {
 
     public function beforeFilter(EventInterface $event): void {
         parent::beforeFilter($event);
-        $this->Security->setConfig('unlockedActions', ['getdata', 'edit']);
+
+        $formaction = $this->request->getParam('action');
+
+        $this->FormProtection->setConfig('unlockedActions', array(
+            $formaction
+        ));
+
+       // $this->Authentication->allowUnauthenticated(['conversation_analytics']);
     }
 
 //    public function index() {
@@ -48,7 +55,7 @@ class UisController extends AppController {
         }
 
         $session = $this->request->getSession();
-        $account_id = $session->read('Auth.User.account_id');
+        $account_id = $this->getMyAccountID();
         $this->viewBuilder()->setLayout('ajax');
         $query = $this->getTableLocator()->get('RecentChats')->find();
         if (isset($get['query'])) {
@@ -90,7 +97,7 @@ class UisController extends AppController {
         $this->viewBuilder()->setLayout('ajax');
         $query = $this->getTableLocator()->get('StreamViews')->find();
         $query->where(['contact_stream_id' => $contact_stream_id]);
-        $query->andWhere(['account_id' => $session->read('Auth.User.account_id')]);
+        $query->andWhere(['account_id' => $this->getMyAccountID()]);
         $query->order(['modified' => 'DESC']);
         $query->limit(50);
         $messages = $query->all()->toArray();
@@ -100,20 +107,26 @@ class UisController extends AppController {
             if (isset($val->sendarray)) {
                 $val->msg = $this->arraytomsg($val->sendarray);
             } else { //if the message is recived.
-                $val->msg = $val->message_txt_body;
+                $val->msg = $val->recievearray;
             }
         }
         $this->set('messages', $query->all()->toArray()); //table row data
     }
 
     function arraytomsg($sendarray) {
+      //  debug($sendarray);
+        $encoding = mb_detect_encoding($sendarray);
+        if ($encoding !== 'UTF-8') {
+            $json = utf8_encode($sendarray);
+        }
 
-        $send_array = (json_decode($sendarray, true));
+        $send_array = json_decode($this->_removeTrailingCommas($sendarray), true);
         // debug($send_array);
+         $msg=null;
         switch ($send_array['type']) {
             case "template":
                 $template_name = $send_array['template']['name'];
-                //  debug($template_name);
+      //            debug($template_name);
                 $template_info = $this->getTableLocator()->get('Templates')->find()->where(['name' => $template_name])->toArray();
 
                 // debug($template_info);
@@ -124,11 +137,19 @@ class UisController extends AppController {
                     $tbody = null;
                     $theader = null;
                     if (isset($template_details['data'])) {
-                        //  debug($template_details);
+                     //     debug($template_details['data'][0]['components']);
                         foreach ($template_details['data'][0]['components'] as $key => $val) {
                             switch ($val['type']) {
                                 case "HEADER":
-                                    $theader = "<b>" . $val['text'] . "</b>";
+                                 //   debug($val);
+                                    if(($val['format']=="text")){
+                                        $theader = "<b>" . $val['text'] . "</b>";
+                                    ///    debug($val);
+                                    }elseif($val['format']=="IMAGE"){
+                                      //  debug($val);
+                                      $theader='<img src="'.$val['example']['header_handle'][0].'">';
+                                    }
+                                    
                                     break;
                                     ;
                                 case "BODY":
@@ -145,8 +166,16 @@ class UisController extends AppController {
 
                     if (isset($send_array['template']['components'][0]['parameters'])) {
                         foreach ($send_array['template']['components'][0]['parameters'] as $key => $val) {
+                            debug($key);
+                            debug($val);
                             $key = $key + 1;
-                            $tbody = str_replace('{{' . $key . '}}', $val['text'], $tbody);
+                            if($val['type']=="text"){
+                                $tbody = str_replace('{{' . $key . '}}', $val['text'], $tbody);
+                            }
+                            if($val['type']=="image"){
+                                $tbody = str_replace('{{' . $key . '}}',  '<img src="/campaigns/viewsendFile?fileid=' . $val['image']['id'].">', $tbody);
+                            }
+                            
                         }
                     }
                     $tbody = str_replace('\n', '<br>', $tbody);
@@ -163,10 +192,22 @@ class UisController extends AppController {
             case "text":
                 $msg = $send_array['text']['body'];
                 break;
+            case "interactive":
+                $msg ="Interactive". $send_array['interactive']['body']['text'];
+                break;    
+            default:
+                debug($send_array['type'])    ;
         }
 
         return $msg;
     }
+
+    function _removeTrailingCommas($json) {
+        // Remove trailing commas before closing brackets
+        $json = preg_replace('/,\s*([\]}])/m', '$1', $json);
+        return $json;
+    }
+    
 
 //    function index2() {
 //        $this->viewBuilder()->setLayout('ajax');

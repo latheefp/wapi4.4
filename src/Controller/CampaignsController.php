@@ -107,25 +107,23 @@ class CampaignsController extends AppController {
         return $response;
     }
 
-    function viewimageold($file_id = null) { //should be replaced by   viewrcvImage() functoin.
-        if((!isset($file_id))&&(empty($file_id))) {
-            $result['status']="failed";
-            $result['msg']="Missing image ID";
-            return $result;
-        }
 
 
+    public function isAuthorized($user) {
+        return true;
+    }
 
+    function viewsendFile(){
+        $requestinfo = $this->request->getQuery();
+        $file_id = $requestinfo['fileid'];
+
+        $data['account_id'] =$this->getMyAccountID();
+        $FBsettings = $this->_getFBsettings($data);
 
         $this->viewBuilder()->setLayout('ajax');
         $file = tmpfile();
         $file_path = stream_get_meta_data($file)['uri'];
         $curl = curl_init();
-        $table = $this->getTableLocator()->get('CampaignForms');
-        $query = $table->find()
-                ->where(['fbimageid' => $file_id])
-                ->first();
-        //  debug ($query);
         curl_setopt_array($curl, array(
             CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $file_id,
             CURLOPT_RETURNTRANSFER => true,
@@ -136,58 +134,98 @@ class CampaignsController extends AppController {
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => array(
-                'Content-Type: ' . $query->file_type,
-                'Authorization: Bearer ' . $this->_getsettings('ACCESSTOKENVALUE')
+             //   'Content-Type: ' . $filetype,
+                'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
             ),
         ));
 
         $response = curl_exec($curl);
-        curl_close($curl);
-        $result = json_decode($response, true);
-        $url = $result['url'];
-        // debug($url);
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 0,
-            CURLOPT_HEADER => 0,
-            CURLOPT_ENCODING => '',
-//            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-//            CURLOPT_FILE => $file_handle,
-            CURLOPT_BINARYTRANSFER => true,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $this->_getsettings('ACCESSTOKENVALUE'),
-                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
-            ),
-        ));
-
-        $raw = curl_exec($curl);
-
-        curl_close($curl);
-        if (file_exists($file_path)) {
-            unlink($file_path);
+        $responsArray=json_decode($response,true);
+        if(isset($responsArray['error'])){
+            $this->setResponse(
+                $this->response->withStatus(401) // OK status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'message' => 'File not found'
+                    ]))
+            );
+        }else{
+            curl_close($curl);
+            $result = json_decode($response, true);
+            $url = $result['url'];
+            // debug($url);
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 0,
+                CURLOPT_HEADER => 0,
+                CURLOPT_ENCODING => '',
+    //            CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+    //            CURLOPT_FILE => $file_handle,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE'],
+                    'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
+                ),
+            ));
+    
+            $raw = curl_exec($curl);
+    
+            curl_close($curl);
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+            $file_handle = fopen($file_path, 'x');
+    
+            fwrite($file_handle, $raw);
+    
+            $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
+            $rcarray = json_decode($streamRow->recievearray, true);
+            $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
+           // debug($message_array);
+    
+            if ($message_array['type'] == "document") {
+                 $fname=$message_array['document']['filename'];
+            } else {
+                $ext = null;
+                //debug($filetype);
+                
+                switch ($filetype) {
+                    case "video/mp4":
+                        $ext = "mp4";
+                        break;
+                    case "image/webp":
+                        $ext = "webp";
+                        break;
+                    case "image/jpeg":
+                        $ext = "jpg";
+                        break;
+                    case " audio/ogg":
+                        $ext = "mp3";
+                    case " application/pdf":
+                        $ext = "pdf";
+                    case " application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                        $ext = "docx";
+                    case " text/csv":
+                        $ext = "csv";
+                    case " text/plain":
+                        $ext = "txt";
+                    default:
+                        $ext = "unknown"; // Set a default extension or handle the case as needed.
+                        break;
+                }
+                $fname=$message_array['from'].".".$ext;
         }
-        $file_handle = fopen($file_path, 'x');
-
-        fwrite($file_handle, $raw);
-
-        fclose($file_handle);
-        $response = $this->response->withFile($file_path,
-                ['download' => true, 'name' => $query->field_value]
-        );
-        $response->withType($query->file_type);
-        return $response;
+       
+       
     }
-
-    public function isAuthorized($user) {
-        return true;
-    }
+}
 
     function viewrcvImage() {
         //  $file_id = "6371848519559997";

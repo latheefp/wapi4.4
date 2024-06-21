@@ -6,23 +6,27 @@ namespace App\View\Helper;
 use Cake\View\Helper;
 use Cake\View\View;
 
-class RcvDataformatHelper extends Helper {
+class RcvDataformatHelper extends Helper
+{
 
-    public function initialize(array $config): void {
+    public function initialize(array $config): void
+    {
         //     debug($config);
     }
 
-    function format($data) {
+    function format($data)
+    {
+        //  debug($data);
         $rcarray = json_decode($data['json'], true);
-        //  debug($rcarray);
+        //   debug($rcarray);
         if (!is_array($rcarray)) {
             return false;
         }
         $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'];
         $result = null;
-        //   debug($data);
+        //  debug($data);
         foreach ($message_array as $key => $val) {
-          //    debug($val);
+            //    debug($val);
             $type = $val['type'];
             switch ($type) {
                 case "image":
@@ -30,8 +34,8 @@ class RcvDataformatHelper extends Helper {
 
                     break;
                 case "document":
-//                    $result = $result . '<img src="/campaigns/viewrcvImage?fileid=' . $val['document']['id'] . '&type=' . $val['document']['mime_type'] . '">';
-                    $result = $result . '<a href="/campaigns/viewrcvImage?fileid=' . $val['document']['id'] . '&type=' . $val['document']['mime_type'] . '&id=' . $data['id'] . '" download><i class="material-icons">Download File:'.$val['document']['filename'].'</i> </a>';
+                    //                    $result = $result . '<img src="/campaigns/viewrcvImage?fileid=' . $val['document']['id'] . '&type=' . $val['document']['mime_type'] . '">';
+                    $result = $result . '<a href="/campaigns/viewrcvImage?fileid=' . $val['document']['id'] . '&type=' . $val['document']['mime_type'] . '&id=' . $data['id'] . '" download><i class="material-icons">Download File:' . $val['document']['filename'] . '</i> </a>';
                     break;
                 case "video":
                     $result = $result . '<video controls> <source  src="/campaigns/viewrcvImage?fileid=' . $val['video']['id'] . '&type=' . $val['video']['mime_type'] . '&id=' . $data['id'] . '"> </video>';
@@ -83,8 +87,15 @@ class RcvDataformatHelper extends Helper {
                         $result = $result . "<br>";
                     }
                     $result = $result . "</div></div>";
-
                     break;
+                case "request_welcome":
+                    $result = $result . "Request Welcome";
+                    break;
+                default:
+                    debug($type);
+                    debug($val);
+                    break;    
+
             }
             if (isset($val[$type]['caption'])) {
                 $result = $result . "<br><div>" . $val[$type]['caption'] . "</div>";
@@ -94,7 +105,7 @@ class RcvDataformatHelper extends Helper {
         return $result;
     }
 
-//    function sanitizeString($string) {
-//        return htmlspecialchars(trim($string), ENT_QUOTES, 'UTF-8');
-//    }
+    //    function sanitizeString($string) {
+    //        return htmlspecialchars(trim($string), ENT_QUOTES, 'UTF-8');
+    //    }
 }

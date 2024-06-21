@@ -113,7 +113,7 @@ class JobsController extends AppController
                     $return = $this->_forwardmsg($sendQrecord, $FBSettings);
                 } else {
              //       debug("Type is send to customers");
-                    $return = $this->_send_schedule($qid, $FBSettings);
+                    $return = $this->_send_schedule($qid, $FBSettings); //main send fuction to fb api.
                 }
 
 
@@ -435,7 +435,7 @@ class JobsController extends AppController
                     case "var":
                         $newvar = $vararray[0] . "-" . $vararray[1];
                         if (isset($data[$newvar])) {
-                            $newval['field_value'] = $data[$newvar];
+                            $newval['field_value'] = $this->clearText($data[$newvar]); //cleartext will remove more than one space and newline on varaibles.
                         }
                         break;
                     case "button":
@@ -445,7 +445,7 @@ class JobsController extends AppController
                       //  debug($data[$newvar]);
                        
                         if (isset($data[$newvar])) {
-                            $newval['field_value'] = $data[$newvar];
+                            $newval['field_value'] = $this->clearText($data[$newvar]);//cleartext will remove more than one space and newline for button text
                         }
                         break;
                 }
@@ -1410,7 +1410,7 @@ class JobsController extends AppController
 
 
     //!Schdule comapgain related code starts from here. it directly hit here. 
-    function sendcamp()
+    function sendcamp() //this is the direct endpoint to send campagains and schedule it. 
     { //this API need two values, 1. API-key as header and schedule_id. this will send the scdules to all contactacts. 
         //this is auto triggered when new shedules are added from FE. /campaigns/schedules
         //this will add the schedule to sendQ.
@@ -1445,7 +1445,7 @@ class JobsController extends AppController
             $this->set('response', $response);
             return;
         }
-        $return = $this->queue_message($sched_id);
+        $return = $this->queue_message($sched_id); //the main function to Q the message.
 
         if (isset($return['result']['error'])) {
             // debug($return);
@@ -1462,7 +1462,7 @@ class JobsController extends AppController
         $this->set('response', $return);
     }
 
-    function queue_message($schedule_id)
+    function queue_message($schedule_id) //used by Camp to Q the messages in send Q.
     {
         $sendarray = [];
 
@@ -1528,7 +1528,7 @@ class JobsController extends AppController
             }
 
             if ($keyarray[0] == "var") {  //parmeters injection. 
-                $sendarray['var-' . $keyarray[1]] = $val['field_value'];
+                $sendarray['var-' . $keyarray[1]] =$val['field_value'];  
             }
 
             if ($keyarray[0] == "button") {  //parmeters for button variables. 
@@ -1652,5 +1652,18 @@ class JobsController extends AppController
       //  debug($contact_array);
         return array_unique($contact_array);
     }
+
+
+    function clearText($text) {
+        // Remove new lines and tabs using str_replace
+        $cleanText = str_replace(array("\r", "\n", "\t"), "", $text);
+      
+        // Replace consecutive spaces with single spaces using preg_replace
+        $cleanText = preg_replace('/ +/', ' ', $cleanText);
+      
+        // Return the cleaned text
+        return $cleanText;
+      }
+      
 
 }

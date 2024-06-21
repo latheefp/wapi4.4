@@ -2,6 +2,13 @@ version: "3"
 #project_name: dev  # Specify your project name here
 services:
   wap44:
+    # resources:
+    #   reservations:
+    #     cpus: "0.5"  # Minimum CPU cores to reserve
+    #     memory: "1G"  # Minimum memory reservation
+    #   limits:
+    #     cpus: "1.0"  # Maximum CPU cores allowed
+    #     memory: "2G"  # Maximum memory allowed
     volumes:
       - D:\web\wa4.4:/var/www/html
       - D:\web\wa4.4\docker\env.sh:/var/www/html/config/k8s/.env
@@ -12,14 +19,15 @@ services:
     # env_file:
     #  - ./docker/env.sh
     ports:
-      - "8001:80"
+      - "8090:80"
+      - "8080:8080"
     networks:
       dev-network:
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/healthcheck"]
-      interval: 60s
-      timeout: 5s
-      retries: 3      
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost/healthcheck"]
+    #   interval: 60s
+    #   timeout: 5s
+    #   retries: 3      
 networks:
   dev-network:
     driver: bridge

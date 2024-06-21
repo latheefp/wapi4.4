@@ -127,8 +127,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 'contact',
                 'getrate',
                 'sendcamp',
-                'rating'
-                // 'validate'
+                'rating',
+                'uiregister',
+                'uiunregister',
+                'sendMessage'
             ];
          //   debug("Action is ". $request->getParam('action'));
             $actionToCheck = $request->getParam('action');

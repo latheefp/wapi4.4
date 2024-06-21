@@ -1035,8 +1035,8 @@ class AppController extends Controller
     function viewRcvImg($file_id = null, $filetype = null)
     {
 
-        $file_id = "6371848519559997";
-        $filetype = "image/jpeg";
+      //  $file_id = "6371848519559997";
+     //   $filetype = "image/jpeg";
         //        $session = $this->request->getSession();
         $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
@@ -1149,6 +1149,16 @@ class AppController extends Controller
             return $user->id;
         } else {
             // User is not authenticated
+        }
+    }
+
+    public function getMyUserName()
+    {
+        $user = $this->Authentication->getIdentity();
+        if ($user) {
+            return $user->name;
+        } else {
+            return null;
         }
     }
 
@@ -1271,4 +1281,9 @@ class AppController extends Controller
         // Compare generated hash with the hash to validate
         return hash_equals($generatedHash, $hashToValidate);
     }
+
+
+    // function register(){
+    //     debug("Register");
+    // }
 }
