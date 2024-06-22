@@ -30,7 +30,7 @@ class RcvDataformatHelper extends Helper
             $type = $val['type'];
             switch ($type) {
                 case "image":
-                    $result = $result . '<img src="/campaigns/viewrcvImage?fileid=' . $val['image']['id'] . '&type=' . $val['image']['mime_type'] . '&id=' . $data['id'] . '">';
+                    $result = $result . '<div class="image-container"><img src="/campaigns/viewrcvImage?fileid=' . $val['image']['id'] . '&type=' . $val['image']['mime_type'] . '&id=' . $data['id'] . '"></div>';
 
                     break;
                 case "document":

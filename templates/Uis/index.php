@@ -707,6 +707,12 @@
 
 
             }
+
+            .image-container {
+                width: 1000px;
+                height: 1000px; /* Adjust as needed */
+                overflow: hidden; /* Hide overflowing parts of the image */
+                }
         </style>
 
 

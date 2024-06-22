@@ -141,6 +141,8 @@ class CampaignsController extends AppController {
 
         $response = curl_exec($curl);
         $responsArray=json_decode($response,true);
+       // debug($responsArray);
+     curl_close($curl);
         if(isset($responsArray['error'])){
             $this->setResponse(
                 $this->response->withStatus(401) // OK status code
@@ -150,7 +152,7 @@ class CampaignsController extends AppController {
                     ]))
             );
         }else{
-            curl_close($curl);
+            
             $result = json_decode($response, true);
             $url = $result['url'];
             // debug($url);
@@ -185,18 +187,18 @@ class CampaignsController extends AppController {
     
             fwrite($file_handle, $raw);
     
-            $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
-            $rcarray = json_decode($streamRow->recievearray, true);
-            $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
-           // debug($message_array);
+    //         $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
+    //         $rcarray = json_decode($streamRow->recievearray, true);
+    //         $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
+    //        // debug($message_array);
     
-            if ($message_array['type'] == "document") {
+            if ($responsArray['mime_type'] == "document") {
                  $fname=$message_array['document']['filename'];
             } else {
                 $ext = null;
                 //debug($filetype);
                 
-                switch ($filetype) {
+                switch ($responsArray['mime_type']) {
                     case "video/mp4":
                         $ext = "mp4";
                         break;
@@ -219,9 +221,9 @@ class CampaignsController extends AppController {
                     default:
                         $ext = "unknown"; // Set a default extension or handle the case as needed.
                         break;
-                }
-                $fname=$message_array['from'].".".$ext;
-        }
+            }
+                $fname="Whatsapp-$file_id".".".$ext;
+       }
        
        
     }
