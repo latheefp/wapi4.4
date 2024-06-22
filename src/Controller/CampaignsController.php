@@ -16,108 +16,112 @@ use Cake\Mailer\Mailer;
 use Cake\Http\ServerRequest;
 use HTTP\Request2;
 
-class CampaignsController extends AppController {
+class CampaignsController extends AppController
+{
 
-    public function beforeFilter(EventInterface $event): void {
+    public function beforeFilter(EventInterface $event): void
+    {
         parent::beforeFilter($event);
-        $this->FormProtection->setConfig('unlockedActions', ['add','newcamp','getcampaign','attachments','getschedules','newsched','getstreams','updatecomment','sendshedule']);
+        $this->FormProtection->setConfig('unlockedActions', ['add', 'newcamp', 'getcampaign', 'attachments', 'getschedules', 'newsched', 'getstreams', 'updatecomment', 'sendshedule']);
     }
 
     var $uses = array('Campaigns');
 
 
 
-    function viewimage($file_id,$account_id) { //should be replaced by   viewrcvImage() functoin.
-        if((!isset($file_id))&&(empty($file_id))) {
-            $result['status']="failed";
-            $result['msg']="Missing image ID";
-            return $result;
-        }
+    //     function viewimage($file_id,$account_id) { //should be replaced by   viewrcvImage() functoin.
+    //         if((!isset($file_id))&&(empty($file_id))) {
+    //             $result['status']="failed";
+    //             $result['msg']="Missing image ID";
+    //             return $result;
+    //         }
 
-        $FBsettings=$this->_getFBsettings(['account_id'=>$account_id]);
+    //         $FBsettings=$this->_getFBsettings(['account_id'=>$account_id]);
 
-     //   debug($FBsettings);
-
-
-        $this->viewBuilder()->setLayout('ajax');
-        $file = tmpfile();
-        $file_path = stream_get_meta_data($file)['uri'];
-        $curl = curl_init();
-        $table = $this->getTableLocator()->get('CampaignForms');
-        $query = $table->find()
-                ->where(['fbimageid' => $file_id])
-                ->first();
-        //  debug ($query);
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $file_id,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: ' . $query->file_type,
-                'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
-            ),
-        ));
-
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $result = json_decode($response, true);
-        $url = $result['url'];
-        // debug($url);
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 0,
-            CURLOPT_HEADER => 0,
-            CURLOPT_ENCODING => '',
-//            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-//            CURLOPT_FILE => $file_handle,
-            CURLOPT_BINARYTRANSFER => true,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Authorization: Bearer ' .  $FBsettings['ACCESSTOKENVALUE'],
-                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
-            ),
-        ));
-
-        $raw = curl_exec($curl);
-
-        curl_close($curl);
-        if (file_exists($file_path)) {
-            unlink($file_path);
-        }
-        $file_handle = fopen($file_path, 'x');
-
-        fwrite($file_handle, $raw);
-
-        fclose($file_handle);
-        $response = $this->response->withFile($file_path,
-                ['download' => true, 'name' => $query->field_value]
-        );
-        $response->withType($query->file_type);
-        return $response;
-    }
+    //      //   debug($FBsettings);
 
 
+    //         $this->viewBuilder()->setLayout('ajax');
+    //         $file = tmpfile();
+    //         $file_path = stream_get_meta_data($file)['uri'];
+    //         $curl = curl_init();
+    //         $table = $this->getTableLocator()->get('CampaignForms');
+    //         $query = $table->find()
+    //                 ->where(['fbimageid' => $file_id])
+    //                 ->first();
+    //         //  debug ($query);
+    //         curl_setopt_array($curl, array(
+    //             CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $file_id,
+    //             CURLOPT_RETURNTRANSFER => true,
+    //             CURLOPT_ENCODING => '',
+    //             CURLOPT_MAXREDIRS => 10,
+    //             CURLOPT_TIMEOUT => 0,
+    //             CURLOPT_FOLLOWLOCATION => true,
+    //             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //             CURLOPT_CUSTOMREQUEST => 'GET',
+    //             CURLOPT_HTTPHEADER => array(
+    //                 'Content-Type: ' . $query->file_type,
+    //                 'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
+    //             ),
+    //         ));
 
-    public function isAuthorized($user) {
+    //         $response = curl_exec($curl);
+    //         curl_close($curl);
+    //         $result = json_decode($response, true);
+    //         $url = $result['url'];
+    //         // debug($url);
+    //         $curl = curl_init();
+    //         curl_setopt_array($curl, array(
+    //             CURLOPT_URL => $url,
+    //             CURLOPT_RETURNTRANSFER => true,
+    //             CURLOPT_CONNECTTIMEOUT => 0,
+    //             CURLOPT_HEADER => 0,
+    //             CURLOPT_ENCODING => '',
+    // //            CURLOPT_MAXREDIRS => 10,
+    //             CURLOPT_TIMEOUT => 0,
+    //             CURLOPT_FOLLOWLOCATION => true,
+    //             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //             CURLOPT_CUSTOMREQUEST => 'GET',
+    // //            CURLOPT_FILE => $file_handle,
+    //             CURLOPT_BINARYTRANSFER => true,
+    //             CURLOPT_HTTPHEADER => array(
+    //                 'Content-Type: application/json',
+    //                 'Authorization: Bearer ' .  $FBsettings['ACCESSTOKENVALUE'],
+    //                 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
+    //             ),
+    //         ));
+
+    //         $raw = curl_exec($curl);
+
+    //         curl_close($curl);
+    //         if (file_exists($file_path)) {
+    //             unlink($file_path);
+    //         }
+    //         $file_handle = fopen($file_path, 'x');
+
+    //         fwrite($file_handle, $raw);
+
+    //         fclose($file_handle);
+    //         $response = $this->response->withFile($file_path,
+    //                 ['download' => true, 'name' => $query->field_value]
+    //         );
+    //         $response->withType($query->file_type);
+    //         return $response;
+    //     }
+
+
+
+    public function isAuthorized($user)
+    {
         return true;
     }
 
-    function viewsendFile(){
+    function viewsendFile()
+    {
         $requestinfo = $this->request->getQuery();
         $file_id = $requestinfo['fileid'];
 
-        $data['account_id'] =$this->getMyAccountID();
+        $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
 
         $this->viewBuilder()->setLayout('ajax');
@@ -134,16 +138,16 @@ class CampaignsController extends AppController {
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => array(
-             //   'Content-Type: ' . $filetype,
+                //   'Content-Type: ' . $filetype,
                 'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
             ),
         ));
 
         $response = curl_exec($curl);
-        $responsArray=json_decode($response,true);
-       // debug($responsArray);
-     curl_close($curl);
-        if(isset($responsArray['error'])){
+        $responsArray = json_decode($response, true);
+        // debug($responsArray);
+        curl_close($curl);
+        if (isset($responsArray['error'])) {
             $this->setResponse(
                 $this->response->withStatus(401) // OK status code
                     ->withType('application/json')
@@ -151,8 +155,8 @@ class CampaignsController extends AppController {
                         'message' => 'File not found'
                     ]))
             );
-        }else{
-            
+        } else {
+
             $result = json_decode($response, true);
             $url = $result['url'];
             // debug($url);
@@ -163,12 +167,12 @@ class CampaignsController extends AppController {
                 CURLOPT_CONNECTTIMEOUT => 0,
                 CURLOPT_HEADER => 0,
                 CURLOPT_ENCODING => '',
-    //            CURLOPT_MAXREDIRS => 10,
+                //            CURLOPT_MAXREDIRS => 10,
                 CURLOPT_TIMEOUT => 0,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'GET',
-    //            CURLOPT_FILE => $file_handle,
+                //            CURLOPT_FILE => $file_handle,
                 CURLOPT_BINARYTRANSFER => true,
                 CURLOPT_HTTPHEADER => array(
                     'Content-Type: application/json',
@@ -176,28 +180,28 @@ class CampaignsController extends AppController {
                     'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
                 ),
             ));
-    
+
             $raw = curl_exec($curl);
-    
+
             curl_close($curl);
             if (file_exists($file_path)) {
                 unlink($file_path);
             }
             $file_handle = fopen($file_path, 'x');
-    
+
             fwrite($file_handle, $raw);
-    
-    //         $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
-    //         $rcarray = json_decode($streamRow->recievearray, true);
-    //         $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
-    //        // debug($message_array);
-    
+
+            //         $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
+            //         $rcarray = json_decode($streamRow->recievearray, true);
+            //         $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
+            //        // debug($message_array);
+
             if ($responsArray['mime_type'] == "document") {
-                 $fname=$message_array['document']['filename'];
+                $fname = $message_array['document']['filename'];
             } else {
                 $ext = null;
                 //debug($filetype);
-                
+
                 switch ($responsArray['mime_type']) {
                     case "video/mp4":
                         $ext = "mp4";
@@ -221,24 +225,23 @@ class CampaignsController extends AppController {
                     default:
                         $ext = "unknown"; // Set a default extension or handle the case as needed.
                         break;
+                }
+                $fname = "Whatsapp-$file_id" . "." . $ext;
             }
-                $fname="Whatsapp-$file_id".".".$ext;
-       }
-       
-       
+        }
     }
-}
 
-    function viewrcvImage() {
+    function viewrcvImage()
+    {
         //  $file_id = "6371848519559997";
         //   $filetype = "image/jpeg";
         $requestinfo = $this->request->getQuery();
         //debug($requestinfo);
         $file_id = $requestinfo['fileid'];
-        $filetype = $requestinfo['type'];
+     //   $filetype = $requestinfo['type'];
         $stream_id = $requestinfo['id'];
-//        $session = $this->request->getSession();
-        $data['account_id'] =$this->getMyAccountID();
+        //        $session = $this->request->getSession();
+        $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
 
         $this->viewBuilder()->setLayout('ajax');
@@ -261,107 +264,125 @@ class CampaignsController extends AppController {
         ));
 
         $response = curl_exec($curl);
+        $responsArray=json_decode($response, true);
+      //  debug($responsArray);
         curl_close($curl);
-        $result = json_decode($response, true);
-        $url = $result['url'];
-        // debug($url);
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 0,
-            CURLOPT_HEADER => 0,
-            CURLOPT_ENCODING => '',
-//            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-//            CURLOPT_FILE => $file_handle,
-            CURLOPT_BINARYTRANSFER => true,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE'],
-                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
-            ),
-        ));
-
-        $raw = curl_exec($curl);
-
-        curl_close($curl);
-        if (file_exists($file_path)) {
-            unlink($file_path);
-        }
-        $file_handle = fopen($file_path, 'x');
-
-        fwrite($file_handle, $raw);
-
-        $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
-        $rcarray = json_decode($streamRow->recievearray, true);
-        $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
-       // debug($message_array);
-
-        if ($message_array['type'] == "document") {
-             $fname=$message_array['document']['filename'];
+        if (isset($responsArray['error'])) {
+            $this->setResponse(
+                $this->response->withStatus(401) // OK status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'message' => 'File not found'
+                    ]))
+            );
         } else {
-            $ext = null;
-            //debug($filetype);
-            
-            switch ($filetype) {
-                case "video/mp4":
-                    $ext = "mp4";
-                    break;
-                case "image/webp":
-                    $ext = "webp";
-                    break;
-                case "image/jpeg":
-                    $ext = "jpg";
-                    break;
-                case " audio/ogg":
-                    $ext = "mp3";
-                case " application/pdf":
-                    $ext = "pdf";
-                case " application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-                    $ext = "docx";
-                case " text/csv":
-                    $ext = "csv";
-                case " text/plain":
-                    $ext = "txt";
-                default:
-                    $ext = "unknown"; // Set a default extension or handle the case as needed.
-                    break;
-            }
-            $fname=$message_array['from'].".".$ext;
-        }
+          
+            $result = json_decode($response, true);
+            $url = $result['url'];
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 0,
+                CURLOPT_HEADER => 0,
+                CURLOPT_ENCODING => '',
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
 
-        fclose($file_handle);
-        $response = $this->response->withFile($file_path,
+                CURLOPT_BINARYTRANSFER => true,
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE'],
+                    'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
+                ),
+            ));
+
+            $raw = curl_exec($curl);
+
+            curl_close($curl);
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+            $file_handle = fopen($file_path, 'x');
+            $filetype=$responsArray['mime_type'];
+            $fname=null;
+            fwrite($file_handle, $raw);
+            if(!empty($stream_id)){
+                $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
+                $rcarray = json_decode($streamRow->recievearray, true);
+                $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
+                if ($message_array['type'] == "document") {
+                    $fname = $message_array['document']['filename'];
+                } 
+            }
+            
+            // debug($message_array);
+
+            if(!isset($fname)) {
+                $ext = null;
+                //debug($filetype);
+
+                switch ($filetype) {
+                    case "video/mp4":
+                        $ext = "mp4";
+                        break;
+                    case "image/webp":
+                        $ext = "webp";
+                        break;
+                    case "image/jpeg":
+                        $ext = "jpg";
+                        break;
+                    case " audio/ogg":
+                        $ext = "mp3";
+                    case " application/pdf":
+                        $ext = "pdf";
+                    case " application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                        $ext = "docx";
+                    case " text/csv":
+                        $ext = "csv";
+                    case " text/plain":
+                        $ext = "txt";
+                    default:
+                        $ext = "unknown"; // Set a default extension or handle the case as needed.
+                        break;
+                }
+                $fname = $responsArray['id'] . "." . $ext;
+            }
+
+            fclose($file_handle);
+            $response = $this->response->withFile(
+                $file_path,
                 ['download' => true, 'name' => $fname]
-        );
-        $response->withType($filetype);
-        return $response;
+            );
+            $response->withType($filetype);
+            return $response;
+        }
     }
 
 
 
 
 
-    function index() {
+    function index()
+    {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('campaign_views'));
         $this->set('titleforlayout', "List Campaigns");
-        $this->set('account_id',$this->getMyAccountID());
+        $this->set('account_id', $this->getMyAccountID());
     }
 
-    function newcamp() {
-//  debug($_FILES);
+    function newcamp()
+    {
+        //  debug($_FILES);
 
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('Campaigns');
         $result = [];
         if ($this->request->is('post')) {
             $data = $this->request->getData();
-// debug($data);
+            // debug($data);
             $row = $table->newEmptyEntity();
             $row->start_date = $data['start_date'];
             $row->end_date = $data['end_date'];
@@ -371,7 +392,7 @@ class CampaignsController extends AppController {
             if ($row->getErrors()) {
                 $result['status'] = "failed";
                 $result['msg'] = "Validation errors";
-//$this->set('result', $result);
+                //$this->set('result', $result);
                 $error = $row->getErrors();
             } else {
                 if ($table->save($row)) {
@@ -387,7 +408,7 @@ class CampaignsController extends AppController {
             $result['status'] = "failed";
             $result['msg'] = "Wrong data Type";
         }
-//debug($error);
+        //debug($error);
         if (!empty($error)) {
             $result['msg'] = null;
             foreach ($error as $key => $val) {
@@ -400,13 +421,14 @@ class CampaignsController extends AppController {
         $this->set('result', $result);
     }
 
-    function _saveform_delete($data, $id, $files) {
+    function _saveform_delete($data, $id, $files)
+    {
         $asset_path = ROOT . DS . 'upload/' . $id;
-// debug($asset_path);
+        // debug($asset_path);
         mkdir($asset_path, 0700);
         $table = $this->getTableLocator()->get('CampainForms');
 
-//  debug($files);
+        //  debug($files);
         foreach ($files as $key => $val) {
             if ($val == "undefined") {
                 continue;
@@ -418,7 +440,7 @@ class CampaignsController extends AppController {
             $row->field_value = $val->getClientFilename(); //file Name
             $imagePath = $asset_path . "/" . ($this->_genrand(8));
             $val->moveTo($imagePath);
-//                copy($path ,$copypath);
+            //                copy($path ,$copypath);
             $row->file_path = $imagePath;
             $row->file_type = $val->getClientMediaType();
             $row->file_size = $val->getSize();
@@ -431,21 +453,23 @@ class CampaignsController extends AppController {
             }
         }
 
-//        debug($data);
+        //        debug($data);
     }
 
-    public function getcampaign() {
+    public function getcampaign()
+    {
         $model = "CampaignViews";
         $base_table = "campaign_views";
         $this->viewBuilder()->setLayout('ajax');
-//   debug($this->request->getData());
+        //   debug($this->request->getData());
         $query = $this->_set_camp_query($this->request->getData(), $model, $base_table);
         $data = $this->paginate = $query;
         $this->set('data', $this->paginate($model));
         $this->set('fieldsType', $this->_fieldtypes($base_table));
     }
 
-    public function _set_camp_query($querydata, $model, $base_table) {  //return array of quey based on passed values from index page search.
+    public function _set_camp_query($querydata, $model, $base_table)
+    {  //return array of quey based on passed values from index page search.
         $query = [
             'order' => [
                 $model . '.id' => 'desc'
@@ -457,7 +481,7 @@ class CampaignsController extends AppController {
             $query['limit'] = $this->_getsettings('pagination_count');
         }
         $fields = $this->_fieldtypes($base_table);
-//  debug($fields);
+        //  debug($fields);
         foreach ($fields as $title => $props) {
             if (($props['viewable'] == true) && ($props['searchable'] == true)) {
                 if (isset($querydata['search']['value'])) {
@@ -465,17 +489,18 @@ class CampaignsController extends AppController {
                 }
             }
         }
-//        $session = $this->request->getSession();
-        $query['conditions']['AND'][] = array($model . ".account_id" =>$this->getMyAccountID());
+        //        $session = $this->request->getSession();
+        $query['conditions']['AND'][] = array($model . ".account_id" => $this->getMyAccountID());
 
         $start = intval($querydata['start']);
         $query['page'] = ($start / $query['limit']) + 1;
         $query['order'] = array($querydata['columns'][$querydata['order']['0']['column']]['name'] . ' ' . $querydata['order']['0']['dir']);
-//  debug($query);
+        //  debug($query);
         return $query;
     }
 
-    function deletecamp($id) {
+    function deletecamp($id)
+    {
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('Campaigns');
         $camp = $table->findById($id)->firstOrFail();
@@ -489,11 +514,12 @@ class CampaignsController extends AppController {
         $this->set('result', $result);
     }
 
-    function attachments($id = null) {
+    function attachments($id = null)
+    {
         if ($this->request->is('post')) {
             $this->viewBuilder()->setLayout('ajax');
             $data = $this->request->getData();
-        //    debug($data);
+            //    debug($data);
             $files = $_FILES;
             $id = $data['id'];
             unset($data['id']);
@@ -501,23 +527,22 @@ class CampaignsController extends AppController {
             //delete any existing entry in form before saving. 
             $conditions = ['Campaign_id' => $id];
 
-            if(isset($data['auto_inject'])){
-                if($data['auto_inject']=="1"){
-              //      debug("Autoinject is setting");
+            if (isset($data['auto_inject'])) {
+                if ($data['auto_inject'] == "1") {
+                    //      debug("Autoinject is setting");
                     //process to save autoinject to campaigns table.
-                    $CampaignTable=$this->getTableLocator()->get('Campaigns');
-                    $CampaginRow=$CampaignTable->get($id);
-                  //  debug($CampaginRow);
-                    $CampaginRow->auto_inject=1;
-                    $CampaginRow->inject_text=$data['inject_text'];
-                    if(!$CampaignTable->save($CampaginRow)){
-                      // debug($CampaginRow->getErrors());
+                    $CampaignTable = $this->getTableLocator()->get('Campaigns');
+                    $CampaginRow = $CampaignTable->get($id);
+                    //  debug($CampaginRow);
+                    $CampaginRow->auto_inject = 1;
+                    $CampaginRow->inject_text = $data['inject_text'];
+                    if (!$CampaignTable->save($CampaginRow)) {
+                        // debug($CampaginRow->getErrors());
                     }
-                    
                 }
-               
-                
-           //     debug($data);
+
+
+                //     debug($data);
             }
             unset($data['inject_text']);
             unset($data['auto_inject']);
@@ -555,15 +580,15 @@ class CampaignsController extends AppController {
             }
             if (!empty($data)) {
 
-           //     debug($data);
+                //     debug($data);
                 //process auto inject values params from form and delete it from array.
 
-              
+
 
 
                 foreach ($data as $key => $val) {
                     $keyarray = explode("-", $key);
-                 //  debug($keyarray);
+                    //  debug($keyarray);
                     $row = $table->newEmptyEntity();
                     $row->campaign_id = $id;
                     $row->field_type = 'variable';
@@ -571,7 +596,7 @@ class CampaignsController extends AppController {
                     $row->field_value = $val; //file Name
                     $row->language = $keyarray[2];
                     if ($table->save($row)) {
-                     //  print "Variable saved\n";
+                        //  print "Variable saved\n";
                     } else {
                         //     print "File Save failed \n";
                         //   $error = $row->getErrors();
@@ -587,20 +612,20 @@ class CampaignsController extends AppController {
         $this->set('camp', $camp);
         $template_id = $camp->template_id;
         $tableTemplates = $this->getTableLocator()->get('Templates');
-        
-     //   debug($template_id);
-        $tableTemplatesquery = $tableTemplates->query()
-                ->where(['id' => $template_id])
-                ->first();
 
-    //  debug($tableTemplatesquery->toSql());      
+        //   debug($template_id);
+        $tableTemplatesquery = $tableTemplates->query()
+            ->where(['id' => $template_id])
+            ->first();
+
+        //  debug($tableTemplatesquery->toSql());      
 
         $this->set('data', $tableTemplatesquery->toArray());
         $tableCampaignForms = $this->getTableLocator()->get('CampaignForms');
         $queryCampaignForms = $tableCampaignForms->query()
-                ->find('all')
-               
-                ->where(['campaign_id' => $id]);
+            ->find('all')
+
+            ->where(['campaign_id' => $id]);
 
         $this->set('formdata', $queryCampaignForms->toArray());
     }
@@ -686,16 +711,17 @@ class CampaignsController extends AppController {
     //     $this->set('formdata', $query->toArray());
     // }
 
-    function _uploadtofb($id, $path) {
-       // debug($data);
+    function _uploadtofb($id, $path)
+    {
+        // debug($data);
         $session = $this->request->getSession();
         $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
         //     debug($id);
         $table = $this->getTableLocator()->get('CampaignForms');
         $query = $table->find()
-                ->where(['id' => $id])
-                ->first();
+            ->where(['id' => $id])
+            ->first();
         //     debug($query);
         $curl = curl_init();
         //     debug($FBsettings);
@@ -711,7 +737,7 @@ class CampaignsController extends AppController {
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => array('file' => new \CURLFILE("$path", $query->file_type, 'file'), 'messaging_product' => 'whatsapp'),
             CURLOPT_HTTPHEADER => array(
-//                'Content-Type: application/json',
+                //                'Content-Type: application/json',
                 'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
             ),
         ));
@@ -720,33 +746,31 @@ class CampaignsController extends AppController {
 
         curl_close($curl);
         $resparray = (json_decode($response, TRUE));
-    //    debug($resparray);
+        //    debug($resparray);
         if (isset($resparray['id'])) {
             $fbimageid = $resparray['id'];
             $row = $table->get($id);
             $row->fbimageid = $fbimageid;
-            if($table->save($row)){
+            if ($table->save($row)) {
                 return true;
-
-            }else{
+            } else {
                 return false;
             }
-            
-        }else{
+        } else {
             return false;
         }
-       
     }
 
-    function schedules() {
+    function schedules()
+    {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('schedule_views'));
         $this->set('titleforlayout', "Schedules");
-        $this->set('account_id',$this->getMyAccountID());
-        
+        $this->set('account_id', $this->getMyAccountID());
     }
 
-    public function getschedules() {
+    public function getschedules()
+    {
         $model = "ScheduleViews";
         $base_table = "schedule_views";
         $this->viewBuilder()->setLayout('ajax');
@@ -757,7 +781,8 @@ class CampaignsController extends AppController {
         $this->set('fieldsType', $this->_fieldtypes($base_table));
     }
 
-    public function _set_sched_query($querydata, $model, $base_table) {  //return array of quey based on passed values from index page search.
+    public function _set_sched_query($querydata, $model, $base_table)
+    {  //return array of quey based on passed values from index page search.
         $query = [
             'order' => [
                 $model . '.id' => 'desc'
@@ -769,7 +794,7 @@ class CampaignsController extends AppController {
             $query['limit'] = $this->_getsettings('pagination_count');
         }
         $fields = $this->_fieldtypes($base_table);
-//  debug($fields);
+        //  debug($fields);
         foreach ($fields as $title => $props) {
             if (($props['viewable'] == true) && ($props['searchable'] == true)) {
                 if (isset($querydata['search']['value'])) {
@@ -819,11 +844,11 @@ class CampaignsController extends AppController {
                     $apikey = $this->getMyAPIKey($this->getMyAccountID());
                     $cmd = ROOT . '/bin/runschedule.pl  -i ' . $id . ' -k ' . $apikey . ' >' . ROOT . '/logs/process.log 2>&1 &';
 
-                 //    debug($cmd);
-                     exec($cmd);
-                 //   system($cmd, $return_var);
-                  //  debug($return_var);
-                  $result['msg'] = "Scheduleling is success with $id";
+                    //    debug($cmd);
+                    exec($cmd);
+                    //   system($cmd, $return_var);
+                    //  debug($return_var);
+                    $result['msg'] = "Scheduleling is success with $id";
                 } else {
                     $result['status'] = "failed";
                     $result['msg'] = "Not able to save the the Contact group";
@@ -869,21 +894,20 @@ class CampaignsController extends AppController {
 
 
 
-    function test(){
+    function test()
+    {
         $this->viewBuilder()->setLayout('ajax');
-        $data=[
-            'issue'=>"Ac maintaineace",
-            'mobile'=>"9496470804",
-            'campaign_id'=>56,
-            'service_type_id'=>14,
-            'account_id'=>1,
-            'action'=>'camps',
-            'backend'=>true
+        $data = [
+            'issue' => "Ac maintaineace",
+            'mobile' => "9496470804",
+            'campaign_id' => 56,
+            'service_type_id' => 14,
+            'account_id' => 1,
+            'action' => 'camps',
+            'backend' => true
         ];
         debug(json_encode($data));
         debug(base64_encode(json_encode($data)));
-
-
     }
 
     function sendmsgnew()
@@ -903,7 +927,7 @@ class CampaignsController extends AppController {
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => array('schedule_id' => '135', 'contacts' => '7'),
             CURLOPT_HTTPHEADER => array(
-                'X-Api-Key: '.$this->getMyAPIKey()
+                'X-Api-Key: ' . $this->getMyAPIKey()
             ),
         ));
 
@@ -917,7 +941,8 @@ class CampaignsController extends AppController {
         debug($API_keys);
     }
 
-    function deletesched($id) {
+    function deletesched($id)
+    {
         $this->viewBuilder()->setLayout('ajax');
         $contacts_schedules = $this->getTableLocator()->get('ContactSchedules');
         $contacts_schedules->deleteAll(['schedule_id' => $id]);
@@ -933,16 +958,17 @@ class CampaignsController extends AppController {
         $this->set('result', $result);
     }
 
-    function getscheddetails($id) {
+    function getscheddetails($id)
+    {
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('Streams');
         $total = $table->query()
-                ->where(['schedule_id' => $id])
-                ->count();
+            ->where(['schedule_id' => $id])
+            ->count();
         //debug($total);
         $no_wa = $table->query()
-                ->where(['schedule_id' => $id, 'has_wa' => 0])
-                ->count();
+            ->where(['schedule_id' => $id, 'has_wa' => 0])
+            ->count();
         // debug ($no_wa);
 
         $this->set('total', $total);
@@ -960,26 +986,28 @@ class CampaignsController extends AppController {
         $this->set('camp', $camp);
 
         $query = $table->query()
-                ->where(['id' => $template_id])
-                ->first();
+            ->where(['id' => $template_id])
+            ->first();
 
         $this->set('data', $query->toArray());
         $table = $this->getTableLocator()->get('CampaignForms');
         $query = $table->query()
-                ->find('all')
-                ->where(['campaign_id' => $schedule->campaign_id]);
+            ->find('all')
+            ->where(['campaign_id' => $schedule->campaign_id]);
 
         $this->set('formdata', $query->toArray());
     }
 
-    function schedulereport($id) {
+    function schedulereport($id)
+    {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('schedulestreamsviews'));
         $this->set('titleforlayout', "Schedule Report");
         $this->set('id', $id);
     }
 
-    function getschedulereport() {
+    function getschedulereport()
+    {
         $this->viewBuilder()->setLayout('ajax');
         $model = "Schedulestreamsviews";
         $base_table = "schedulestreamsviews";
@@ -992,7 +1020,8 @@ class CampaignsController extends AppController {
         $this->set('fieldsType', $this->_fieldtypes($base_table));
     }
 
-    public function _sched_report_query($querydata, $model, $base_table) {  //return array of quey based on passed values from index page search.
+    public function _sched_report_query($querydata, $model, $base_table)
+    {  //return array of quey based on passed values from index page search.
         //  debug($querydata);
         $query = [
             'order' => [
@@ -1030,25 +1059,28 @@ class CampaignsController extends AppController {
         return $query;
     }
 
-  
-    function streams() {
+
+    function streams()
+    {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('stream_views'));
         $this->set('titleforlayout', "StreamView");
     }
 
-    function getstreams() {
+    function getstreams()
+    {
         $model = "StreamViews";
         $base_table = "stream_views";
         $this->viewBuilder()->setLayout('ajax');
         $query = $this->_set_stream_query($this->request->getData(), $model, $base_table);
-    //     debug($query);
+        //     debug($query);
         $data = $this->paginate = $query;
         $this->set('data', $this->paginate($model));
         $this->set('fieldsType', $this->_fieldtypes($base_table));
     }
 
-    public function _set_stream_query($querydata, $model, $base_table) {  //return array of quey based on passed values from index page search.
+    public function _set_stream_query($querydata, $model, $base_table)
+    {  //return array of quey based on passed values from index page search.
         $query = [
             'order' => [
                 $model . '.id' => 'desc'
@@ -1077,11 +1109,11 @@ class CampaignsController extends AppController {
 
 
 
-        if($querydata['show_recv']=="true"){
-            $query['conditions']['AND'][] = array($model.'.type'=>'receive');
+        if ($querydata['show_recv'] == "true") {
+            $query['conditions']['AND'][] = array($model . '.type' => 'receive');
         }
 
-//        $session = $this->request->getSession();
+        //        $session = $this->request->getSession();
         $query['conditions']['AND'][] = array($model . ".account_id" => $this->getMyAccountID());
 
         return $query;
@@ -1089,32 +1121,33 @@ class CampaignsController extends AppController {
 
 
 
-    function getstreamdetails($id = null) {
+    function getstreamdetails($id = null)
+    {
         $session = $this->request->getSession();
-     //   $ugroup_id = intval($session->read('Auth.ugroup_id'));
-        $this->set('ugroup_id',$this->getMyGID());
+        //   $ugroup_id = intval($session->read('Auth.ugroup_id'));
+        $this->set('ugroup_id', $this->getMyGID());
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('Streams');
         $query = $table->query()
-                ->where(['id' => $id])
-                ->first();
+            ->where(['id' => $id])
+            ->first();
         $this->set('id', $id);
         $this->set('data', $query);
-//        $session = $this->request->getSession();
+        //        $session = $this->request->getSession();
         $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
         $this->set('FBsettings', $FBsettings);
 
         $updateTable = $this->getTableLocator()->get('StreamsUpdates');
         $updatequery = $updateTable->find()
-                ->where(['stream_id' => $id])
-                ->contain('Users')
-                ->all();
+            ->where(['stream_id' => $id])
+            ->contain('Users')
+            ->all();
         $this->set('updates', $updatequery);
-        
     }
 
-    function updatecomment() {
+    function updatecomment()
+    {
         $this->autoRender = false;
         $data = $this->request->getData();
         $data['user_id'] = $this->getMyUID();
@@ -1131,9 +1164,9 @@ class CampaignsController extends AppController {
             $streamtable->save($row);
 
             $updatequery = $updateTable->find()
-                    ->where(['StreamsUpdates.id' => $updateStream->id])
-                    ->contain('Users')
-                    ->all();
+                ->where(['StreamsUpdates.id' => $updateStream->id])
+                ->contain('Users')
+                ->all();
             $this->set('updates', $updatequery);
             $message = ['message' => 'Update saved successfully'];
             $message['data'] = $updatequery->toArray();
@@ -1146,35 +1179,36 @@ class CampaignsController extends AppController {
         return $this->response;
     }
 
-    function blockme($stream_id) {
+    function blockme($stream_id)
+    {
         $streamtable = $this->getTableLocator()->get('Streams');
         $row = $streamtable->get($stream_id);
-     //   debug($row);
+        //   debug($row);
     }
 
-    
 
-    function forwarderq($stream_id) {
+
+    function forwarderq($stream_id)
+    {
         $this->viewBuilder()->setLayout('ajax');
-        $sendQData['mobile_number']=$this->getMyMobileNumber();
-        $sendQData['type']="forward";
-        $sendQData['api_key']=$this->getMyAPIKey($this->getMyAccountID());
-        $sendQData['stream_id']=$stream_id;
+        $sendQData['mobile_number'] = $this->getMyMobileNumber();
+        $sendQData['type'] = "forward";
+        $sendQData['api_key'] = $this->getMyAPIKey($this->getMyAccountID());
+        $sendQData['stream_id'] = $stream_id;
         $sendQ = $this->getTableLocator()->get('SendQueues');
         $sendQrow = $sendQ->newEmptyEntity();
         $sendQrow->form_data = json_encode($sendQData);
         $sendQrow->status = "queued";
         $sendQrow->type = "forward";
-        $result=[];
-        if($sendQ->save($sendQrow)){
-            $result['status']="success";
-            $result['msg']="Message queued for delivery, $sendQrow->id";
-        }else{
-            $result['status']="failed";
-            $result['msg']="Failed to forward";
+        $result = [];
+        if ($sendQ->save($sendQrow)) {
+            $result['status'] = "success";
+            $result['msg'] = "Message queued for delivery, $sendQrow->id";
+        } else {
+            $result['status'] = "failed";
+            $result['msg'] = "Failed to forward";
         }
 
-        $this->set('result',$result);
+        $this->set('result', $result);
     }
-
 }

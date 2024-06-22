@@ -30,15 +30,16 @@ class RcvDataformatHelper extends Helper
             $type = $val['type'];
             switch ($type) {
                 case "image":
-                    $result = $result . '<div class="image-container"><img src="/campaigns/viewrcvImage?fileid=' . $val['image']['id'] . '&type=' . $val['image']['mime_type'] . '&id=' . $data['id'] . '"></div>';
+  //                  debug($val);//
+                    $result = $result . '<div class="image-container"><img src="/campaigns/viewrcvImage?fileid=' . $val['image']['id'] . '&type=' . $val['image']['mime_type'] . '&id=' . $data['stream_id'] . '"></div>';
 
                     break;
                 case "document":
                     //                    $result = $result . '<img src="/campaigns/viewrcvImage?fileid=' . $val['document']['id'] . '&type=' . $val['document']['mime_type'] . '">';
-                    $result = $result . '<a href="/campaigns/viewrcvImage?fileid=' . $val['document']['id'] . '&type=' . $val['document']['mime_type'] . '&id=' . $data['id'] . '" download><i class="material-icons">Download File:' . $val['document']['filename'] . '</i> </a>';
+                    $result = $result . '<a href="/campaigns/viewrcvImage?fileid=' . $val['document']['id'] . '&type=' . $val['document']['mime_type'] . '&id=' . $data['stream_id'] . '" download><i class="material-icons">Download File:' . $val['document']['filename'] . '</i> </a>';
                     break;
                 case "video":
-                    $result = $result . '<video controls> <source  src="/campaigns/viewrcvImage?fileid=' . $val['video']['id'] . '&type=' . $val['video']['mime_type'] . '&id=' . $data['id'] . '"> </video>';
+                    $result = $result . '<video controls> <source  src="/campaigns/viewrcvImage?fileid=' . $val['video']['id'] . '&type=' . $val['video']['mime_type'] . '&id=' . $data['stream_id'] . '"> </video>';
 
                     break;
                 case "text":
@@ -48,7 +49,7 @@ class RcvDataformatHelper extends Helper
                     $result = $result . "https://maps.google.com/?q=" . $val['location']['latitude'] . "," . $val['location']['longitude'];
                     break;
                 case "sticker":
-                    $result = $result . '<img  width="512" height="512" src="/campaigns/viewrcvImage?fileid=' . $val['sticker']['id'] . '&type=' . $val['sticker']['mime_type'] . '&id=' . $data['id'] . '">';
+                    $result = $result . '<img  width="512" height="512" src="/campaigns/viewrcvImage?fileid=' . $val['sticker']['id'] . '&type=' . $val['sticker']['mime_type'] . '&id=' . $data['stream_id'] . '">';
                     break;
                 case "interactive":
                     $result = $result . "Interactive Reply:" . $val['interactive']['list_reply']['title'] . ":" . $val['interactive']['list_reply']['description'];

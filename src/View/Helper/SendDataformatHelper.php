@@ -99,7 +99,7 @@ class SendDataformatHelper extends Helper
             case "image":
                // debug($send_array);
                 $msg= "<figure>";
-                $msg =$msg.'<img src="/campaigns/viewsendFile?fileid=' . $send_array['image']['id'] . '">'; 
+                $msg =$msg.'<div class="image-container"><img src="/campaigns/viewsendFile?fileid=' . $send_array['image']['id'] . '"></div>'; 
                 if(isset($send_array['image']['caption'])){
                     $msg =$msg ."<figcaption>".$send_array['image']['caption']."</figcaption>";
                 }
