@@ -68,7 +68,7 @@ class SendDataformatHelper extends Helper
                                 $tbody = str_replace('{{' . $key . '}}', $val['text'], $tbody);
                             }
                             if ($val['type'] == "image") {
-                                $tbody = str_replace('{{' . $key . '}}', '<div class="image-container"><img src="/campaigns/viewsendFile?fileid=' . $val['image']['id'] . '"></div>', $tbody);
+                                $tbody = str_replace('{{' . $key . '}}', '<div class="image-container"><img src="/campaigns/viewsendFile?fileid=' . $val['image']['id'] . '&id=' . $data['stream_id'] . '"></div>', $tbody);
                             }
                         }
                     }
@@ -99,25 +99,27 @@ class SendDataformatHelper extends Helper
             case "image":
                // debug($send_array);
                 $msg= "<figure>";
-                $msg =$msg.'<div class="image-container"><img src="/campaigns/viewsendFile?fileid=' . $send_array['image']['id'] . '"></div>'; 
+                $msg =$msg.'<div class="image-container"><img src="/campaigns/viewsendFile?fileid=' . $send_array['image']['id'] .'&id=' . $data['stream_id'] . '"></div>'; 
                 if(isset($send_array['image']['caption'])){
                     $msg =$msg ."<figcaption>".$send_array['image']['caption']."</figcaption>";
                 }
                 
                 $msg =$msg ."</figure>";
                 break;    
+            case "document":
+                   // debug($send_array);
+                     $msg ='<a href="/campaigns/viewsendFile?fileid=' . $send_array['document']['id'] . '&id=' . $data['stream_id'] . '" download><i class="material-icons">Download File:' . $send_array['document']['id'] . '</i> </a>';
+                    break;   
             default:
                 debug($send_array);
         }
 
-      //  debug($msg);
+
     
         return $msg;
     }
 
-    //    function sanitizeString($string) {
-    //        return htmlspecialchars(trim($string), ENT_QUOTES, 'UTF-8');
-    //    }
+
 
 
     

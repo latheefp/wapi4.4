@@ -123,6 +123,7 @@ class CampaignsController extends AppController
 
         $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
+        $stream_id= $requestinfo['id'];
 
         $this->viewBuilder()->setLayout('ajax');
         $file = tmpfile();
@@ -145,7 +146,7 @@ class CampaignsController extends AppController
 
         $response = curl_exec($curl);
         $responsArray = json_decode($response, true);
-        // debug($responsArray);
+      //   debug($responsArray);
         curl_close($curl);
         if (isset($responsArray['error'])) {
             $this->setResponse(
@@ -188,21 +189,15 @@ class CampaignsController extends AppController
                 unlink($file_path);
             }
             $file_handle = fopen($file_path, 'x');
+            $filetype = ltrim(rtrim($responsArray['mime_type']));
+      //      debug($stream_id);
 
             fwrite($file_handle, $raw);
 
-            //         $streamRow = $this->getTableLocator()->get('Streams')->get($stream_id);
-            //         $rcarray = json_decode($streamRow->recievearray, true);
-            //         $message_array = $rcarray['entry'][0]['changes'][0]['value']['messages'][0];
-            //        // debug($message_array);
-
-            if ($responsArray['mime_type'] == "document") {
-                $fname = $message_array['document']['filename'];
-            } else {
                 $ext = null;
-                //debug($filetype);
+ 
 
-                switch ($responsArray['mime_type']) {
+                switch ( $filetype) {
                     case "video/mp4":
                         $ext = "mp4";
                         break;
@@ -212,23 +207,38 @@ class CampaignsController extends AppController
                     case "image/jpeg":
                         $ext = "jpg";
                         break;
-                    case " audio/ogg":
+                    case "audio/ogg":
                         $ext = "mp3";
-                    case " application/pdf":
+                        break;
+                    case "application/pdf":
                         $ext = "pdf";
-                    case " application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                        break;
+                    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                         $ext = "docx";
-                    case " text/csv":
+                        break;
+                    case "text/csv":
                         $ext = "csv";
-                    case " text/plain":
+                        break;
+                    case "text/plain":
                         $ext = "txt";
+                        break;
                     default:
                         $ext = "unknown"; // Set a default extension or handle the case as needed.
                         break;
                 }
+               
                 $fname = "Whatsapp-$file_id" . "." . $ext;
-            }
+               // debug($fname);
+            // }
         }
+
+        fclose($file_handle);
+        $response = $this->response->withFile(
+            $file_path,
+            ['download' => true, 'name' => $fname]
+        );
+        $response->withType($filetype);
+        return $response;
     }
 
     function viewrcvImage()
@@ -258,7 +268,7 @@ class CampaignsController extends AppController
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET',
             CURLOPT_HTTPHEADER => array(
-                'Content-Type: ' . $filetype,
+      //          'Content-Type: ' . $filetype,
                 'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
             ),
         ));
@@ -266,6 +276,7 @@ class CampaignsController extends AppController
         $response = curl_exec($curl);
         $responsArray=json_decode($response, true);
       //  debug($responsArray);
+      $filetype=$responsArray['mime_type'];
         curl_close($curl);
         if (isset($responsArray['error'])) {
             $this->setResponse(
@@ -306,7 +317,7 @@ class CampaignsController extends AppController
                 unlink($file_path);
             }
             $file_handle = fopen($file_path, 'x');
-            $filetype=$responsArray['mime_type'];
+           
             $fname=null;
             fwrite($file_handle, $raw);
             if(!empty($stream_id)){
