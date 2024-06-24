@@ -110,6 +110,11 @@ class SendDataformatHelper extends Helper
                    // debug($send_array);
                      $msg ='<a href="/campaigns/viewsendFile?fileid=' . $send_array['document']['id'] . '&id=' . $data['stream_id'] . '" download><i class="material-icons">Download File:' . $send_array['document']['id'] . '</i> </a>';
                     break;   
+             case "audio":
+                $msg = $msg . '<source src="/campaigns/viewsendFile?fileid=' . $send_array['audio']['id'] . '&id=' . $data['stream_id'] . '" type="audio/mpeg">';
+                $msg = $msg . 'Your browser does not support the audio element.</audio></div>';
+                $msg = $msg . '<div class="play-button"> <button id="playButton" onclick="togglePlayback()"></button> </div> </div>';
+                break;           
             default:
                 debug($send_array);
         }
