@@ -114,13 +114,13 @@ class SendDataformatHelper extends Helper
                 $msg = $msg . '<source src="/campaigns/viewsendFile?fileid=' . $send_array['audio']['id'] . '&id=' . $data['stream_id'] . '" type="audio/mpeg">';
                 $msg = $msg . 'Your browser does not support the audio element.</audio></div>';
                 $msg = $msg . '<div class="play-button"> <button id="playButton" onclick="togglePlayback()"></button> </div> </div>';
-                break;           
+                break;         
+            case "reaction":
+                $msg = $send_array['reaction']['emoji'];
+                    break;               
             default:
                 debug($send_array);
-        }
-
-
-    
+        }    
         return $msg;
     }
 
