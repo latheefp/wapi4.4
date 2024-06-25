@@ -118,7 +118,7 @@ class SendDataformatHelper extends Helper
             case "video":
                 
                 $msg= "<figure>";
-                $msg = $msg . '<video controls> <source  src="/campaigns/viewsendFile?fileid=' . $send_array['video']['id'] .  '&id=' . $send_array['stream_id'] . '"> </video>';
+                $msg = $msg . '<video controls> <source  src="/campaigns/viewsendFile?fileid=' . $send_array['video']['id'] .  '&id=' . $data['stream_id'] . '"> </video>';
                 if(isset($send_array['image']['caption'])){
                     $msg =$msg ."<figcaption>".$send_array['image']['caption']."</figcaption>";
                 }
