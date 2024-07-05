@@ -19,7 +19,10 @@ $(document).ready(function() {
             console.log(response);
             sessionId = response.data.session_id;
 
-            socket = new WebSocket('ws://localhost:8080'); // Use the declared socket variable
+           // socket = new WebSocket('ws://localhost:8080'); // Use the declared socket variable
+            socket = new WebSocket('ws://${chat_url}'); // Use the declared socket variable
+
+            ${contactNumber}
 
             // Handle WebSocket connection
             socket.onopen = () => {

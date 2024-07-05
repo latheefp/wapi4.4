@@ -44,7 +44,9 @@ class ChatsController extends AppController
 
     function index()
     {
+       // print(getenv('CHAT_URL'));
         $this->viewBuilder()->setLayout('ajax');
+        $this->set('chat_url', getenv('CHAT_URL'));
       
     }
 

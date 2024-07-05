@@ -29,6 +29,7 @@
 </head>
 
 <body>
+ 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <div class="container app">
         <div class="row app-one">
@@ -824,12 +825,13 @@
     </style>
 
 
-    <?=
-    $this->Html->scriptBlock(sprintf(
-        'var csrfToken = %s;',
-        json_encode($this->request->getAttribute('csrfToken'))
-    ));
-    ?>
+ 
+
+    <?= $this->Html->scriptBlock(sprintf(
+        'var csrfToken = %s; var chat_url = %s;',
+        json_encode($this->request->getAttribute('csrfToken')),
+        json_encode($chat_url)
+    )); ?>
 
     <script type="text/javascript">
         $(function() {
