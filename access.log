@@ -9597,3 +9597,6 @@
 127.0.0.1 - - [05/Jul/2024:07:08:46 +0000] "POST /chats/uiunregister HTTP/1.1" 200 436 "-" "CakePHP"
 127.0.0.1 - - [05/Jul/2024:07:08:50 +0000] "POST /chats/uiregister HTTP/1.1" 201 442 "-" "CakePHP"
 127.0.0.1 - - [05/Jul/2024:07:08:53 +0000] "POST /chats/getcontact HTTP/1.1" 201 4393 "-" "CakePHP"
+127.0.0.1 - - [05/Jul/2024:07:09:20 +0000] "POST /chats/loadchathistory HTTP/1.1" 200 48824 "-" "CakePHP"
+127.0.0.1 - - [05/Jul/2024:07:09:30 +0000] "POST /chats/newchat HTTP/1.1" 201 260 "-" "CakePHP"
+127.0.0.1 - - [05/Jul/2024:07:16:05 +0000] "POST /chats/newchat HTTP/1.1" 201 274 "-" "CakePHP"

@@ -373,7 +373,7 @@ class AppController extends Controller
 
                 $this->writelog($sendarray, "Send array");
 
-                break;
+                break; 
             case "text":
                 $json_array = '{
                         "messaging_product": "whatsapp",

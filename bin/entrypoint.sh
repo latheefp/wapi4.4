@@ -7,5 +7,6 @@ service apache2 start
 /var/www/html/bin/cake Processrcvq &
 /var/www/html/bin/cake Processsendq &
 /var/www/html/bin/cake Metrics &
+/var/www/html/bin/cake Chat &
  
  tail -f /dev/null
