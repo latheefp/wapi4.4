@@ -5,6 +5,7 @@ namespace App\Chat; // Ensure correct namespace
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use React\Socket\Server as ReactServer;
+use React\EventLoop\Timer\TimerInterface;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
 use Ratchet\Server\IoServer;
@@ -18,14 +19,9 @@ class ChatServer implements MessageComponentInterface
     protected static $instance = null;
     protected $clients;
     protected $loop;
+    protected $lastPongTime;
 
 
-    // public function __construct(LoopInterface $loop)
-    // {
-    //     $this->clients = new \SplObjectStorage;
-    //     $this->loop = $loop;
-    //     echo "ChatServer initialized with LoopInterface: " . get_class($loop) . "\n";
-    // }
 
     public function __construct(LoopInterface $loop)
     {
@@ -51,6 +47,38 @@ class ChatServer implements MessageComponentInterface
         $webSock = new ReactServer('0.0.0.0:8080', $this->loop);
         $server = new IoServer(new HttpServer(new WsServer($this)), $webSock, $this->loop);
         echo "WebSocket server running with LoopInterface: " . get_class($this->loop) . "\n";
+
+
+        // Schedule ping messages to be sent every 30 seconds
+        $this->loop->addPeriodicTimer(30, function () {
+            $this->sendPingMessages();
+        });
+
+        // Schedule a task to check for clients that didn't respond to the ping
+        $this->loop->addPeriodicTimer(60, function () {
+            $this->checkPongResponses();
+        });
+    }
+
+    protected function sendPingMessages()
+    {
+        foreach ($this->clients as $client) {
+            $client->send(json_encode(['type' => 'ping']));
+            $this->lastPongTime[$client->resourceId] = time();
+        }
+    }
+
+    protected function checkPongResponses()
+    {
+        $currentTime = time();
+        foreach ($this->clients as $client) {
+            if ($currentTime - $this->lastPongTime[$client->resourceId] > 60) {
+                echo "Client {$client->resourceId} did not respond to ping, disconnecting.\n";
+                $client->close();
+                $this->clients->detach($client);
+                unset($this->lastPongTime[$client->resourceId]);
+            }
+        }
     }
   
 

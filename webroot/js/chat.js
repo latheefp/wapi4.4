@@ -251,6 +251,15 @@ $(document).ready(function() {
     }
 });
 
+function sendMsg(message){
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(message));
+      //  toastr.success('Message sent successfully.');
+      } else {
+        toastr.error('The connection is not active, try refreshing the page');
+      }
+}
+
 
 function loadchat(contact, profile) {
     var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
@@ -290,7 +299,9 @@ function loadchat(contact, profile) {
         page: lastID,
         contact_stream_id: contact
     };
-    socket.send(JSON.stringify(message));
+
+    sendMsg(message);
+   // socket.send(JSON.stringify(message));
 
 
 }
@@ -316,7 +327,7 @@ function sendchat() {
         msgtype: "text"
     };
 
-    socket.send(JSON.stringify(message));
+   sendMsg(message);
 
 
 }
