@@ -332,6 +332,7 @@ class ChatsController extends AppController
                         $sendQrow->status = "queued";
                         $sendQrow->type = "chat";
                //         $result = [];
+                        $this->log('SendQueue entity before save: ' . json_encode($sendQrow), 'debug');
                         if ($sendQ->save($sendQrow)) {
                             $this->setResponse(
                                 $this->response->withStatus(201) // Created status code
