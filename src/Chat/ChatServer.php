@@ -34,35 +34,7 @@ class ChatServer implements MessageComponentInterface
         echo "ChatServer initialized with LoopInterface: " . get_class($loop) . "\n";
     }
 
-    // public static function getInstance(LoopInterface $loop = null)
-    // {
-    //     if (self::$instance === null) {
-    //       //  print "Self instance is null";
-    //         if ($loop === null) {
-    //             throw new \Exception("LoopInterface is required for the first instance creation.");
-    //         }
-    //         self::$instance = new self($loop);
-    //     }
-    //     return self::$instance;
-    // }
-    // public function run()
-    // {
 
-    //     // Use ReactPHP socket server to create a non-blocking Ratchet server
-    //     // $socket = new ReactServer('0.0.0.0:8080', $this->loop);
-    //     // $httpServer = new HttpServer(new WsServer($this));
-    //     // $server = new IoServer($httpServer, $socket, $this->loop);
-
-
-
-    //     // $server = IoServer::factory(new HttpServer(new WsServer($this)), 8080, '0.0.0.0');
-    //     // $server->run();
-
-    //     $webSock = new ReactServer('0.0.0.0:8080', $this->loop);
-    //     $server = new IoServer(new HttpServer(new WsServer($this)), $webSock, $this->loop);
-    //     echo "WebSocket server running with LoopInterface: " . get_class($this->loop) . "\n";
-
-    // }
     public static function getInstance(LoopInterface $loop = null)
     {
         if (self::$instance === null) {
@@ -92,30 +64,83 @@ class ChatServer implements MessageComponentInterface
     {
         $data = json_decode($msg, true);
 
-        $this->logmsg($msg, $from);
+        $this->logmsg($msg, "first message from ".$from->resourceId);
 
 
         $msgArray = json_decode($msg, true);
-        if (isset($msgArray['type'])) {
-            if ($msgArray['type'] == "register") {
+        print_r($msg);
+        switch($msgArray['type']){
+            case "register":
                 $clientinfo['client_id'] = $from->resourceId;
                 $clientinfo['session_id'] = $msgArray['session_id'];
-                $this->registerclient($clientinfo);
-            }
-        } else {
-            // You can handle the received message here, such as saving it to the database
-            foreach ($this->clients as $client) {
-                if ($from !== $client) {
-                    $client->send($msg);
+                if($this->registerclient($clientinfo)){
+                    $query['session_id']=$msgArray['session_id'];
+                    $query['limit']=25;
+                    $query['page']=1;
+                    $query['client_id']=$from->resourceId;;;
+                    $query['query']=null;
+                   $this->SendRecentChatContact($query);
+                }else{
+                    print "Client registration failed";
                 }
-            }
+                break;
+            case "loadcontact":
+                $msgArray['client_id'] = $from->resourceId;
+                $this->SendRecentChatContact($msgArray);
+                break;
+            case "loadChathistory":
+                $msgArray['client_id'] = $from->resourceId;
+                $this->loadChathistory($msgArray);
+                break;
+            case "sendchat":
+                $msgArray['client_id'] = $from->resourceId;
+                print_r($msgArray);
+                $this->newChat($msgArray);
+                break;
+            default:
+
+                print "No action defined for " . $msgArray['type'] . " Sending to Client";
+                foreach ($this->clients as $client) {
+                    if ($from !== $client) {
+                        $client->send($msg);
+                    }
+                }
         }
+        
+    }
+
+    function newChat($msgArray){
+        $http = new Client();
+        $response = $http->post('http://localhost/chats/newchat', $msgArray);
+        $msgArray['html'] = $response->getStringBody();
+        $this->sendMessageToClient($msgArray['client_id'], $msgArray);
+    }
+
+    function loadChathistory($query)
+    {
+        $http = new Client();
+        $response = $http->post('http://localhost/chats/loadchathistory', $query);
+        $query['html'] = $response->getStringBody();
+        $this->sendMessageToClient($query['client_id'], $query);
+    }
+
+    function SendRecentChatContact($query){ //function to send latest contact list 
+        print "CAlling sendRcentContact function. ";
+        $http = new Client();
+        $response = $http->post('http://localhost/chats/getcontact', $query);
+       // $this->logmsg($response->getStringBody(), "contact list for initial request");
+        $message['type']="contactlist";
+        $message['message']=json_decode( $response->getStringBody(),true);
+        $this->sendMessageToClient($query['client_id'], $message);
+       // print_r($response->getStringBody());
+        print "Contact list finished";
     }
 
     public function sendMessageToClient($clientId, $message)
     {
         foreach ($this->clients as $client) {
             if ($client->resourceId == $clientId) {
+                print "Sending message to  $clientId \n";
                 $client->send(json_encode($message));
                 break;
             }
@@ -136,8 +161,9 @@ class ChatServer implements MessageComponentInterface
         $this->unregister($conn->resourceId);
     }
 
-    function logmsg($log, $from)
+    function logmsg($log, $des)
     {
+        print ($des);
         $file =   '/var/www/html/logs/chat.log';
         $time = date("Y-m-d H:i:s", time());
         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
@@ -151,11 +177,11 @@ class ChatServer implements MessageComponentInterface
 
     public function pollDatabase()
     {
-        print "Polling DB \n";
+      //  print "Polling DB \n";
         // Replace with your actual database query logic
         $newMessages = $this->getNewMessagesFromDatabase();
 
-        print_r($newMessages);
+      //  print_r($newMessages);
 
         foreach ($newMessages as $message) {
             foreach ($this->clients as $client) {
@@ -191,11 +217,28 @@ class ChatServer implements MessageComponentInterface
 
     function registerclient($clientinfo)
     {
-        print_r($clientinfo);
+       # print_r($clientinfo);
         $http = new Client();
         $response = $http->post('http://localhost/chats/uiregister', $clientinfo);
-        print_r($response);
-        $this->logmsg($response->getStringBody(), null);
+        $responseCode = $response->getStatusCode();
+        if($responseCode==201){
+            print ("Response\n");
+            print_r(json_decode($response->getStringBody(),true));
+            print ("Response End\n");
+            $this->logmsg($response->getStringBody(), null);
+            $message['type']="success";
+            $message['message']="Client Registered";
+            $this->sendMessageToClient($clientinfo['client_id'],$message);
+            return true;
+        }else{
+            print "Something wrong while registering client. $responseCode is not 200";
+            print_r(json_decode($response->getStringBody(),true));
+            $message['type']="failed";
+            $message['message']="Client Registeration failed";
+            $this->sendMessageToClient($clientinfo['client_id'],$message);
+            return false;
+        }
+
     }
 
     function unregister($resourceId)
@@ -203,11 +246,10 @@ class ChatServer implements MessageComponentInterface
         $clientinfo['client_id'] = $resourceId;
         $http = new Client();
         $response = $http->post('http://localhost/chats/uiunregister', $clientinfo);
-        print_r($response);
+     //   print_r($response);
         $this->logmsg($response->getStringBody(), null);
     }
 
-
-
+ 
     
 }

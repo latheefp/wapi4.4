@@ -8,6 +8,7 @@
         <title>Whatsapp web chat template - Bootdey.com</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="/js/chat.js"></script>
         <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     </head>
@@ -23,12 +24,10 @@
                                     <img src="https://bootdey.com/img/Content/avatar/avatar1.png">
                                 </div>
                             </div>
-                            <div class="col-sm-1 col-xs-1  heading-dot  pull-right">
-                                <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
-                            </div>
-                            <div class="col-sm-2 col-xs-2 heading-compose  pull-right">
-                                <i class="fa fa-comments fa-2x  pull-right" aria-hidden="true"></i>
-                            </div>
+                            <?php $accountName = $this->request->getSession()->read('Account.name'); ?>
+                            <span style="font-weight: bold; text-align: left;">
+                                <h4><?php echo $accountName; ?></h4>
+                            </span>
                         </div>
 
                         <div class="row searchBox">
@@ -74,9 +73,13 @@
 
                 <div class="col-sm-8 conversation">
                     <div class="row heading" id="conv-row-head">
+
                     </div>
 
+
                     <div class="row message" id="conversation">
+                        
+
                         <div class="row message-previous">
                             <div class="col-sm-12 previous">
                                 <a onclick="previous(this)" id="ankitjain28" name="20">
@@ -84,35 +87,13 @@
                                 </a>
                             </div>
                         </div>
-
-                        <div class="row message-body">
-                            <div class="col-sm-12 message-main-receiver">
-                                <div class="receiver">
-                                    <div class="message-text">
-                                        Hi, what are you doing?!
-                                    </div>
-                                    <span class="message-time pull-right">
-                                        Sun
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row message-body">
-                            <div class="col-sm-12 message-main-sender">
-                                <div class="sender">
-                                    <div class="message-text">
-                                        I am doing nothing man!
-                                    </div>
-                                    <span class="message-time pull-right">
-                                        Sun
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>
+                    <div id="loading-icon" class="text-center" style="display:none ;">
+                            <i class="fa fa-spinner fa-spin fa-3x"></i> Loading...
+                        </div>
 
-                    <div class="row reply">
+                    <div class="row reply resizable">
                         <div class="col-sm-1 col-xs-1 reply-emojis">
                             <i class="fa fa-smile-o fa-2x"></i>
                         </div>
@@ -533,6 +514,7 @@
                 text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
                 display: inline-block;
                 word-wrap: break-word;
+                height: auto;
             }
 
 
@@ -602,6 +584,9 @@
                 border: none;
                 text-indent: 5px;
                 box-shadow: none;
+            }
+            .selected div{
+                background: lightblue;
             }
 
             @media screen and (max-width: 700px) {
@@ -719,7 +704,16 @@
                     padding: 5px 2px 5px 0 !important;
                     font-size: 1.8em !important;
                 }
+
+
+
             }
+
+            .image-container {
+                width: 1000px;
+                height: 1000px; /* Adjust as needed */
+                overflow: hidden; /* Hide overflowing parts of the image */
+                }
         </style>
 
 
@@ -748,40 +742,29 @@
                     });
                 });
 
-                $(".fa-send").click(function () {
-                    message = $('#comment').val();
-                    if (message.length == 0) {
-                        console.log("Empty message");
-                    } else {
-                        API_KEY = $('#api_key').val();
-                        mobilenumberId = $('#selectdNumber').val();
-
-                        $.ajax({
-                            beforeSend: function (xhr) { // Add this line
-                                xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                            },
-                            url: "/apis/sendchat",
-                            method: "POST",
-                            data: {message: message, mobilenumberId: mobilenumberId},
-                            headers: {
-                                "Authorization": "Bearer " + API_KEY // Replace "YOUR_API_KEY" with your actual API key
-                            },
-                            success: function (data) {
-                                // Handle the success response
-                            },
-                            error: function (xhr, textStatus, errorThrown) {
-                                // Handle the error response
-                            }
-                        });
 
 
 
 
-
-
-
+                $(document).on('keydown', '#comment', function (event) {
+                    if (event.which === 13) {
+                        event.preventDefault(); // Prevent the default Enter key behavior (e.g., line break)
+                        console.log('Enter key pressed');
+                        sendchat();
                     }
                 });
+
+
+
+                $(document).on('click', '.fa-send', function (event) {
+                    message = $('#comment').val();
+                    if (message.length == 0) {
+                        sendchat();
+                    }
+                });
+
+
+
 
             })
         </script>
@@ -792,7 +775,7 @@
             let page = 1;
             $(document).ready(function () {
 
-                loadcontact();
+                loadcontact(); //socket
                 limit = 5;
                 page = 5;
                 //   console.log(lengh);
@@ -842,6 +825,74 @@
                 $("#status-options").removeClass("active");
             });
 
+
+            function sendchat() {
+                var message = $('#comment').val().trim();
+
+                // Check if the message is empty
+                if (message.length === 0) {
+                    //   console.log("Empty message");
+                    return; // Exit the function
+                }
+                API_KEY = $('#api_key').val();
+                mobilenumberId = $('#selectdNumber').val();
+                $('#comment').val('');
+
+                $.ajax({
+                    beforeSend: function (xhr) { // Add this line
+                        xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+                    },
+                    url: "/apis/sendchat",
+                    method: "POST",
+                    data: {message: message, mobilenumberId: mobilenumberId},
+                    headers: {
+                        "Authorization": "Bearer " + API_KEY // Replace "YOUR_API_KEY" with your actual API key
+                    },
+                    success: function (data) {
+                        console.log("updating data");
+                        var conversationElement = document.getElementById("conversation");
+                        var newElement = document.createElement("div");
+                        newElement.classList.add("row", "message-body");
+                        newElement.innerHTML = `<div class="col-sm-12 message-main-sender">
+                            <div class="sender">
+                            <div class="message-text">` + message + `</div>
+                            <span class="message-time pull-right" title="Now">Now</span>
+                            </div></div>`;
+
+                        conversationElement.appendChild(newElement);
+                        conversationElement.scrollTop = conversationElement.scrollHeight;
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        // Handle the error response
+                    }
+
+                });
+
+            }
+
+
+
+            function fetchMessages() { //new, need to replace getmsg. Not active yet.
+                $.ajax({
+                    beforeSend: function (xhr) { // Add this line
+                        xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+                    },
+                    url: "/apis/getMessage",
+                    method: "POST",
+                    data: {message: message, mobilenumberId: mobilenumberId},
+                    headers: {
+                        "Authorization": "Bearer " + API_KEY // Replace "YOUR_API_KEY" with your actual API key
+                    },
+                    success: function (data)
+                    {
+                        $('#conversation').html(data);
+                        var elem = document.getElementById('conversation');
+                        elem.scrollTop = elem.scrollHeight;
+
+                    }
+                });
+            }
+
             function newMessage() {
                 message = $(".message-input input").val();
                 if ($.trim(message) == '') {
@@ -864,6 +915,8 @@
 
 
 
+
+
             $('#searchText').keydown(function (event) {
                 let keyPressed = event.keyCode || event.which;
                 if (keyPressed === 13) {
@@ -878,10 +931,12 @@
 
 
 
+
+
             function loadcontact() {
                 var query = $('#searchText').val();
                 $.ajax({
-                    url: "/uis/getcontact?query=" + query + "&page=" + page + "&limit=" + limit,
+                    url: "/uis/getcontact?query=" + query + "&page=" + page + "&limit=" + limit,  //socket.
                     method: "GET",
                     //   data:{customer:query},  
                     success: function (data)
@@ -898,10 +953,25 @@
 
 
             function loadchat(contact, profile) {
+                var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
+                sideBarBodies.forEach(function (element) {
+                    element.classList.remove("selected");
+                });
 
+                var clickedElement = document.getElementById("sidebar-body-" + contact);
+                if (clickedElement) {
+                    clickedElement.classList.add("selected");
+                    $('#conv-row-head').html('');
+                    $('#conversation').html('');
+
+                }
                 $.ajax({
                     url: "/uis/getrowhead/" + profile,
                     method: "GET",
+                    beforeSend: function () {
+                        // Show the loading icon before making the AJAX request
+                        $('#loading-icon').show();
+                    },
                     success: function (data)
                     {
                         $('#conv-row-head').html(data);
@@ -916,20 +986,29 @@
                     success: function (data)
                     {
                         $('#conversation').html(data);
+                        $('#loading-icon').hide();
                         var elem = document.getElementById('conversation');
                         elem.scrollTop = elem.scrollHeight;
 
+
+                    },
+                    error: function () {
+
+                        $('#loading-icon').hide();
+                        toastr.error('An error occurred while loading data.');
+
                     }
+
                 });
 
             }
 
 
-            function fetchMessages() {
-                // Make an AJAX request to the server to fetch messages
-                // Update the chatConsole element with the received messages
-                // You can use XMLHttpRequest or any other AJAX library like jQuery.ajax()
-            }
+//            function fetchMessages() {
+//                // Make an AJAX request to the server to fetch messages
+//                // Update the chatConsole element with the received messages
+//                // You can use XMLHttpRequest or any other AJAX library like jQuery.ajax()
+//            }
 
 // Function to send a message to the API
 
@@ -949,10 +1028,6 @@
 
 // Fetch messages from the server periodically
             setInterval(fetchMessages, 2000); // Adjust the interval as per your requirement
-
-
-
-
         </script>
     </body>
 </html>

@@ -6,20 +6,21 @@ namespace App\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * Chat Entity
+ * ChatsSession Entity
  *
  * @property int $id
- * @property string $sendarray
- * @property string $rcvarray
- * @property int $mobile_number
- * @property \Cake\I18n\FrozenTime $created
- * @property int|null $contact_stream_id
- * @property int|null $account_id
+ * @property int $clientid
+ * @property int $account_id
+ * @property int $user_id
+ * @property string $token
+ * @property bool $active
+ * @property \Cake\I18n\FrozenTime|null $created
+ * @property \Cake\I18n\FrozenTime|null $modified
  *
  * @property \App\Model\Entity\Account $account
  * @property \App\Model\Entity\User $user
  */
-class Chat extends Entity
+class ChatsSession extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -31,13 +32,23 @@ class Chat extends Entity
      * @var array<string, bool>
      */
     protected $_accessible = [
-        'sendarray' => true,
-        'rcvarray' => true,
-        'mobile_number' => true,
-        'created' => true,
-        'contact_stream_id' => true,
+        'clientid' => true,
         'account_id' => true,
+        'user_id' => true,
+        'token' => true,
+        'active' => true,
+        'created' => true,
+        'modified' => true,
         'account' => true,
         'user' => true,
+    ];
+
+    /**
+     * Fields that are excluded from JSON versions of the entity.
+     *
+     * @var array<string>
+     */
+    protected $_hidden = [
+        'token',
     ];
 }

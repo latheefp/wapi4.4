@@ -12,7 +12,6 @@ use Cake\Validation\Validator;
  * Chats Model
  *
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
- * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
  *
  * @method \App\Model\Entity\Chat newEmptyEntity()
  * @method \App\Model\Entity\Chat newEntity(array $data, array $options = [])
@@ -48,13 +47,16 @@ class ChatsTable extends Table
 
         $this->addBehavior('Timestamp');
 
+        $this->belongsTo('ContactStreams', [
+            'foreignKey' => 'contact_stream_id',
+        ]);
         $this->belongsTo('Accounts', [
             'foreignKey' => 'account_id',
-            'joinType' => 'INNER',
         ]);
-        $this->belongsTo('Users', [
-            'foreignKey' => 'user_id',
-            'joinType' => 'INNER',
+        $this->belongsToMany('Sessions', [
+            'foreignKey' => 'chat_id',
+            'targetForeignKey' => 'session_id',
+            'joinTable' => 'chats_sessions',
         ]);
     }
 
@@ -67,27 +69,29 @@ class ChatsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('clientid')
-            ->requirePresence('clientid', 'create')
-            ->notEmptyString('clientid');
+            ->scalar('sendarray')
+            ->maxLength('sendarray', 4294967295)
+            ->requirePresence('sendarray', 'create')
+            ->notEmptyString('sendarray');
+
+        $validator
+            ->scalar('rcvarray')
+            ->maxLength('rcvarray', 4294967295)
+            ->requirePresence('rcvarray', 'create')
+            ->notEmptyString('rcvarray');
+
+        $validator
+            ->integer('mobile_number')
+            ->requirePresence('mobile_number', 'create')
+            ->notEmptyString('mobile_number');
+
+        $validator
+            ->integer('contact_stream_id')
+            ->allowEmptyString('contact_stream_id');
 
         $validator
             ->integer('account_id')
-            ->notEmptyString('account_id');
-
-        $validator
-            ->integer('user_id')
-            ->notEmptyString('user_id');
-
-        $validator
-            ->scalar('token')
-            ->maxLength('token', 1048)
-            ->requirePresence('token', 'create')
-            ->notEmptyString('token');
-
-        $validator
-            ->boolean('active')
-            ->notEmptyString('active');
+            ->allowEmptyString('account_id');
 
         return $validator;
     }
@@ -101,8 +105,8 @@ class ChatsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
+        $rules->add($rules->existsIn('contact_stream_id', 'ContactStreams'), ['errorField' => 'contact_stream_id']);
         $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
-        $rules->add($rules->existsIn('user_id', 'Users'), ['errorField' => 'user_id']);
 
         return $rules;
     }

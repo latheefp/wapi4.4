@@ -31,7 +31,7 @@ class RcvDataformatHelper extends Helper
             switch ($type) {
                 case "image":
   //                  debug($val);//
-                    $result = $result . '<div class="image-container"><img src="/campaigns/viewrcvImage?fileid=' . $val['image']['id'] . '&type=' . $val['image']['mime_type'] . '&id=' . $data['stream_id'] . '"></div>';
+                    $result = $result . '<div class="image-container"><img src="/campaigns/viewrcvImage?fileid=' . $val['image']['id'] . '&type=' . $val['image']['mime_type'] . '&id=' . $data['stream_id'] . '" class="responsive-image"></div>';
 
                     break;
                 case "document":

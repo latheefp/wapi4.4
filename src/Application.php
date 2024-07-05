@@ -130,7 +130,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 'rating',
                 'uiregister',
                 'uiunregister',
-                'sendMessage'
+                'sendMessage',
+                'getcontact',
+                'loadchathistory',
+                'newchat'
             ];
          //   debug("Action is ". $request->getParam('action'));
             $actionToCheck = $request->getParam('action');

@@ -46,7 +46,7 @@ class SendDataformatHelper extends Helper
                                         // debug($val);
                                     } elseif ($val['format'] == "IMAGE") {
                                         // debug($val);
-                                        $theader = '<img src="' . $val['example']['header_handle'][0] . '">';
+                                        $theader = '<img class="responsive-image" src="' . $val['example']['header_handle'][0] . '">';
                                     }
                                     break;
                                 case "BODY":
@@ -68,7 +68,7 @@ class SendDataformatHelper extends Helper
                                 $tbody = str_replace('{{' . $key . '}}', $val['text'], $tbody);
                             }
                             if ($val['type'] == "image") {
-                                $tbody = str_replace('{{' . $key . '}}', '<div class="image-container"><img src="/campaigns/viewsendFile?fileid=' . $val['image']['id'] . '&id=' . $data['stream_id'] . '"></div>', $tbody);
+                                $tbody = str_replace('{{' . $key . '}}', '<div class="responsive-image""><img src="/campaigns/viewsendFile?fileid=' . $val['image']['id'] . '&id=' . $data['stream_id'] . '"></div>', $tbody);
                             }
                         }
                     }
@@ -99,7 +99,7 @@ class SendDataformatHelper extends Helper
             case "image":
                // debug($send_array);
                 $msg= "<figure>";
-                $msg =$msg.'<div class="image-container"><img src="/campaigns/viewsendFile?fileid=' . $send_array['image']['id'] .'&id=' . $data['stream_id'] . '"></div>'; 
+                $msg =$msg.'<div class="image-container"><img  src="/campaigns/viewsendFile?fileid=' . $send_array['image']['id'] .'&id=' . $data['stream_id'] . '" class="responsive-image" ></div>'; 
                 if(isset($send_array['image']['caption'])){
                     $msg =$msg ."<figcaption>".$send_array['image']['caption']."</figcaption>";
                 }

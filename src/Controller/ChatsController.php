@@ -6,6 +6,16 @@ use Cake\Event\EventInterface;
 use Cake\Http\Client;
 use App\Chat\ChatServer;
 
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
+
+
+
+use Cake\ORM\TableRegistry;
+use Cake\I18n\FrozenTime;
+use Cake\Core\Configure;
+use Cake\Event\Event;
+
 class ChatsController extends AppController
 {
 
@@ -29,17 +39,50 @@ class ChatsController extends AppController
         $this->FormProtection->setConfig('unlockedActions', array(
             $formaction
         ));
-        $this->Authentication->allowUnauthenticated(['uiregister','uiunregister','sendMessage']);
+        $this->Authentication->allowUnauthenticated(['uiregister','uiunregister','sendMessage','getcontact','loadchathistory','newchat']);
     }
 
     function index()
     {
-        $data['user_id'] = $this->getMyUID();
-        $data['expiry'] = time() + 24 * 60; //24hrs expiry
-        $data['account_id'] = $this->getMyAccountID();
-        $this->set('session_id', $this->Token->generateToken($data));
-        $this->set('user_name', $this->getMyUserName());
+        $this->viewBuilder()->setLayout('ajax');
+      
     }
+
+
+    public function createSession() {
+        $this->autoRender = false; // Disable view rendering
+        // Validate user ID and account ID
+        $userId = $this->getMyUID();
+        $accountId = $this->getMyAccountID();
+
+        if (isset($userId) && isset($accountId)) {
+            $data['user_id'] = $userId;
+            $data['expiry'] = time() + 24 * 60 * 60; // 24 hours expiry
+            $data['account_id'] = $accountId;
+
+            $data['session_id'] = $this->Token->generateToken($data);
+            $data['user_name'] = $this->getMyUserName();
+
+            $this->setResponse(
+                $this->response->withStatus(200) // OK status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'message' => 'Session created successfully',
+                        'data' => $data
+                    ]))
+            );
+        } else {
+            // Return an error response if validation fails
+            $this->setResponse(
+                $this->response->withStatus(400) // Bad Request status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'message' => 'Invalid user or account'
+                    ]))
+            );
+        }
+    }
+
 
     public function uiunregister()
     {
@@ -53,7 +96,7 @@ class ChatsController extends AppController
 
         // Validate the token
 
-        $ChatTable = $this->getTableLocator()->get('Chats');
+        $ChatTable = $this->getTableLocator()->get('ChatsSessions');
         $record = $ChatTable->find()
         ->where(['clientid' => $data['client_id']])
         ->first();
@@ -93,7 +136,7 @@ class ChatsController extends AppController
         $tokeninfo = $this->Token->validateToken($data['session_id']);
         if ($tokeninfo) {
             // Prepare to save the record
-            $ChatTable = $this->getTableLocator()->get('Chats');
+            $ChatTable = $this->getTableLocator()->get('ChatsSessions');
             $newRecord = $ChatTable->newEmptyEntity();
             $newRecord->clientid = $data['client_id'];
             $newRecord->account_id = $tokeninfo->account_id;
@@ -134,75 +177,211 @@ class ChatsController extends AppController
         }
     }
 
+    public function loadchathistory(){
+        $this->request->allowMethod(['post']);
+        // Use $this->request->getData() to retrieve POST data
+        $postData = $this->request->getData();
 
-    // public function sendMessage()
-    // {
-    //     $this->request->allowMethod(['post']);
-    //     $data = $this->request->getData();
+       // debug($postData);
 
-    //     $clientId = $data['client_id'];
-    //     $message = $data['message'];
+        // Ensure no view rendering for this action
+        $this->viewBuilder()->setLayout('ajax');
+       // $this->autoRender = false; // Disable view rendering
 
-    //      // Ensure the ChatServer is initialized with the loop on the first call
-    //     $chatServer = \App\Chat\ChatServer::getInstance(); // Loop is initialized by the Shell command
+        // Validate the token
+        $tokeninfo = $this->Token->validateToken($postData['session_id']);
+        if ($tokeninfo) {
+         //   debug($tokeninfo);
+            $account_id = $tokeninfo->account_id;
+            $query = $this->getTableLocator()->get('StreamViews')->find();
+            $query->where(['contact_stream_id' => $postData['contact_stream_id']]);
+            if(!isset($postData['direction'])){
+                $postData['direction']="up";
+            }
+
+            if(!isset($postData['page'])){ //bookmark show where to start the message from.
+                if($postData['direction']=="up"){ //scrooling up, old messages
+                    $query->order(['modified' => 'DESC']);
+                    $query->where(['id > ' => $postData['page']]);
+                }else{
+                    $query->order(['modified' => 'ASC']);
+                    $query->where(['id < ' => $postData['page']]);
+                }
+            }else{
+                $query->order(['modified' => 'DESC']);
+            }
+           
+            $query->andWhere(['account_id' => $account_id ]);
+            
+            $query->limit(50);
+            $messages = $query->all()->toArray();
+          //  debug($postData);
+            $this->set('messages',$messages);
+            $this->set('contact_stream_id',$postData['contact_stream_id']);
+        }else{
+
+            $this->autoRender = false;
+            $this->setResponse(
+                $this->response->withStatus(201) // Created status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'error' => 'Wrong token'
+                    ]))
+            );
+        }
+    }
+
+    public function getcontact() {
+
+        $this->request->allowMethod(['post']);
+        // Use $this->request->getData() to retrieve POST data
+        $postData = $this->request->getData();
+
+        // Ensure no view rendering for this action
+        $this->viewBuilder()->setLayout('ajax');
+        $this->autoRender = false; // Disable view rendering
+        $tokeninfo = $this->Token->validateToken($postData['session_id']);
+        if ($tokeninfo) {
+            $account_id = $tokeninfo->account_id;
+            $query = $this->getTableLocator()->get('RecentChats')->find();
+            if (isset($postData)) {
+                $query->where(
+                    [
+                        'AND' => ['account_id' => $account_id],
+                        'OR' => [
+                            'profile_name  LIKE' => '%' . $postData['query'] . '%',
+                            'contact_number  LIKE' => '%' . $postData['query'] . '%',
+                        ]
+                    ]
+                );
+            }
 
 
-    //     // Use a shared ChatServer instance to send the message
-    //   //  $chatServer = $this->getChatServerInstance();
-    //     $chatServer->sendMessageToClient($clientId, $message);
 
-    //     $this->set([
-    //         'message' => 'Message sent successfully',
-    //         '_serialize' => ['message']
-    //     ]);
-    // }
+            // $query->limit((int) $query['limit']);
+            // $query->page((int) $query['page']);
 
-    // private function getChatServerInstance()
-    // {
-    //     // Assume you have a way to get the ChatServer instance
-    //     // This could be a singleton, a service container, etc.
-    //     return \App\Chat\ChatServer::getInstance();
-        
-    // }
+            if (isset($postData['limit']) && isset($postData['page'])) {
+                $query->limit((int) $postData['limit']);
+                $query->page((int) $postData['page']);
+            }
 
+             $contact = $query->all();
+            $this->setResponse(
+                $this->response->withStatus(201) // Created status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'message' => 'Record saved successfully',
+                        'data' => $contact // Include saved data if needed
+                    ]))
+            );
+           
+        }else{
+            $this->setResponse(
+                $this->response->withStatus(400) // Bad Request status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'message' => 'Failed to save record',
+                        'errors' => $newRecord->getErrors()
+                    ]))
+            );
+        }
 
-    // public function sendMessage()
-    // {
-    //     $this->request->allowMethod(['post']);
-    //     $data = $this->request->getData();
-
-    //     $clientId = $data['client_id'];
-    //     $message = $data['message'];
-
-
-    //     $this->viewBuilder()->setLayout('ajax');
-    //     $this->autoRender = false; // Disable view rendering
-
-    //     try {
-    //         $chatServer = ChatServer::getInstance();
-    //         $chatServer->sendMessageToClient($clientId, $message);
+       
+    }
 
 
 
-    //         $this->setResponse(
-    //             $this->response->withStatus(200) 
-    //                 ->withType('application/json')
-    //                 ->withStringBody(json_encode([
-    //                     'message' => 'Message sent successfully',
-    //                     '_serialize' => ['message']
-    //                 ]))
-    //         );
+    function newchat(){
 
-    //     } catch (\Exception $e) {
+        $this->request->allowMethod(['post']);
+        // Use $this->request->getData() to retrieve POST data
+        $postData = $this->request->getData();
 
-    //         $this->setResponse(
-    //             $this->response->withStatus(500) 
-    //                 ->withType('application/json')
-    //                 ->withStringBody(json_encode([
-    //                     'message' => 'Failed to send message: ' . $e->getMessage(),
-    //                     '_serialize' => ['message']
-    //                 ]))
-    //         );
-    //     }
-    // }
+        //debug($postData);
+
+        $this->viewBuilder()->setLayout('ajax');
+
+
+        // Validate the token
+        $tokeninfo = $this->Token->validateToken($postData['session_id']);
+      //  debug($tokeninfo);
+        if ($tokeninfo) {
+            $this->autoRender = false; // Disable view rendering
+                $data['account_id'] = $tokeninfo->account_id ;
+                $FBSettings = $this->_getFBsettings($data);
+             //   debug($FBSettings);
+                if ($FBSettings['status']['code'] !== 200) {
+                    $this->setResponse(
+                        $this->response->withStatus(201) // Created status code
+                            ->withType('application/json')
+                            ->withStringBody(json_encode([
+                                'error' => 'Wrong API key of settings'
+                            ]))
+                    );
+            } else {
+                switch ($postData['msgtype']) {
+                    case "text":
+                        $sendQData['contact_stream_id'] = $postData['contact_stream_id'];
+                        $sendQData['type'] = $postData['msgtype'];
+                        $sendQData['api_key'] = $this->getMyAPIKey($FBSettings['account_id']);
+                        $sendQData['message'] = $postData['message'];
+                        $sendQ = $this->getTableLocator()->get('SendQueues');
+                        $sendQrow = $sendQ->newEmptyEntity();
+                        $sendQrow->form_data = json_encode($sendQData);
+                        $sendQrow->status = "queued";
+                        $sendQrow->type = "chat";
+                        $result = [];
+                        if ($sendQ->save($sendQrow)) {
+                            $this->setResponse(
+                                $this->response->withStatus(201) // Created status code
+                                    ->withType('application/json')
+                                    ->withStringBody(json_encode([
+                                        'success' => $sendQrow->id
+                                    ]))
+                            );
+                        } else {
+                            $this->setResponse(
+                                $this->response->withStatus(201) // Created status code
+                                    ->withType('application/json')
+                                    ->withStringBody(json_encode([
+                                        'error' => "Failed to Que msg"
+                                    ]))
+                            );
+                        }
+                        break;
+                }
+            }
+
+        }else{
+            $this->autoRender = false;
+            $this->setResponse(
+                $this->response->withStatus(201) // Created status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'error' => 'Wrong token'
+                    ]))
+            );
+        }
+    }
+
+    function test($type = null)
+    {
+      //  debug($type);
+      $this->viewBuilder()->setLayout('ajax');
+        $response=null;
+        switch ($type) {
+            case "register":
+                break;
+            case "getcontact":
+                $http = new Client();
+                $query['limit']=25;
+                $query['page']=1;
+                $query['client_id']=335;
+                $query['session_id']="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBUFBfTkFNRSIsImF1ZCI6IldBSnVuY3Rpb25DaGF0IiwiaWF0IjoxNzE5NTcwMjEwLCJleHAiOjE3MTk2NTY2MTAsInN1YiI6MiwiYWNjb3VudF9pZCI6MX0.T_muGYXzoLU6cDYqRga2aB2F8wrmg4XTm0_b60M5uCU";
+                $response = $http->post('http://localhost/chats/getcontact', $query);
+                break;
+        }
+        $this->set('response',$response);
+    }
 }

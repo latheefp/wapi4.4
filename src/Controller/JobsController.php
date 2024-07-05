@@ -85,6 +85,7 @@ class JobsController extends AppController
             case "send":  //message to be send to end user.  
 
 
+                //check record exists in SendQ Table.
                 try {
                     $table = TableRegistry::getTableLocator()->get('SendQueues');
                     $sendQrecord = $table->get($qid);
@@ -97,7 +98,7 @@ class JobsController extends AppController
 
 
 
-                
+                //Validate API key of the Json array in SendForm.
                 $form_data = json_decode($sendQrecord->form_data, true);
                 $FBSettings = $this->_getFBsettings($data = ['api_key' => $form_data['api_key']]);
                 if ($FBSettings['status']['code'] == 404) {
@@ -107,15 +108,19 @@ class JobsController extends AppController
                     $this->set('response', $response);
                     return;
                 }
-         //       debug($sendQrecord);
-                if ($sendQrecord->type == "forward") {
-               //     debug("Type is forward");
-                    $return = $this->_forwardmsg($sendQrecord, $FBSettings);
-                } else {
-             //       debug("Type is send to customers");
-                    $return = $this->_send_schedule($qid, $FBSettings); //main send fuction to fb api.
-                }
 
+           //     debug($sendQrecord);
+                switch($sendQrecord->type){
+                    case "forward":
+                        $return = $this->_forwardmsg($sendQrecord, $FBSettings);
+                        break;
+                    case "chat":
+                        $return = $this->_chat($sendQrecord, $FBSettings);
+                        break;
+                    default:
+                    $return = $this->_send_schedule($qid, $FBSettings); //main send fuction to fb api.
+                    break;
+                }
 
                
                 if (isset($return['result']['error'])) {
@@ -159,6 +164,64 @@ class JobsController extends AppController
         //      debug($return);
         $this->set('response', $return['result']);
     }
+
+
+    function _chat($sendQrecord, $FBsettings)
+    { //this function to procecess chat Q send. 
+        $retun=[];
+        $result=[];
+        $form_data = json_decode($sendQrecord->form_data, true);
+        switch ($form_data['type']) {
+            case "text":
+                $streams_table = $this->getTableLocator()->get('Streams');
+                $streamrow = $streams_table->newEmptyEntity();
+                $streamrow->contact_stream_id = $form_data['contact_stream_id'];
+                $streamrow->initiator = "Chat";
+                $streamrow->type = "Chat";
+                $streamrow->postdata = $sendQrecord->form_data;
+                $streamrow->account_id = $FBsettings['account_id'];
+                $streams_table->save($streamrow);
+                $contact = $streams_table->get($streamrow->id);
+                $result = $this->_despatch_msg($contact,$form_data, null, $FBsettings, "text");
+                if (isset($result['messages'][0]['id'])) {
+                    $return['result']['status'] = "success";
+                    $return['result']['msg'] = $result;
+                } else {
+                    $return['result']['status'] = "failed";
+                    $return['result']['msg'] =$result;
+                }
+                break;
+            case "image":
+           
+                break;
+            case "document":
+         
+                break;
+            case "video":
+        
+                break;
+       
+            case "location":
+              
+                break;
+            case "sticker":
+                
+                break;
+            case "audio":
+                
+                break;
+            case "reaction":
+              
+                break;
+            case "contacts":
+                
+                break;
+        }
+
+        return $return;
+    
+    }
+
 
     function _forwardmsg($sendQrecord, $FBsettings)
     { //this function to create  stream 
@@ -286,6 +349,7 @@ class JobsController extends AppController
 
  
 
+
     
 
     function _update_http_code($qid, $code, $type)
@@ -354,17 +418,20 @@ class JobsController extends AppController
         // $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
         $data = json_decode($record->form_data, true);
-      //  debug($data);
-        if (!isset($data['mobile_number'])) {
-            $return['result']['error'] = "No mobile number provided";
-            return $return;
+        debug($data);
+        if(!isset($data['contact_stream_id'])){ //chat client provide contact_stream_id instead of mobile number.
+            if (!isset($data['mobile_number'])) {
+                $return['result']['error'] = "No mobile number provided";
+                return $return;
+            }
+            if (strlen($data['mobile_number']) >= 10 && is_numeric($data['mobile_number'])) {
+                // echo "Valid mobile number!";
+            } else {
+                $return['result']['error'] = "Invalid mobile number ".$data['mobile_number'];
+                return $return;
+            }
         }
-        if (strlen($data['mobile_number']) >= 10 && is_numeric($data['mobile_number'])) {
-            // echo "Valid mobile number!";
-        } else {
-            $return['result']['error'] = "Invalid mobile number ".$data['mobile_number'];
-            return $return;
-        }
+        
 
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
         $schedTable = $this->getTableLocator()->get('Schedules');

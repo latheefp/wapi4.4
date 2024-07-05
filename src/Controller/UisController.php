@@ -127,4 +127,17 @@ class UisController extends AppController {
         $this->set('profile', $profile);
     }
 
+
+    function newindex() {
+
+        $this->viewBuilder()->setLayout('ajax');
+        $apiTable = $this->getTableLocator()->get('ApiKeys');
+        $apiKey = $apiTable->find()
+                ->where(['account_id' => $this->getMyAccountID(), 'enabled' => true])
+                ->first();
+        $this->set('api_key', $apiKey);
+
+        $this->viewBuilder()->setLayout('ajax');
+    }
+
 }
