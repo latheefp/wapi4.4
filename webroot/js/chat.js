@@ -23,7 +23,7 @@ $(document).ready(function() {
 
             // Handle WebSocket connection
             socket.onopen = () => {
-                console.log('WebSocket connected');
+               // console.log('WebSocket connected');
                 // Register
                 const message = {
                     session_id: sessionId, // Use the fetched session ID
@@ -48,8 +48,8 @@ $(document).ready(function() {
                         toastr.success(message.message);
                         break;
                     case "contactlist":
-                        console.log("Contact list");
-                        console.log(message.message);
+                       // console.log("Contact list");
+                       // console.log(message.message);
                         if (message.message.data) {
                             appendContacts(message.message.data);
                         }
@@ -61,8 +61,8 @@ $(document).ready(function() {
                         toastr.error(message.message);
                         break;
                     case "loadChathistory":
-                        console.log("Loading Chat history of a user");
-                        console.log(message)
+                      //  console.log("Loading Chat history of a user");
+                     //   console.log(message)
                         if(message['error']){
                             toastr.warning(message.error);
                         }else{
