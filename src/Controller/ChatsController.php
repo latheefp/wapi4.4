@@ -331,13 +331,13 @@ class ChatsController extends AppController
                         $sendQrow->form_data = json_encode($sendQData);
                         $sendQrow->status = "queued";
                         $sendQrow->type = "chat";
-                        $result = [];
+               //         $result = [];
                         if ($sendQ->save($sendQrow)) {
                             $this->setResponse(
                                 $this->response->withStatus(201) // Created status code
                                     ->withType('application/json')
                                     ->withStringBody(json_encode([
-                                        'success' => $sendQrow->id
+                                        'success' => "send queued ".$sendQrow->id
                                     ]))
                             );
                         } else {
@@ -345,7 +345,7 @@ class ChatsController extends AppController
                                 $this->response->withStatus(201) // Created status code
                                     ->withType('application/json')
                                     ->withStringBody(json_encode([
-                                        'error' => "Failed to Que msg"
+                                        'error' => "Failefd to Que msg"
                                     ]))
                             );
                         }
