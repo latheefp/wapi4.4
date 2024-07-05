@@ -195,8 +195,9 @@ class ChatsController extends AppController
         if ($tokeninfo) {
          //   debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
-            $query = $this->getTableLocator()->get('StreamViews')->find();
+            $query = $this->getTableLocator()->get('Streams')->find();
             $query->where(['contact_stream_id' => $postData['contact_stream_id']]);
+            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id']);
             if(!isset($postData['direction'])){
                 $postData['direction']="up";
             }
@@ -368,23 +369,5 @@ class ChatsController extends AppController
         }
     }
 
-    function test($type = null)
-    {
-      //  debug($type);
-      $this->viewBuilder()->setLayout('ajax');
-        $response=null;
-        switch ($type) {
-            case "register":
-                break;
-            case "getcontact":
-                $http = new Client();
-                $query['limit']=25;
-                $query['page']=1;
-                $query['client_id']=335;
-                $query['session_id']="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBUFBfTkFNRSIsImF1ZCI6IldBSnVuY3Rpb25DaGF0IiwiaWF0IjoxNzE5NTcwMjEwLCJleHAiOjE3MTk2NTY2MTAsInN1YiI6MiwiYWNjb3VudF9pZCI6MX0.T_muGYXzoLU6cDYqRga2aB2F8wrmg4XTm0_b60M5uCU";
-                $response = $http->post('http://localhost/chats/getcontact', $query);
-                break;
-        }
-        $this->set('response',$response);
-    }
+   
 }
