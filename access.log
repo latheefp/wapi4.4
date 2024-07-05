@@ -9936,3 +9936,8 @@
 127.0.0.1 - - [05/Jul/2024:09:42:06 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.56 (Debian) PHP/8.1.18 (internal dummy connection)"
 127.0.0.1 - - [05/Jul/2024:09:42:07 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.56 (Debian) PHP/8.1.18 (internal dummy connection)"
 127.0.0.1 - - [05/Jul/2024:09:42:08 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.56 (Debian) PHP/8.1.18 (internal dummy connection)"
+172.20.0.1 - - [05/Jul/2024:09:52:37 +0000] "GET /chats/ HTTP/1.1" 200 6776 "http://localhost:8090/login?redirect=%2Fchats%2F" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0"
+172.20.0.1 - - [05/Jul/2024:09:52:40 +0000] "GET /js/chat.js HTTP/1.1" 200 2992 "http://localhost:8090/chats/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0"
+172.20.0.1 - - [05/Jul/2024:09:52:41 +0000] "GET /debug-kit/toolbar/f519d9bc-0481-4a7f-a061-311ddd5f0310 HTTP/1.1" 200 1696 "http://localhost:8090/chats/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0"
+172.20.0.1 - - [05/Jul/2024:09:52:40 +0000] "GET /chats/createSession HTTP/1.1" 200 745 "http://localhost:8090/chats/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0"
+127.0.0.1 - - [05/Jul/2024:09:52:43 +0000] "POST /chats/uiregister HTTP/1.1" 201 442 "-" "CakePHP"

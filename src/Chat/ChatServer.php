@@ -68,7 +68,7 @@ class ChatServer implements MessageComponentInterface
 
 
         $msgArray = json_decode($msg, true);
-        print_r($msg);
+      //  print_r($msg);
         switch($msgArray['type']){
             case "register":
                 $clientinfo['client_id'] = $from->resourceId;
@@ -94,7 +94,7 @@ class ChatServer implements MessageComponentInterface
                 break;
             case "sendchat":
                 $msgArray['client_id'] = $from->resourceId;
-                print_r($msgArray);
+             //   print_r($msgArray);
                 $this->newChat($msgArray);
                 break;
             default:
@@ -163,14 +163,14 @@ class ChatServer implements MessageComponentInterface
 
     function logmsg($log, $des)
     {
-        print ($des);
+      //  print ($des);
         $file =   '/var/www/html/logs/chat.log';
         $time = date("Y-m-d H:i:s", time());
         $handle = fopen($file, 'a') or die('Cannot open file:  ' . $file); //implicitly creates file
         fwrite($handle, print_r("\n$time============================= \n", true));
         fwrite($handle, print_r($log, true));
         fclose($handle);
-        print_r($log . "\n");
+       // print_r($log . "\n");
         //  print_r($from->resourceId);
     }
 
@@ -222,9 +222,9 @@ class ChatServer implements MessageComponentInterface
         $response = $http->post('http://localhost/chats/uiregister', $clientinfo);
         $responseCode = $response->getStatusCode();
         if($responseCode==201){
-            print ("Response\n");
-            print_r(json_decode($response->getStringBody(),true));
-            print ("Response End\n");
+          //  print ("Response\n");
+            //print_r(json_decode($response->getStringBody(),true));
+            //print ("Response End\n");
             $this->logmsg($response->getStringBody(), null);
             $message['type']="success";
             $message['message']="Client Registered";
@@ -232,7 +232,7 @@ class ChatServer implements MessageComponentInterface
             return true;
         }else{
             print "Something wrong while registering client. $responseCode is not 200";
-            print_r(json_decode($response->getStringBody(),true));
+           // print_r(json_decode($response->getStringBody(),true));
             $message['type']="failed";
             $message['message']="Client Registeration failed";
             $this->sendMessageToClient($clientinfo['client_id'],$message);
