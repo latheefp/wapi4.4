@@ -19,8 +19,14 @@ class SendDataformatHelper extends Helper
     {
       //  $sendarray = json_decode($data['json'], true);
         $send_array = json_decode($this->_removeTrailingCommas($data['json']), true);
-        // debug($send_array);
+        
+        if(!isset($send_array)){  //sometime json_decode is empty, need to investigate.
+            print "Error:null json on stream id:".$data['stream_id'];
+            return false;
+        }
         $msg = null;
+    
+      
         switch ($send_array['type']) {
             case "template":
             case "api":
@@ -137,8 +143,12 @@ class SendDataformatHelper extends Helper
 
     
     function _removeTrailingCommas($json) {
-        // Remove trailing commas before closing brackets
-        $json = preg_replace('/,\s*([\]}])/m', '$1', $json);
+      //  debug($json);
+        if (isset($json) && is_string($json)) {
+            $json = preg_replace('/,\s*([\]}])/m', '$1', $json);
+            return $json;
+        }
         return $json;
+
     }
 }

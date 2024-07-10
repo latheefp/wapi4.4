@@ -181,23 +181,21 @@ class ChatsController extends AppController
 
     public function loadchathistory(){
         $this->request->allowMethod(['post']);
-        // Use $this->request->getData() to retrieve POST data
         $postData = $this->request->getData();
-
-       // debug($postData);
-
-        // Ensure no view rendering for this action
         $this->viewBuilder()->setLayout('ajax');
-       // $this->autoRender = false; // Disable view rendering
-
-        // Validate the token
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
         if ($tokeninfo) {
          //   debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
             $query = $this->getTableLocator()->get('Streams')->find();
-            $query->where(['contact_stream_id' => $postData['contact_stream_id']]);
-            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id']);
+            $query->where(['contact_stream_id' => $postData['contact_stream_id'],'account_id'=>$account_id]); //conditions.
+            $query->andWhere(function ($exp, $q) {
+                return $exp->or_([
+                    'sendarray IS NOT' => null,
+                    'recievearray IS NOT' => null
+                ]);
+            });
+            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id','created']);
             if(!isset($postData['direction'])){
                 $postData['direction']="up";
             }
@@ -205,20 +203,16 @@ class ChatsController extends AppController
             if(!isset($postData['page'])){ //bookmark show where to start the message from.
                 if($postData['direction']=="up"){ //scrooling up, old messages
                     $query->order(['modified' => 'DESC']);
-                    $query->where(['id > ' => $postData['page']]);
                 }else{
                     $query->order(['modified' => 'ASC']);
-                    $query->where(['id < ' => $postData['page']]);
                 }
             }else{
-                $query->order(['modified' => 'DESC']);
+                $query->order(['id' => 'DESC']);
             }
            
-            $query->andWhere(['account_id' => $account_id ]);
-            
             $query->limit(50);
+            $query->page($postData['page']);
             $messages = $query->all()->toArray();
-          //  debug($postData);
             $this->set('messages',$messages);
             $this->set('contact_stream_id',$postData['contact_stream_id']);
         }else{
@@ -232,6 +226,7 @@ class ChatsController extends AppController
                     ]))
             );
         }
+     //   debug($query->sql());
     }
 
     public function getcontact() {

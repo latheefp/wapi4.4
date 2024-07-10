@@ -111,6 +111,19 @@ return [
             'url' => env('CACHE_DEFAULT_URL', null),
         ],
 
+
+        // 'default' => [
+        //     'className' => \Cake\Cache\Engine\RedisEngine::class,
+        //     'duration' => '+1 years',
+        //     'prefix' => 'wajunction',
+        //     'server' => getenv('REDIS_SERVER'), // Redis server address
+        //     'port' => getenv('REDIS_PORT'), // Redis server port
+        //     'password' => null, // If your Redis server is password protected
+        //     'database' => 0, // Redis database number
+        //     'timeout' => 0,
+        //     'persistent' => false,
+        // ],
+
         /*
          * Configure the cache used for general framework caching.
          * Translation cache files are stored with this configuration.
@@ -154,6 +167,8 @@ return [
             'duration' => '+1 years',
             'url' => env('CACHE_CAKEROUTES_URL', null),
         ],
+
+        
     ],
 
     /*

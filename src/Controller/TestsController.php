@@ -13,7 +13,7 @@ use Cake\Event\EventInterface;
 use Cake\Event\Event;
 //use Cake\Http\Exception\ForbiddenException;
 //use Cake\Datasource\ConnectionManager;
-//use Cake\Cache\Cache;
+use Cake\Cache\Cache;
 use Cake\ORM\Query;
 use Twig\TokenParser\EmbedTokenParser;
 
@@ -111,6 +111,16 @@ class TestsController extends AppController
         ];
         $this->set(compact('response'));
         $this->viewBuilder()->setOption('serialize', 'response');
+    }
+
+
+
+    public function saveToRedis($uid, $accounts, $mobileNumber, $position) {
+        // Construct the Redis key
+        $redisKey = "$uid:accounts:$mobileNumber:position";
+        
+        // Save the data to Redis
+        Cache::write($redisKey, $position);
     }
 
     function _validatekey($data)

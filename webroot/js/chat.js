@@ -4,26 +4,26 @@ let sessionId; // Declare sessionId in the broader scope
 let socket; // Declare socket in the broader scope
 let query;
 
-$(document).ready(function() {
+$(document).ready(function () {
 
     toastr.options = {
         "positionClass": "toast-top-right",
         "containerId": "toast-container"
     };
-    
+
     $.ajax({
         url: '/chats/createSession',
         method: 'GET',
         dataType: 'json',
-        success: function(response) {
+        success: function (response) {
             console.log(response);
             sessionId = response.data.session_id;
 
-           // socket = new WebSocket('ws://localhost:8080'); // Use the declared socket variable
+            // socket = new WebSocket('ws://localhost:8080'); // Use the declared socket variable
             socket = new WebSocket(chat_url); // Use the declared socket variable
             // Handle WebSocket connection
             socket.onopen = () => {
-               // console.log('WebSocket connected');
+                // console.log('WebSocket connected');
                 // Register
                 const message = {
                     session_id: sessionId, // Use the fetched session ID
@@ -43,13 +43,13 @@ $(document).ready(function() {
             // Handle incoming messages
             socket.onmessage = (event) => {
                 const message = JSON.parse(event.data);
-                switch(message.type){
+                switch (message.type) {
                     case "success":
                         toastr.success(message.message);
                         break;
                     case "contactlist":
-                       // console.log("Contact list");
-                       // console.log(message.message);
+                        // console.log("Contact list");
+                        // console.log(message.message);
                         if (message.message.data) {
                             appendContacts(message.message.data);
                         }
@@ -60,18 +60,27 @@ $(document).ready(function() {
                     case "failed":
                         toastr.error(message.message);
                         break;
+                    case "ping":
+                        //just ingnore ping.
+                        break;
                     case "loadChathistory":
-                      //  console.log("Loading Chat history of a user");
-                     //   console.log(message)
-                        if(message['error']){
+                        if (message['error']) {
                             toastr.warning(message.error);
-                        }else{
-                            $('#conversation').html(message.html);
+                        } else {
                             $('#loading-icon').hide();
-                            var elem = document.getElementById('conversation');
-                            elem.scrollTop = elem.scrollHeight;
+                            updateConversation(message);
+                           attachScrollEventListeners();
                         }
-                       
+
+                        break;
+                    case "appendchat":
+                        if (message['error']) {
+                            toastr.warning(message.error);
+                        } else {
+                            $('#loading-icon').hide();
+                            prependChat(message);
+                           attachScrollEventListeners();
+                        }
                         break;
                     default:
                         console.log("unknown message");
@@ -79,6 +88,43 @@ $(document).ready(function() {
 
                 }
             };
+
+            function prependChat(message){
+                var contact_stream_id = message.contact_stream_id;
+                var conversationId = 'conversation-' + contact_stream_id;
+                var conversationDiv = $('#' + conversationId); // Corrected this line
+                conversationDiv.prepend(message.html);
+            }
+
+
+            function updateConversation(message) {
+                var contact_stream_id = message.contact_stream_id;
+                var conversationId = 'conversation-' + contact_stream_id;
+                // var conversationDiv = $(conversationId);
+                var conversationDiv = $('#' + conversationId); // Corrected this line
+
+                // Hide all other conversation divs
+                $('#conversation .conversation-stream').hide();
+                if (conversationDiv.length > 0) { //existing div. 
+                    console.log('appending existing ' + conversationDiv.length);
+                    conversationDiv.append(message.html).show();
+                } else {
+                    console.log('div conversation-' + contact_stream_id + " is zero and ")
+                    // If the div does not exist, create it, append to the conversation container, and show it
+                    $('#conversation').append('<div class="conversation-stream row message-stream" page=1 contact_stream_id="' + message.contact_stream_id + '"  id="conversation-' + contact_stream_id + '">' + message.html + '</div>');
+                }
+
+                // Scroll to the bottom of the conversation container
+                var conversationContainer = $('#conversation');
+                conversationContainer.scrollTop(conversationContainer[0].scrollHeight);
+
+
+
+
+                // Scroll to the bottom of the conversation container
+                var elem = $('#' + conversationId);
+                elem.scrollTop(elem[0].scrollHeight);
+            }
 
             // Function to display messages on the chat interface
             function appendMessage(userId, content, messageType) {
@@ -125,18 +171,18 @@ $(document).ready(function() {
                 });
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error fetching session ID:', error);
         }
     });
 
-    $('#sideBarContactList').on('scroll', function() {
-       // alert("scrolling");
+    $('#sideBarContactList').on('scroll', function () {
+        // alert("scrolling");
         console.log("Scrolling...");
         let div = $(this).get(0);
         if (div.scrollTop + div.clientHeight >= div.scrollHeight) {
             page += 5;
-            console.log("PAging more" + limit + "' " +page + " "+query);
+            console.log("PAging more" + limit + "' " + page + " " + query);
             loadcontact();
         }
     });
@@ -189,9 +235,9 @@ $(document).ready(function() {
     }
 
 
-     function loadchat(contact, profile) {
+    function loadchat(contact, profile) {
         var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
-        sideBarBodies.forEach(function(element) {
+        sideBarBodies.forEach(function (element) {
             element.classList.remove("selected");
         });
 
@@ -206,11 +252,11 @@ $(document).ready(function() {
         $.ajax({
             url: "/uis/getrowhead/" + profile,  //this is the chatbox header. 
             method: "GET",
-            beforeSend: function() {
+            beforeSend: function () {
                 // Show the loading icon before making the AJAX request
                 $('#loading-icon').show();
             },
-            success: function(data) {
+            success: function (data) {
                 $('#conv-row-head').html(data);
 
             }
@@ -220,25 +266,6 @@ $(document).ready(function() {
         $('#selectdNumber').val(contact);
 
 
-        // $.ajax({
-        //     url: "/uis/getmsg/" + contact,
-        //     method: "GET",
-        //     success: function(data) {
-        //         $('#conversation').html(data);
-        //         $('#loading-icon').hide();
-        //         var elem = document.getElementById('conversation');
-        //         elem.scrollTop = elem.scrollHeight;
-
-
-        //     },
-        //     error: function() {
-
-        //         $('#loading-icon').hide();
-        //         toastr.error('An error occurred while loading data.');
-
-        //     }
-
-        // });
 
         const message = {
             session_id: sessionId, // Use the fetched session ID
@@ -246,69 +273,126 @@ $(document).ready(function() {
             page: lastID,
         };
         socket.send(JSON.stringify(message));
-  
+
 
     }
+
+
+
+
 });
 
-function sendMsg(message){
+function sendMsg(message) {
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(message));
-      //  toastr.success('Message sent successfully.');
-      } else {
+        //  toastr.success('Message sent successfully.');
+    } else {
         toastr.error('The connection is not active, try refreshing the page');
-      }
+    }
 }
 
 
-function loadchat(contact, profile) {
+
+function loadchatscrollup(contact_stream_id) {
+    $('#selectdNumber').val(contact_stream_id);
+    console.log("loadchatscroll, "+contact_stream_id);
+    var conversationId = 'conversation-' + contact_stream_id;
+    var conversationDiv = $('#' + conversationId); // Corrected this line
+    currentpgae = parseInt(conversationDiv.attr('page')); // Convert to integer
+    page=currentpgae + 1
+    console.log("Current page is "+ currentpgae + " and new page is "+page)
+
+    // lastID=10;
+
+    if (conversationDiv.length > 0) {
+        var chatContainer = (conversationDiv);
+        disableScroll(conversationDiv);
+        $('#loading-icon').show();
+
+        //  page=page+1;
+        const message = {
+            session_id: sessionId, // Use the fetched session ID
+            type: "appendchat",
+            page: page,
+            contact_stream_id: contact_stream_id
+        };
+        sendMsg(message);
+    } else {
+        console.log(conversationDiv.length + " is  zero initial history not loaded")
+    }
+}
+
+function disableScroll(conversationDiv) {
+    console.log("Disabling scroll");
+    conversationDiv.off('scroll'); // Remove the scroll event listener
+    conversationDiv.css('overflow', 'hidden'); // Prevent scrolling by setting overflow to hidden
+}
+
+// Function to enable scrolling
+// function enableScroll(conversationDiv) {
+//     conversationDiv.on('scroll', function() {
+//         // Your scroll event handling logic here
+//     });
+//     conversationDiv.css('overflow', 'auto'); // Allow scrolling by setting overflow to auto
+// }
+
+
+
+function loadchat(contact_stream_id, profile) {
     var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
-    sideBarBodies.forEach(function(element) {
+
+    sideBarBodies.forEach(function (element) {
         element.classList.remove("selected");
     });
 
-    var clickedElement = document.getElementById("sidebar-body-" + contact);
+    var clickedElement = document.getElementById("sidebar-body-" + contact_stream_id);
     if (clickedElement) {
         clickedElement.classList.add("selected");
-        $('#conv-row-head').html('');
-        $('#conversation').html('');
+        // $('#conv-row-head').html('');
+        // $('#conversation').html('');
 
     }
 
     $.ajax({
         url: "/uis/getrowhead/" + profile,  //this is the chatbox header. 
         method: "GET",
-        beforeSend: function() {
+        beforeSend: function () {
             // Show the loading icon before making the AJAX request
             $('#loading-icon').show();
         },
-        success: function(data) {
+        success: function (data) {
             $('#conv-row-head').html(data);
 
         }
     });
 
     //  $('.heading-name-meta').html(profile);
-    $('#selectdNumber').val(contact);
+    $('#selectdNumber').val(contact_stream_id);
 
-    lastID=10;
+    // lastID=10;
+    var conversationId = 'conversation-' + contact_stream_id;
+    var conversationDiv = $('#' + conversationId); // Corrected this line
+    if (conversationDiv.length == 0) {
+        //  page = parseInt(conversationDiv.attr('page')); // Convert to integer
+        //  page=page+1;
+        const message = {
+            session_id: sessionId, // Use the fetched session ID
+            type: "loadChathistory",
+            page: 1,
+            contact_stream_id: contact_stream_id
+        };
+        sendMsg(message);
+    } else {
+        console.log(conversationDiv.length + " is not zero Inintial loading is done, please scrollup for more loading.")
+    }
 
-    const message = {
-        session_id: sessionId, // Use the fetched session ID
-        type: "loadChathistory",
-        page: lastID,
-        contact_stream_id: contact
-    };
-
-    sendMsg(message);
-   // socket.send(JSON.stringify(message));
 
 
 }
 
 
 function sendchat() {
-    console.log("newchat");
+    // console.log("newchat");
     var chatMessage = $('#comment').val().trim();
 
     // Check if the message is empty
@@ -316,7 +400,7 @@ function sendchat() {
         //   console.log("Empty message");
         return; // Exit the function
     }
-   // API_KEY = $('#api_key').val();
+    // API_KEY = $('#api_key').val();
     mobilenumberId = $('#selectdNumber').val();
     $('#comment').val('');
     const message = {
@@ -327,7 +411,37 @@ function sendchat() {
         msgtype: "text"
     };
 
-   sendMsg(message);
+    sendMsg(message);
 
 
 }
+
+function attachScrollEventListeners() {
+    $('.conversation-stream').css({
+        
+        'overflow-y': 'auto'
+    });
+
+    $('.conversation-stream').each(function () {
+        var chatContainer = $(this);
+        var lastScrollTop = chatContainer.scrollTop(); // Initialize with current scroll position
+
+        chatContainer.off('scroll'); // Remove previous event listeners to avoid duplication
+        chatContainer.on('scroll', function () {
+            var currentScrollTop = chatContainer.scrollTop();
+            console.log("Scrolling");
+
+            // Check if scrolling up and at the top of the div
+            if (currentScrollTop < lastScrollTop && currentScrollTop === 0) {
+                console.log("scroll top.");
+                // console.log($(this).attr('contact_stream_id')); // Log the attribute
+                loadchatscrollup($(this).attr('contact_stream_id'));
+            }
+
+            // Update last scroll position
+            lastScrollTop = currentScrollTop;
+        });
+    });
+}
+
+

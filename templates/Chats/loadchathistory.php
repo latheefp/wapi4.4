@@ -1,10 +1,10 @@
-<div class="row message-previous">
+<!-- <div class="row message-previous">
       <div class="col-sm-12 previous">
           <a onclick="previous(this)" id="<?= $contact_stream_id ?>" name="20">
               Show Previous Message!
           </a>
       </div>
-  </div>
+  </div> -->
 
   <?php
   if(is_array(($messages))){
@@ -12,12 +12,12 @@
   }
    
     foreach ($messages as $key => $val) {
-       // debug($val);
+   //     debug($val);
         switch ($val->type) {
 
             case "receive":
     ?>
-              <div class="row message-body">
+              <div class="row message-body" "id"=<?= $val->id ?>>
                   <div class="col-sm-12 message-main-receiver">
                       <div class="receiver">
                           <div class="message-text" id="<?$val->messageid ?>">
@@ -28,7 +28,7 @@
                                 ?>
                           </div>
                           <span  class="message-time pull-right" title="<?= $this->Dformat->format(['data' => $val->created, 'format' => 'DT2DT']) ?>">
-                              <?= $this->Time->timeAgoInWords($val->created) ?>
+                              <?= $this->Time->timeAgoInWords($val->created) . "Rcv"?>
                           </span>
                       </div>
                   </div>
@@ -38,7 +38,7 @@
             default:
 
             ?>
-              <div class="row message-body">
+              <div class="row message-body" "id"=<?= $val->id ?> >
                   <div class="col-sm-12 message-main-sender">
                       <div class="sender">
                           <div class="message-text" id="<?$val->messageid ?>">
@@ -49,7 +49,8 @@
                                 ?>
                           </div>
                           <span class="message-time pull-right" title="<?= $this->Dformat->format(['data' => $val->created, 'format' => 'DT2DT']) ?>">
-                              <?= $this->Time->timeAgoInWords($val->created) ?>
+                              <?= $this->Time->timeAgoInWords($val->created) ."Send" ?>
+
                           </span>
                       </div>
                   </div>

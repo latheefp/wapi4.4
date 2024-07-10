@@ -14,7 +14,7 @@
     <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <?=
     $this->Html->script([
-        '/js/chat.js',
+          '/js/chat.js',
         '/plugins/jquery/jquery.min',
         '/plugins/bootstrap/js/bootstrap.bundle.min',
         '/plugins/toastr/toastr.min'
@@ -29,7 +29,7 @@
 </head>
 
 <body>
- 
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <div class="container app">
         <div class="row app-one">
@@ -41,9 +41,8 @@
                                 <img src="https://bootdey.com/img/Content/avatar/avatar1.png">
                             </div>
                         </div>
-                        <?php $accountName = $this->request->getSession()->read('Account.name'); ?>
-                        <span style="font-weight: bold; text-align: left;">
-                            <h4><?php echo $accountName; ?></h4>
+                                                <span style="font-weight: bold; text-align: left;">
+                            <h4></h4>
                         </span>
                     </div>
 
@@ -99,13 +98,13 @@
                 <div class="row message" id="conversation">
 
 
-                    <div class="row message-previous">
+                    <!-- <div class="row message-previous">
                         <div class="col-sm-12 previous">
                             <a onclick="previous(this)" id="ankitjain28" name="20">
                                 Show Previous Message!
                             </a>
                         </div>
-                    </div>
+                    </div> -->
 
                 </div>
                 <div id="loading-icon" class="text-center" style="display:none ;">
@@ -130,7 +129,6 @@
             </div>
         </div>
     </div>
-
 
 
 
@@ -446,7 +444,7 @@
 
         /*Conversation*/
 
-        .conversation {
+        .conversation-stream {
             padding: 0 !important;
             margin: 0 !important;
             height: 100%;
@@ -475,6 +473,19 @@
             border: 1px solid #f7f7f7;
             height: calc(100% - 120px);
         }
+
+        .message-stream {
+            position: relative;
+            padding: 0 !important;
+            margin: 0 !important;
+            /* background: url("/img/Wajunction.png") no-repeat fixed center; */
+            background-size: cover;
+            overflow-y: auto;
+            border: 1px solid #f7f7f7;
+            height: calc(100%);
+        }
+
+        
 
         .message::before {
             content: "";
@@ -799,7 +810,7 @@
 
         }
 
-    
+
 
 
         #toast-container {
@@ -812,20 +823,10 @@
             z-index: 9999;
             /* Ensure it's above other content */
         }
-
-        /* #sideBarContactList {
-            height: 200px;
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-        } */
-        /* .contact {
-            height: 50px;
-            border-bottom: 1px solid #ddd;
-        } */
     </style>
 
 
- 
+
 
     <?= $this->Html->scriptBlock(sprintf(
         'var csrfToken = %s; var chat_url = %s;',
@@ -876,25 +877,10 @@
 
 
     <script>
-        //  let limit = 25;
-        //  let page = 1;
-        //  let sessionI="";
-        // $(document).ready(function() {
-
-        //     //        loadcontact(); //socket
-        //     limit = 5;
-        //     page = 5;
-        //     //   console.log(lengh);
-        //     $('#sideBarContactList').on('scroll', function() {
-        //    //     alert("scrolling sideBarContactList" );
-        //         let div = $(this).get(0);
-        //         if (div.scrollTop + div.clientHeight >= div.scrollHeight) {
-        //             page = page + 5;
-        //             console.log("PAging more" + limit + "' " +page + " "+query);
-        //             loadcontact();
-        //         }
+        //     $(document).ready(function() {
+        //    //     attachScrollEventListeners();
         //     });
-        // })
+
 
         $(".messages").animate({
             scrollTop: $(document).height()
@@ -933,91 +919,7 @@
         });
 
 
-        function sendchatdelete() {
-            var message = $('#comment').val().trim();
 
-            // Check if the message is empty
-            if (message.length === 0) {
-                //   console.log("Empty message");
-                return; // Exit the function
-            }
-            API_KEY = $('#api_key').val();
-            mobilenumberId = $('#selectdNumber').val();
-            $('#comment').val('');
-
-            $.ajax({
-                beforeSend: function(xhr) { // Add this line
-                    xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-                },
-                url: "/apis/sendchat",
-                method: "POST",
-                data: {
-                    message: message,
-                    mobilenumberId: mobilenumberId
-                },
-                headers: {
-                    "Authorization": "Bearer " + API_KEY // Replace "YOUR_API_KEY" with your actual API key
-                },
-                success: function(data) {
-                    console.log("updating data");
-                    var conversationElement = document.getElementById("conversation");
-                    var newElement = document.createElement("div");
-                    newElement.classList.add("row", "message-body");
-                    newElement.innerHTML = `<div class="col-sm-12 message-main-sender">
-                            <div class="sender">
-                            <div class="message-text">` + message + `</div>
-                            <span class="message-time pull-right" title="Now">Now</span>
-                            </div></div>`;
-
-                    conversationElement.appendChild(newElement);
-                    conversationElement.scrollTop = conversationElement.scrollHeight;
-                },
-                error: function(xhr, textStatus, errorThrown) {
-                    // Handle the error response
-                }
-
-            });
-
-        }
-
-
-
-        // function fetchMessages() { //new, need to replace getmsg. Not active yet.
-        //     $.ajax({
-        //         beforeSend: function(xhr) { // Add this line
-        //             xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-        //         },
-        //         url: "/apis/getMessage",
-        //         method: "POST",
-        //         data: {
-        //             message: message,
-        //             mobilenumberId: mobilenumberId
-        //         },
-        //         headers: {
-        //             "Authorization": "Bearer " + API_KEY // Replace "YOUR_API_KEY" with your actual API key
-        //         },
-        //         success: function(data) {
-        //             $('#conversation').html(data);
-        //             var elem = document.getElementById('conversation');
-        //             elem.scrollTop = elem.scrollHeight;
-
-        //         }
-        //     });
-        // }
-
-        // function newMessage1() {
-        //     message = $(".message-input input").val();
-        //     if ($.trim(message) == '') {
-        //         return false;
-        //     }
-        //     $('<li class="sent"><img src="http://emilcarlsson.se/assets/mikeross.png" alt="" /><p>' + message + '</p></li>')
-        //         .appendTo($('.messages ul'));
-        //     $('.message-input input').val(null);
-        //     $('.contact.active .preview').html('<span>You: </span>' + message);
-        //     $(".messages").animate({
-        //         scrollTop: $(document).height()
-        //     }, "fast");
-        // };
 
         $('.submit').click(function() {
             sendchat();
@@ -1038,95 +940,6 @@
                 loadcontact();
             }
         });
-
-
-
-
-
-
-        // function loadcontact() {
-        //     var query = $('#searchText').val();
-        //     $.ajax({
-        //         url: "/uis/getcontact?query=" + query + "&page=" + page + "&limit=" + limit, //socket.
-        //         method: "GET",
-        //         //   data:{customer:query},  
-        //         success: function(data) {
-        //             //                        sideBarContactList = document.createElement("sideBarContactList");
-        //             //                             $('#sideBarContactList').html(data);
-        //             $('#sideBarContactList').append(data);
-        //             sideBarContactList.append = (data);
-        //             $('#sideBar-body').html(data);
-        //         }
-        //         //  this.count=this.count+10
-        //     });
-        // }
-
-
-        function loadchat1(contact, profile) {
-            var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
-            sideBarBodies.forEach(function(element) {
-                element.classList.remove("selected");
-            });
-
-            var clickedElement = document.getElementById("sidebar-body-" + contact);
-            if (clickedElement) {
-                clickedElement.classList.add("selected");
-                $('#conv-row-head').html('');
-                $('#conversation').html('');
-
-            }
-            $.ajax({
-                url: "/uis/getrowhead/" + profile,
-                method: "GET",
-                beforeSend: function() {
-                    // Show the loading icon before making the AJAX request
-                    $('#loading-icon').show();
-                },
-                success: function(data) {
-                    $('#conv-row-head').html(data);
-
-                }
-            });
-            //  $('.heading-name-meta').html(profile);
-            $('#selectdNumber').val(contact);
-            $.ajax({
-                url: "/uis/getmsg/" + contact,
-                method: "GET",
-                success: function(data) {
-                    $('#conversation').html(data);
-                    $('#loading-icon').hide();
-                    var elem = document.getElementById('conversation');
-                    elem.scrollTop = elem.scrollHeight;
-
-
-                },
-                error: function() {
-
-                    $('#loading-icon').hide();
-                    toastr.error('An error occurred while loading data.');
-
-                }
-
-            });
-
-        }
-
-
-
-        // document.getElementById("chatForm").addEventListener("submit", function(event) {
-        //     event.preventDefault(); // Prevent the form from submitting
-
-        //     var messageInput = document.getElementById("messageInput");
-        //     var message = messageInput.value.trim();
-
-        //     if (message !== "") {
-        //         sendMessage(message); // Send the message to the API
-        //         messageInput.value = ""; // Clear the input field
-        //     }
-        // });
-
-        // Fetch messages from the server periodically
-        //  setInterval(fetchMessages, 2000); // Adjust the interval as per your requirement
     </script>
 </body>
 

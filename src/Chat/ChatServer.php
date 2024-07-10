@@ -72,11 +72,14 @@ class ChatServer implements MessageComponentInterface
     {
         $currentTime = time();
         foreach ($this->clients as $client) {
-            if ($currentTime - $this->lastPongTime[$client->resourceId] > 60) {
-                echo "Client {$client->resourceId} did not respond to ping, disconnecting.\n";
-                $client->close();
-                $this->clients->detach($client);
-                unset($this->lastPongTime[$client->resourceId]);
+            if(isset($this->lastPongTime[$client->resourceId])){
+                if ($currentTime - $this->lastPongTime[$client->resourceId] > 60) {
+                    echo "Client {$client->resourceId} did not respond to ping, disconnecting.\n";
+                    $client->close();
+                    $this->clients->detach($client);
+                    $this->unregister($client->resourceId);
+                    unset($this->lastPongTime[$client->resourceId]);
+                }
             }
         }
     }
@@ -117,7 +120,9 @@ class ChatServer implements MessageComponentInterface
                 $this->SendRecentChatContact($msgArray);
                 break;
             case "loadChathistory":
+            case  "appendchat":
                 $msgArray['client_id'] = $from->resourceId;
+             //  print_r($)
                 $this->loadChathistory($msgArray);
                 break;
             case "sendchat":
@@ -146,6 +151,7 @@ class ChatServer implements MessageComponentInterface
 
     function loadChathistory($query)
     {
+        print_r($query);
         $http = new Client();
         $response = $http->post('http://localhost/chats/loadchathistory', $query);
         $query['html'] = $response->getStringBody();
