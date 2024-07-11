@@ -209,6 +209,8 @@ class ChatsController extends AppController
             }else{
                 $query->order(['id' => 'DESC']);
             }
+
+            $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
            
             $query->limit(50);
             $query->page($postData['page']);
@@ -256,15 +258,12 @@ class ChatsController extends AppController
 
 
 
-            // $query->limit((int) $query['limit']);
-            // $query->page((int) $query['page']);
-
             if (isset($postData['limit']) && isset($postData['page'])) {
                 $query->limit((int) $postData['limit']);
                 $query->page((int) $postData['page']);
             }
 
-             $contact = $query->all();
+            $contact = $query->all();
             $this->setResponse(
                 $this->response->withStatus(201) // Created status code
                     ->withType('application/json')
