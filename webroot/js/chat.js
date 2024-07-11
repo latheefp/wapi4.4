@@ -44,8 +44,12 @@ $(document).ready(function () {
             socket.onmessage = (event) => {
                 const message = JSON.parse(event.data);
                 switch (message.type) {
-                    case "success":
-                        toastr.success(message.message);
+                    case "register":
+                        if(message.status == "success"){
+                            toastr.success(message.message);
+                        }else{
+                            toastr.error(message.message);
+                        }
                         break;
                     case "contactlist":
                         // console.log("Contact list");

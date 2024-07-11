@@ -104,16 +104,19 @@ class ChatServer implements MessageComponentInterface
             case "register":
                 $clientinfo['client_id'] = $from->resourceId;
                 $clientinfo['session_id'] = $msgArray['session_id'];
-                if($this->registerclient($clientinfo)){
-                    $query['session_id']=$msgArray['session_id'];
-                    $query['limit']=25;
-                    $query['page']=1;
-                    $query['client_id']=$from->resourceId;;;
-                    $query['query']=null;
-                   $this->SendRecentChatContact($query);
-                }else{
-                    print "Client registration failed";
-                }
+                $this->registerclient($clientinfo);
+                 
+
+                // if($this->registerclient($clientinfo)){
+                //     $query['session_id']=$msgArray['session_id'];
+                //     $query['limit']=25;
+                //     $query['page']=1;
+                //     $query['client_id']=$from->resourceId;;;
+                //     $query['query']=null;
+                //    $this->SendRecentChatContact($query);
+                // }else{
+                //     print "Client registration failed";
+                // }
                 break;
             case "loadcontact":
                 $msgArray['client_id'] = $from->resourceId;
@@ -260,17 +263,25 @@ class ChatServer implements MessageComponentInterface
             //print_r(json_decode($response->getStringBody(),true));
             //print ("Response End\n");
             $this->logmsg($response->getStringBody(), null);
-            $message['type']="success";
+            $message['type']="register";
+            $message['status']="success";
             $message['message']="Client Registered";
             $this->sendMessageToClient($clientinfo['client_id'],$message);
-            return true;
+
+         //   $query['session_id'] = $clientinfo['session_id'];
+            $clientinfo['limit'] = 25;
+            $clientinfo['page'] = 1;
+            // $query['client_id'] = $from->resourceId;
+            $clientinfo['query'] = null;
+            $this->SendRecentChatContact($clientinfo);
         }else{
             print "Something wrong while registering client. $responseCode is not 200";
            // print_r(json_decode($response->getStringBody(),true));
-            $message['type']="failed";
+           $message['type']="register";
+           $message['status']="failed";
             $message['message']="Client Registeration failed";
             $this->sendMessageToClient($clientinfo['client_id'],$message);
-            return false;
+        //    return false;
         }
 
     }

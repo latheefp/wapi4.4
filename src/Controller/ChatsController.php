@@ -118,7 +118,7 @@ class ChatsController extends AppController
                 $this->response->withStatus(500) // OK status code
                     ->withType('application/json')
                     ->withStringBody(json_encode([
-                        'message' => 'Record not found'
+                        'message' => 'Record not found to delete the session '+$data['client_id']
                     ]))
             );
         }
