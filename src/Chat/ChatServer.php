@@ -149,7 +149,7 @@ class ChatServer implements MessageComponentInterface
         print_r($query);
       //  $http = new Client();
         $http = new Client([
-            'timeout' => 120 // Timeout in seconds
+            'timeout' => 600 // Timeout in seconds
         ]);
         $response = $http->post('http://localhost/chats/loadchathistory', $query);
         $query['html'] = $response->getStringBody();
