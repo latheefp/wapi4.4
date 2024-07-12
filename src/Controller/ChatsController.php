@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Controller\AppController;
@@ -41,19 +42,19 @@ class ChatsController extends AppController
         $this->FormProtection->setConfig('unlockedActions', array(
             $formaction
         ));
-        $this->Authentication->allowUnauthenticated(['uiregister','uiunregister','sendMessage','getcontact','loadchathistory','newchat','getNewmsg']);
+        $this->Authentication->allowUnauthenticated(['uiregister', 'uiunregister', 'sendMessage', 'getcontact', 'loadchathistory', 'newchat', 'getNewmsg']);
     }
 
     function index()
     {
-       // print(getenv('CHAT_URL'));
+        // print(getenv('CHAT_URL'));
         $this->viewBuilder()->setLayout('ajax');
         $this->set('chat_url', getenv('CHAT_URL'));
-      
     }
 
 
-    public function createSession() {
+    public function createSession()
+    {
         $this->autoRender = false; // Disable view rendering
         // Validate user ID and account ID
         $userId = $this->getMyUID();
@@ -102,25 +103,25 @@ class ChatsController extends AppController
 
         $ChatTable = $this->getTableLocator()->get('ChatsSessions');
         $record = $ChatTable->find()
-        ->where(['clientid' => $data['client_id']])
-        ->first();
-     //   debug($record);
+            ->where(['clientid' => $data['client_id']])
+            ->first();
+        //   debug($record);
         if ($record && $ChatTable->delete($record)) {
             // Record deleted successfully
             $this->setResponse(
                 $this->response->withStatus(200) // OK status code
                     ->withType('application/json')
                     ->withStringBody(json_encode([
-                        'message' => 'Session '. $data['client_id'].' deleted successfully',
-                        'data'=> $record 
+                        'message' => 'Session ' . $data['client_id'] . ' deleted successfully',
+                        'data' => $record
                     ]))
             );
-        }else{
+        } else {
             $this->setResponse(
                 $this->response->withStatus(500) // OK status code
                     ->withType('application/json')
                     ->withStringBody(json_encode([
-                        'message' => 'Record not found to delete the session '+$data['client_id']
+                        'message' => 'Record not found to delete the session ' + $data['client_id']
                     ]))
             );
         }
@@ -181,18 +182,19 @@ class ChatsController extends AppController
         }
     }
 
-    public function loadchathistory(){
+    public function loadchathistory()
+    {
         $this->request->allowMethod(['post']);
         $postData = $this->request->getData();
         $this->viewBuilder()->setLayout('ajax');
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
         if ($tokeninfo) {
-         //   debug($tokeninfo);
+            //   debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
             $query = $this->getTableLocator()->get('Chats')->find();
             $query->where([
                 'contact_stream_id' => $postData['contact_stream_id'],
-                'account_id'=>$account_id,
+                'account_id' => $account_id,
                 'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
             ]); //conditions.
             $query->andWhere(function ($exp, $q) {
@@ -201,29 +203,29 @@ class ChatsController extends AppController
                     'recievearray IS NOT' => null
                 ]);
             });
-            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id','created']);
-            if(!isset($postData['direction'])){
-                $postData['direction']="up";
+            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created']);
+            if (!isset($postData['direction'])) {
+                $postData['direction'] = "up";
             }
 
-            if(!isset($postData['page'])){ //bookmark show where to start the message from.
-                if($postData['direction']=="up"){ //scrooling up, old messages
+            if (!isset($postData['page'])) { //bookmark show where to start the message from.
+                if ($postData['direction'] == "up") { //scrooling up, old messages
                     $query->order(['modified' => 'DESC']);
-                }else{
+                } else {
                     $query->order(['modified' => 'ASC']);
                 }
-            }else{
+            } else {
                 $query->order(['id' => 'DESC']);
             }
-         //   debug($query->sql();)
+            //   debug($query->sql();)
             $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
-           
+
             $query->limit(50);
             $query->page($postData['page']);
             $messages = $query->all()->toArray();
-            $this->set('messages',$messages);
-        //    $this->set('contact_stream_id',$postData['contact_stream_id']);
-        }else{
+            $this->set('messages', $messages);
+            //    $this->set('contact_stream_id',$postData['contact_stream_id']);
+        } else {
 
             $this->autoRender = false;
             $this->setResponse(
@@ -234,14 +236,15 @@ class ChatsController extends AppController
                     ]))
             );
         }
-    //    debug($query->sql());
+        //    debug($query->sql());
     }
 
 
-   
 
 
-    public function getcontact() {
+
+    public function getcontact()
+    {
 
         $this->request->allowMethod(['post']);
         // Use $this->request->getData() to retrieve POST data
@@ -254,23 +257,33 @@ class ChatsController extends AppController
         if ($tokeninfo) {
             $account_id = $tokeninfo->account_id;
 
-            $query = $this->getTableLocator()->get('Chats')->find()
-            ->select([
-                'Chats.id',
-                'Chats.created',
-                'Chats.contact_stream_id',
-                'ContactStreams.profile_name',
-                'ContactStreams.name',
-                'ContactStreams.contact_number'
-            ])
-            ->join([
-                'table' => 'contact_streams',
-                'alias' => 'ContactStreams',
-                'type' => 'INNER',
-                'conditions' => 'Chats.contact_stream_id = ContactStreams.id',
-            ])
-            ->group(['Chats.contact_stream_id'])
-            ->order(['Chats.created' => 'DESC']);
+
+            // Subquery to get the latest chat ID for each contact_stream_id
+    $subquery = $this->Chats->find()
+    ->select(['latest_id' => 'MAX(id)'])
+    ->where(['account_id' => $account_id])
+    ->group(['contact_stream_id']);
+
+// Main query to join the subquery with the chats table and contact_streams table
+$query = $this->Chats->find()
+    ->select([
+        'Chats.id',
+        'Chats.created',
+        'Chats.contact_stream_id',
+        'ContactStreams.profile_name',
+        'ContactStreams.name',
+        'ContactStreams.contact_number'
+    ])
+    ->join([
+        'table' => 'contact_streams',
+        'alias' => 'ContactStreams',
+        'type' => 'INNER',
+        'conditions' => 'Chats.contact_stream_id = ContactStreams.id',
+    ])
+    ->where([
+        'Chats.id IN' => $subquery
+    ])
+    ->order(['Chats.id' => 'DESC']);
 
 
 
@@ -300,22 +313,20 @@ class ChatsController extends AppController
                         'data' => $contact // Include saved data if needed
                     ]))
             );
-           
-        }else{
+        } else {
             $this->setResponse(
                 $this->response->withStatus(400) // Bad Request status code
                     ->withType('application/json')
                     ->withStringBody(json_encode([
-                        'message' => 'Failed to save record',
+                        'message' => 'Failed to fech the data',
                         'errors' => "Wrong token info"
                     ]))
             );
         }
-
-       
     }
 
-    function getNewmsg(){
+    function getNewmsg()
+    {
         $this->request->allowMethod(['post']);
         // Use $this->request->getData() to retrieve POST data
         $postData = $this->request->getData();
@@ -327,9 +338,9 @@ class ChatsController extends AppController
 
         // Validate the token
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
-      //  debug($tokeninfo);
+        //  debug($tokeninfo);
         if ($tokeninfo) {
-         //   $this->viewBuilder()->setLayout('ajax');
+            //   $this->viewBuilder()->setLayout('ajax');
             $query = $this->Chats->find()
                 ->where([
                     'OR' => [
@@ -337,11 +348,11 @@ class ChatsController extends AppController
                         'Chats.recievearray IS NOT NULL'
                     ],
                     'Chats.notified' => false,
-                    'account_id'=>$tokeninfo->account_id
+                    'account_id' => $tokeninfo->account_id
                 ])
                 ->order(['Chats.id' => 'ASC']);
             $newMessages = $query->all();
-            $this->set('messages',$newMessages);
+            $this->set('messages', $newMessages);
 
             $this->render('loadchathistory');
 
@@ -351,7 +362,7 @@ class ChatsController extends AppController
             if (!empty($ids)) {
                 $this->Chats->updateAll(['notified' => true], ['id IN' => $ids]);
             }
-        }else{
+        } else {
             $this->autoRender = false;
             $this->setResponse(
                 $this->response->withStatus(201) // Created status code
@@ -361,13 +372,12 @@ class ChatsController extends AppController
                     ]))
             );
         }
-
-        
     }
 
 
 
-    function newchat(){
+    function newchat()
+    {
 
         $this->request->allowMethod(['post']);
         // Use $this->request->getData() to retrieve POST data
@@ -380,20 +390,20 @@ class ChatsController extends AppController
 
         // Validate the token
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
-      //  debug($tokeninfo);
+        //  debug($tokeninfo);
         if ($tokeninfo) {
             $this->autoRender = false; // Disable view rendering
-                $data['account_id'] = $tokeninfo->account_id ;
-                $FBSettings = $this->_getFBsettings($data);
-             //   debug($FBSettings);
-                if ($FBSettings['status']['code'] !== 200) {
-                    $this->setResponse(
-                        $this->response->withStatus(201) // Created status code
-                            ->withType('application/json')
-                            ->withStringBody(json_encode([
-                                'error' => 'Wrong API key of settings'
-                            ]))
-                    );
+            $data['account_id'] = $tokeninfo->account_id;
+            $FBSettings = $this->_getFBsettings($data);
+            //   debug($FBSettings);
+            if ($FBSettings['status']['code'] !== 200) {
+                $this->setResponse(
+                    $this->response->withStatus(201) // Created status code
+                        ->withType('application/json')
+                        ->withStringBody(json_encode([
+                            'error' => 'Wrong API key of settings'
+                        ]))
+                );
             } else {
                 switch ($postData['msgtype']) {
                     case "text":
@@ -406,14 +416,14 @@ class ChatsController extends AppController
                         $sendQrow->form_data = json_encode($sendQData);
                         $sendQrow->status = "queued";
                         $sendQrow->type = "chat";
-               //         $result = [];
+                        //         $result = [];
                         $this->log('SendQueue entity before save: ' . json_encode($sendQrow), 'debug');
                         if ($sendQ->save($sendQrow)) {
                             $this->setResponse(
                                 $this->response->withStatus(201) // Created status code
                                     ->withType('application/json')
                                     ->withStringBody(json_encode([
-                                        'success' => "send queued ".$sendQrow->id
+                                        'success' => "send queued " . $sendQrow->id
                                     ]))
                             );
                         } else {
@@ -428,8 +438,7 @@ class ChatsController extends AppController
                         break;
                 }
             }
-
-        }else{
+        } else {
             $this->autoRender = false;
             $this->setResponse(
                 $this->response->withStatus(201) // Created status code
@@ -440,6 +449,4 @@ class ChatsController extends AppController
             );
         }
     }
-
-   
 }
