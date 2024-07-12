@@ -53,10 +53,16 @@ class StreamToChatBehavior extends Behavior
                     }
                 } else {
                     // Handle case where the corresponding chat record is not found
-                    debug('Chat record not found for stream_id: ' . $entity->id);
-                    debug($entity);
+                   // debug('Chat record not found for stream_id: ' . $entity->id);
+                   // debug($entity);
                 }
             }
         }
     }
 }
+
+// INSERT INTO chats (contact_stream_id, stream_id, sendarray, recievearray, account_id, created)
+// SELECT contact_stream_id, id, sendarray, recievearray, account_id, created
+// FROM streams
+// WHERE sendarray IS NOT NULL OR recievearray IS NOT NULL
+// ORDER BY created;

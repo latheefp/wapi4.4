@@ -6,8 +6,17 @@ FROM php:8.1.18-apache
 # Set the COMPOSER_ALLOW_SUPERUSER environment variable
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
+
 # Set PHP memory limit to 2G
 RUN echo "memory_limit=2G" > /usr/local/etc/php/conf.d/memory-limit.ini
+
+# Set custom PHP settings
+RUN echo "max_execution_time=600" > /usr/local/etc/php/conf.d/custom-php.ini && \
+    echo "memory_limit=512M" >> /usr/local/etc/php/conf.d/custom-php.ini && \
+    echo "post_max_size=128M" >> /usr/local/etc/php/conf.d/custom-php.ini && \
+    echo "upload_max_filesize=128M" >> /usr/local/etc/php/conf.d/custom-php.ini
+
+
 
 # Set an environment variable with the build date
 ARG BUILD_DATE
