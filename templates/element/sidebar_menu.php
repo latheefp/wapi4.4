@@ -3,7 +3,7 @@
         <!-- Add icons to the links using the .nav-icon class
              with Font Awesome Free 5.15.3 icons -->
         <li class="nav-item menu-open">
-            <a href="/dashboard" class="nav-link">
+            <a href="/dashboards" class="nav-link">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
                 <p>
                     Dashboard
@@ -13,7 +13,7 @@
         </li>
 
         <li class="nav-item menu-open">
-            <a href="/uis/index" class="nav-link">
+            <a href="/chats" class="nav-link">
                 <i class="nav-icon fas fa-comments"></i>
                 <p>
                     Chat Console<i class="right fas fa-angle-left"></i>
