@@ -12,9 +12,9 @@ use Ratchet\Server\IoServer;
 use React\EventLoop\LoopInterface;
 use Cake\Http\Client;
 
-$http = new Client([
-    'timeout' => 300 // Timeout in seconds
-]);
+// $http = new Client([
+//     'timeout' => 300 // Timeout in seconds
+// ]);
 
 
 class ChatServer implements MessageComponentInterface
@@ -147,7 +147,10 @@ class ChatServer implements MessageComponentInterface
     function loadChathistory($query)
     {
         print_r($query);
-        $http = new Client();
+      //  $http = new Client();
+        $http = new Client([
+            'timeout' => 120 // Timeout in seconds
+        ])
         $response = $http->post('http://localhost/chats/loadchathistory', $query);
         $query['html'] = $response->getStringBody();
         $this->sendMessageToClient($query['client_id'], $query);
