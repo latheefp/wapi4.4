@@ -348,9 +348,9 @@ class ChatsController extends AppController
 
             // Update all newMessages to set notified to true
             $ids = $query->extract('id')->toList();
-            // if (!empty($ids)) {
-            //     $this->Chats->updateAll(['notified' => true], ['id IN' => $ids]);
-            // }
+            if (!empty($ids)) {
+                $this->Chats->updateAll(['notified' => true], ['id IN' => $ids]);
+            }
         }else{
             $this->autoRender = false;
             $this->setResponse(
