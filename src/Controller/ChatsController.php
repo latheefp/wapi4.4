@@ -187,6 +187,59 @@ class ChatsController extends AppController
         if ($tokeninfo) {
          //   debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
+            $query = $this->getTableLocator()->get('Chats')->find();
+            $query->where(['contact_stream_id' => $postData['contact_stream_id'],'account_id'=>$account_id]); //conditions.
+            $query->andWhere(function ($exp, $q) {
+                return $exp->or_([
+                    'sendarray IS NOT' => null,
+                    'recievearray IS NOT' => null
+                ]);
+            });
+            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id','created']);
+            if(!isset($postData['direction'])){
+                $postData['direction']="up";
+            }
+
+            if(!isset($postData['page'])){ //bookmark show where to start the message from.
+                if($postData['direction']=="up"){ //scrooling up, old messages
+                    $query->order(['modified' => 'DESC']);
+                }else{
+                    $query->order(['modified' => 'ASC']);
+                }
+            }else{
+                $query->order(['id' => 'DESC']);
+            }
+         //   debug($query->sql();)
+            $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
+           
+            $query->limit(50);
+            $query->page($postData['page']);
+            $messages = $query->all()->toArray();
+            $this->set('messages',$messages);
+            $this->set('contact_stream_id',$postData['contact_stream_id']);
+        }else{
+
+            $this->autoRender = false;
+            $this->setResponse(
+                $this->response->withStatus(201) // Created status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'error' => 'Wrong token'
+                    ]))
+            );
+        }
+    //    debug($query->sql());
+    }
+
+
+    public function loadchathistoryolddelete(){
+        $this->request->allowMethod(['post']);
+        $postData = $this->request->getData();
+        $this->viewBuilder()->setLayout('ajax');
+        $tokeninfo = $this->Token->validateToken($postData['session_id']);
+        if ($tokeninfo) {
+         //   debug($tokeninfo);
+            $account_id = $tokeninfo->account_id;
             $query = $this->getTableLocator()->get('Streams')->find();
             $query->where(['contact_stream_id' => $postData['contact_stream_id'],'account_id'=>$account_id]); //conditions.
             $query->andWhere(function ($exp, $q) {
@@ -209,7 +262,7 @@ class ChatsController extends AppController
             }else{
                 $query->order(['id' => 'DESC']);
             }
-
+         //   debug($query->sql();)
             $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
            
             $query->limit(50);
@@ -228,8 +281,9 @@ class ChatsController extends AppController
                     ]))
             );
         }
-     //   debug($query->sql());
+        debug($query->sql());
     }
+
 
     public function getcontact() {
 
