@@ -25,8 +25,9 @@ class ChatsTableTest extends TestCase
      */
     protected $fixtures = [
         'app.Chats',
+        'app.ContactStreams',
         'app.Accounts',
-        'app.Users',
+        'app.Sessions',
     ];
 
     /**

@@ -144,9 +144,11 @@ $(document).ready(function () {
                 const contactList = document.getElementById('sideBarContactList');
 
                 contacts.forEach(contact => {
+                    console.log(contact.ContactStreams);
                     const contactStreamId = contact.contact_stream_id;
-                    const name = contact.name || 'No Name';
-                    const contactNumber = contact.contact_number;
+                    const profile = contact.ContactStreams.profile_name;
+                    const name = contact.ContactStreams.name ||  contact.ContactStreams.contact_number;
+                    const contactNumber = contact.ContactStreams.contact_number;
                     const created = new Date(contact.created);
                     const timeAgo = timeAgoInWords(created);
 
@@ -159,10 +161,12 @@ $(document).ready(function () {
                                 <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="${name}">
                             </div>
                         </div>
-                        <div class="col-sm-9 col-xs-9 sideBar-main" onclick="loadchat(${contactStreamId},'${name}')">
+                        <div class="col-sm-9 col-xs-9 sideBar-main" onclick="loadchat('${contactStreamId}','${name}','${profile}')">
                             <div class="row">
                                 <div class="col-sm-6 col-xs-6 sideBar-name">
                                     <span class="name-meta" title="${contactNumber}">${name}</span>
+                                   
+                                    <span class="name-lastmsg-${contactStreamId}" title="${contactNumber}"></span>
                                 </div>
                                 <div class="col-sm-6 col-xs-6 pull-right sideBar-time">
                                     <span class="time-meta pull-right" title="${formatDate(created)}">${timeAgo}</span>
@@ -239,7 +243,7 @@ $(document).ready(function () {
     }
 
 
-    function loadchat(contact, profile) {
+    function loadchat(contact, name, profile) {
         var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
         sideBarBodies.forEach(function (element) {
             element.classList.remove("selected");
@@ -252,19 +256,45 @@ $(document).ready(function () {
             $('#conversation').html('');
 
         }
+        let displayName = '';
 
-        $.ajax({
-            url: "/uis/getrowhead/" + profile,  //this is the chatbox header. 
-            method: "GET",
-            beforeSend: function () {
-                // Show the loading icon before making the AJAX request
-                $('#loading-icon').show();
-            },
-            success: function (data) {
-                $('#conv-row-head').html(data);
+        if (name) {
+            displayName = name;
+        } else if (profile) {
+            displayName = profile;
+        } else {
+            displayName = contact;
+        }
 
-            }
-        });
+
+        $('#conv-row-head').html(`
+            <div class="col-sm-2 col-md-1 col-xs-3 heading-avatar">
+                <div class="heading-avatar-icon">
+                    <img src="https://bootdey.com/img/Content/avatar/avatar6.png">
+                </div>
+            </div>
+            <div class="col-sm-8 col-xs-7 heading-name">
+                <a class="heading-name-meta">${displayname}</a>
+                <span class="heading-online">Online</span>
+            </div>
+            <div class="col-sm-1 col-xs-1 heading-dot pull-right">
+                <i class="fa fa-ellipsis-v fa-2x pull-right" aria-hidden="true"></i>
+            </div>
+        `);
+        
+
+        // $.ajax({
+        //     url: "/uis/getrowhead/" + profile,  //this is the chatbox header. 
+        //     method: "GET",
+        //     beforeSend: function () {
+        //         // Show the loading icon before making the AJAX request
+        //         $('#loading-icon').show();
+        //     },
+        //     success: function (data) {
+        //         $('#conv-row-head').html();
+
+        //     }
+        // });
 
         //  $('.heading-name-meta').html(profile);
         $('#selectdNumber').val(contact);

@@ -243,17 +243,35 @@ class ChatsController extends AppController
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
         if ($tokeninfo) {
             $account_id = $tokeninfo->account_id;
-            $query = $this->getTableLocator()->get('RecentChats')->find();
+
+            $query = $this->getTableLocator()->get('Chats')->find()
+            ->select([
+                'Chats.id',
+                'Chats.created',
+                'Chats.contact_stream_id',
+                'ContactStreams.profile_name',
+                'ContactStreams.name',
+                'ContactStreams.contact_number'
+            ])
+            ->join([
+                'table' => 'contact_streams',
+                'alias' => 'ContactStreams',
+                'type' => 'INNER',
+                'conditions' => 'Chats.contact_stream_id = ContactStreams.id',
+            ])
+            ->group(['Chats.contact_stream_id'])
+            ->order(['Chats.created' => 'DESC']);
+
+
+
             if (isset($postData)) {
-                $query->where(
-                    [
-                        'AND' => ['account_id' => $account_id],
-                        'OR' => [
-                            'profile_name  LIKE' => '%' . $postData['query'] . '%',
-                            'contact_number  LIKE' => '%' . $postData['query'] . '%',
-                        ]
-                    ]
-                );
+                $query->where([
+                    'Chats.account_id' => $account_id,
+                    'OR' => [
+                        'ContactStreams.profile_name LIKE' => '%' . $postData['query'] . '%',
+                        'ContactStreams.contact_number LIKE' => '%' . $postData['query'] . '%',
+                    ],
+                ]);
             }
 
 
@@ -279,7 +297,7 @@ class ChatsController extends AppController
                     ->withType('application/json')
                     ->withStringBody(json_encode([
                         'message' => 'Failed to save record',
-                        'errors' => $newRecord->getErrors()
+                        'errors' => "Wrong token info"
                     ]))
             );
         }

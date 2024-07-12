@@ -46,7 +46,7 @@ class StreamsTable extends Table
     public function initialize(array $config): void
     {
         parent::initialize($config);
-
+        $this->addBehavior('StreamToChat');
         $this->setTable('streams');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');

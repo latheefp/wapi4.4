@@ -9,15 +9,16 @@ use Cake\ORM\Entity;
  * Chat Entity
  *
  * @property int $id
- * @property string $sendarray
- * @property string $rcvarray
- * @property int $mobile_number
+ * @property string|null $sendarray
+ * @property string|null $recievearray
  * @property \Cake\I18n\FrozenTime $created
  * @property int|null $contact_stream_id
  * @property int|null $account_id
+ * @property int $stream_id
  *
+ * @property \App\Model\Entity\ContactStream $contact_stream
  * @property \App\Model\Entity\Account $account
- * @property \App\Model\Entity\User $user
+ * @property \App\Model\Entity\Session[] $sessions
  */
 class Chat extends Entity
 {
@@ -32,12 +33,13 @@ class Chat extends Entity
      */
     protected $_accessible = [
         'sendarray' => true,
-        'rcvarray' => true,
-        'mobile_number' => true,
+        'recievearray' => true,
         'created' => true,
         'contact_stream_id' => true,
         'account_id' => true,
+        'stream_id' => true,
+        'contact_stream' => true,
         'account' => true,
-        'user' => true,
+        'sessions' => true,
     ];
 }

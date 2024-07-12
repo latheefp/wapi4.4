@@ -11,7 +11,9 @@ use Cake\Validation\Validator;
 /**
  * Chats Model
  *
+ * @property \App\Model\Table\ContactStreamsTable&\Cake\ORM\Association\BelongsTo $ContactStreams
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
+ * @property \App\Model\Table\SessionsTable&\Cake\ORM\Association\BelongsToMany $Sessions
  *
  * @method \App\Model\Entity\Chat newEmptyEntity()
  * @method \App\Model\Entity\Chat newEntity(array $data, array $options = [])
@@ -53,6 +55,10 @@ class ChatsTable extends Table
         $this->belongsTo('Accounts', [
             'foreignKey' => 'account_id',
         ]);
+        $this->belongsTo('Streams', [
+            'foreignKey' => 'stream_id',
+            'joinType' => 'INNER',
+        ]);
         $this->belongsToMany('Sessions', [
             'foreignKey' => 'chat_id',
             'targetForeignKey' => 'session_id',
@@ -71,19 +77,12 @@ class ChatsTable extends Table
         $validator
             ->scalar('sendarray')
             ->maxLength('sendarray', 4294967295)
-            ->requirePresence('sendarray', 'create')
-            ->notEmptyString('sendarray');
+            ->allowEmptyString('sendarray');
 
         $validator
-            ->scalar('rcvarray')
-            ->maxLength('rcvarray', 4294967295)
-            ->requirePresence('rcvarray', 'create')
-            ->notEmptyString('rcvarray');
-
-        $validator
-            ->integer('mobile_number')
-            ->requirePresence('mobile_number', 'create')
-            ->notEmptyString('mobile_number');
+            ->scalar('recievearray')
+            ->maxLength('recievearray', 4294967295)
+            ->allowEmptyString('recievearray');
 
         $validator
             ->integer('contact_stream_id')
@@ -92,6 +91,10 @@ class ChatsTable extends Table
         $validator
             ->integer('account_id')
             ->allowEmptyString('account_id');
+
+        $validator
+            ->integer('stream_id')
+            ->notEmptyString('stream_id');
 
         return $validator;
     }
@@ -107,6 +110,7 @@ class ChatsTable extends Table
     {
         $rules->add($rules->existsIn('contact_stream_id', 'ContactStreams'), ['errorField' => 'contact_stream_id']);
         $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
+        $rules->add($rules->existsIn('stream_id', 'Streams'), ['errorField' => 'stream_id']);
 
         return $rules;
     }
