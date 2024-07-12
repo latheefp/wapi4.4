@@ -12,6 +12,9 @@ use Ratchet\Server\IoServer;
 use React\EventLoop\LoopInterface;
 use Cake\Http\Client;
 
+$http = new Client([
+    'timeout' => 300 // Timeout in seconds
+]);
 
 
 class ChatServer implements MessageComponentInterface
