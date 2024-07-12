@@ -3,18 +3,20 @@ namespace App\Controller;
 
 use App\Controller\AppController;
 use Cake\Event\EventInterface;
-use Cake\Http\Client;
-use App\Chat\ChatServer;
+// use Cake\Http\Client;
+// use App\Chat\ChatServer;
 
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
+// use Cake\Filesystem\Folder;
+// use Cake\Filesystem\File;
 
 
 
-use Cake\ORM\TableRegistry;
+//use Cake\ORM\TableRegistry;
 use Cake\I18n\FrozenTime;
-use Cake\Core\Configure;
-use Cake\Event\Event;
+// use Cake\Core\Configure;
+// use Cake\Event\Event;
+
+
 
 class ChatsController extends AppController
 {
@@ -39,7 +41,7 @@ class ChatsController extends AppController
         $this->FormProtection->setConfig('unlockedActions', array(
             $formaction
         ));
-        $this->Authentication->allowUnauthenticated(['uiregister','uiunregister','sendMessage','getcontact','loadchathistory','newchat']);
+        $this->Authentication->allowUnauthenticated(['uiregister','uiunregister','sendMessage','getcontact','loadchathistory','newchat','getNewmsg']);
     }
 
     function index()
@@ -188,7 +190,11 @@ class ChatsController extends AppController
          //   debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
             $query = $this->getTableLocator()->get('Chats')->find();
-            $query->where(['contact_stream_id' => $postData['contact_stream_id'],'account_id'=>$account_id]); //conditions.
+            $query->where([
+                'contact_stream_id' => $postData['contact_stream_id'],
+                'account_id'=>$account_id,
+                'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
+            ]); //conditions.
             $query->andWhere(function ($exp, $q) {
                 return $exp->or_([
                     'sendarray IS NOT' => null,
@@ -216,7 +222,7 @@ class ChatsController extends AppController
             $query->page($postData['page']);
             $messages = $query->all()->toArray();
             $this->set('messages',$messages);
-            $this->set('contact_stream_id',$postData['contact_stream_id']);
+        //    $this->set('contact_stream_id',$postData['contact_stream_id']);
         }else{
 
             $this->autoRender = false;
@@ -232,57 +238,7 @@ class ChatsController extends AppController
     }
 
 
-    public function loadchathistoryolddelete(){
-        $this->request->allowMethod(['post']);
-        $postData = $this->request->getData();
-        $this->viewBuilder()->setLayout('ajax');
-        $tokeninfo = $this->Token->validateToken($postData['session_id']);
-        if ($tokeninfo) {
-         //   debug($tokeninfo);
-            $account_id = $tokeninfo->account_id;
-            $query = $this->getTableLocator()->get('Streams')->find();
-            $query->where(['contact_stream_id' => $postData['contact_stream_id'],'account_id'=>$account_id]); //conditions.
-            $query->andWhere(function ($exp, $q) {
-                return $exp->or_([
-                    'sendarray IS NOT' => null,
-                    'recievearray IS NOT' => null
-                ]);
-            });
-            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id','created']);
-            if(!isset($postData['direction'])){
-                $postData['direction']="up";
-            }
-
-            if(!isset($postData['page'])){ //bookmark show where to start the message from.
-                if($postData['direction']=="up"){ //scrooling up, old messages
-                    $query->order(['modified' => 'DESC']);
-                }else{
-                    $query->order(['modified' => 'ASC']);
-                }
-            }else{
-                $query->order(['id' => 'DESC']);
-            }
-         //   debug($query->sql();)
-            $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
-           
-            $query->limit(50);
-            $query->page($postData['page']);
-            $messages = $query->all()->toArray();
-            $this->set('messages',$messages);
-            $this->set('contact_stream_id',$postData['contact_stream_id']);
-        }else{
-
-            $this->autoRender = false;
-            $this->setResponse(
-                $this->response->withStatus(201) // Created status code
-                    ->withType('application/json')
-                    ->withStringBody(json_encode([
-                        'error' => 'Wrong token'
-                    ]))
-            );
-        }
-        debug($query->sql());
-    }
+   
 
 
     public function getcontact() {
@@ -357,6 +313,56 @@ class ChatsController extends AppController
         }
 
        
+    }
+
+    function getNewmsg(){
+        $this->request->allowMethod(['post']);
+        // Use $this->request->getData() to retrieve POST data
+        $postData = $this->request->getData();
+
+        //debug($postData);
+
+        $this->viewBuilder()->setLayout('ajax');
+
+
+        // Validate the token
+        $tokeninfo = $this->Token->validateToken($postData['session_id']);
+      //  debug($tokeninfo);
+        if ($tokeninfo) {
+         //   $this->viewBuilder()->setLayout('ajax');
+            $query = $this->Chats->find()
+                ->where([
+                    'OR' => [
+                        'Chats.sendarray IS NOT NULL',
+                        'Chats.recievearray IS NOT NULL'
+                    ],
+                    'Chats.notified' => false,
+                    'account_id'=>$tokeninfo->account_id
+                ])
+                ->order(['Chats.id' => 'ASC']);
+            $newMessages = $query->all();
+            $this->set('messages',$newMessages);
+
+            $this->render('loadchathistory');
+
+
+            // Update all newMessages to set notified to true
+            $ids = $query->extract('id')->toList();
+            // if (!empty($ids)) {
+            //     $this->Chats->updateAll(['notified' => true], ['id IN' => $ids]);
+            // }
+        }else{
+            $this->autoRender = false;
+            $this->setResponse(
+                $this->response->withStatus(201) // Created status code
+                    ->withType('application/json')
+                    ->withStringBody(json_encode([
+                        'error' => 'Wrong token'
+                    ]))
+            );
+        }
+
+        
     }
 
 

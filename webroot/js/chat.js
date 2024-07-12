@@ -16,7 +16,7 @@ $(document).ready(function () {
         method: 'GET',
         dataType: 'json',
         success: function (response) {
-            console.log(response);
+         //   console.log(response);
             sessionId = response.data.session_id;
 
             // socket = new WebSocket('ws://localhost:8080'); // Use the declared socket variable
@@ -144,7 +144,7 @@ $(document).ready(function () {
                 const contactList = document.getElementById('sideBarContactList');
 
                 contacts.forEach(contact => {
-                    console.log(contact.ContactStreams);
+                  //  console.log(contact.ContactStreams);
                     const contactStreamId = contact.contact_stream_id;
                     const profile = contact.ContactStreams.profile_name;
                     const name = contact.ContactStreams.name ||  contact.ContactStreams.contact_number;
@@ -229,7 +229,7 @@ $(document).ready(function () {
     }
 
     function loadcontact() {
-        console.log("Loading more contacts by scrolling down");
+       // console.log("Loading more contacts by scrolling down");
         var query = $('#searchText').val();
 
         const message = {
@@ -243,7 +243,8 @@ $(document).ready(function () {
     }
 
 
-    function loadchat(contact, name, profile) {
+    function loadchatold(contact, name, profile) {
+        alert(contact+ " " + name+ " "+ profile);
         var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
         sideBarBodies.forEach(function (element) {
             element.classList.remove("selected");
@@ -254,7 +255,6 @@ $(document).ready(function () {
             clickedElement.classList.add("selected");
             $('#conv-row-head').html('');
             $('#conversation').html('');
-
         }
         let displayName = '';
 
@@ -283,20 +283,6 @@ $(document).ready(function () {
         `);
         
 
-        // $.ajax({
-        //     url: "/uis/getrowhead/" + profile,  //this is the chatbox header. 
-        //     method: "GET",
-        //     beforeSend: function () {
-        //         // Show the loading icon before making the AJAX request
-        //         $('#loading-icon').show();
-        //     },
-        //     success: function (data) {
-        //         $('#conv-row-head').html();
-
-        //     }
-        // });
-
-        //  $('.heading-name-meta').html(profile);
         $('#selectdNumber').val(contact);
 
 
@@ -372,7 +358,10 @@ function disableScroll(conversationDiv) {
 
 
 
-function loadchat(contact_stream_id, profile) {
+//function loadchatold(contact_stream_id, profile) {
+ function loadchat(contact_stream_id, name, profile) {    
+    $('#loading-icon').show();
+    console.log(contact_stream_id+ " " + name+ " "+ profile);
     var sideBarBodies = document.querySelectorAll(".side-one .sideBar-body");
 
     sideBarBodies.forEach(function (element) {
@@ -387,18 +376,48 @@ function loadchat(contact_stream_id, profile) {
 
     }
 
-    $.ajax({
-        url: "/uis/getrowhead/" + profile,  //this is the chatbox header. 
-        method: "GET",
-        beforeSend: function () {
-            // Show the loading icon before making the AJAX request
-            $('#loading-icon').show();
-        },
-        success: function (data) {
-            $('#conv-row-head').html(data);
 
-        }
-    });
+    let displayName = '';
+
+    if (name) {
+        displayName = name;
+    } else if (profile) {
+        displayName = profile;
+    } else {
+        displayName = contact;
+    }
+
+    // $.ajax({
+    //     url: "/uis/getrowhead/" + profile,  //this is the chatbox header. 
+    //     method: "GET",
+    //     beforeSend: function () {
+    //         // Show the loading icon before making the AJAX request
+    //         $('#loading-icon').show();
+    //     },
+    //     success: function (data) {
+    //         $('#conv-row-head').html(data);
+
+    //     }
+    // });
+
+
+
+    
+    $('#conv-row-head').html(`
+        <div class="col-sm-2 col-md-1 col-xs-3 heading-avatar">
+            <div class="heading-avatar-icon">
+                <img src="https://bootdey.com/img/Content/avatar/avatar6.png">
+            </div>
+        </div>
+        <div class="col-sm-8 col-xs-7 heading-name">
+            <a class="heading-name-meta">${displayName}</a>
+            <span class="heading-online">Online</span>
+        </div>
+        <div class="col-sm-1 col-xs-1 heading-dot pull-right">
+            <i class="fa fa-ellipsis-v fa-2x pull-right" aria-hidden="true"></i>
+        </div>
+    `);
+    
 
     //  $('.heading-name-meta').html(profile);
     $('#selectdNumber').val(contact_stream_id);

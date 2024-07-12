@@ -12,6 +12,13 @@ use Ratchet\Server\IoServer;
 use React\EventLoop\LoopInterface;
 use Cake\Http\Client;
 
+
+
+
+
+use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
+
 // $http = new Client([
 //     'timeout' => 300 // Timeout in seconds
 // ]);
@@ -158,7 +165,9 @@ class ChatServer implements MessageComponentInterface
 
     function SendRecentChatContact($query){ //function to send latest contact list 
         print "CAlling sendRcentContact function. ";
-        $http = new Client();
+        $http = new Client([
+            'timeout' => 600 // Timeout in seconds
+        ]);
         $response = $http->post('http://localhost/chats/getcontact', $query);
        // $this->logmsg($response->getStringBody(), "contact list for initial request");
         $message['type']="contactlist";
@@ -209,41 +218,47 @@ class ChatServer implements MessageComponentInterface
 
     public function pollDatabase()
     {
-      //  print "Polling DB \n";
-        // Replace with your actual database query logic
-        $newMessages = $this->getNewMessagesFromDatabase();
-
-      //  print_r($newMessages);
-
-        foreach ($newMessages as $message) {
+        
+        $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
+        $activeSessions = $ChatsSessionsTable->find()
+            ->where(['active' => 1]);
+        foreach ($activeSessions as $key => $val) {
+            $client_match=false;
             foreach ($this->clients as $client) {
-                // Add logic to determine which clients should receive the message
-                if ($this->shouldReceiveMessage($client, $message)) {
-                    $client->send(json_encode($message));
+                if ($client->resourceId == $val->clientid ) {
+                    $query['session_id']=$val->token;
+                    $query['client_id']=$val->clientid;
+                    $http = new Client([
+                        'timeout' => 600 // Timeout in seconds
+                    ]);
+                    $response = $http->post('http://localhost/chats/getNewmsg', $query);
+                  //  debug($response);
+                    $query['type']="loadChathistory";
+                    $query['html'] = $response->getStringBody();
+                    if(empty($query['html'])){
+                         print "No new message for $val->account_id \n";
+                    }else{
+                        print "Sending message to $val->account_id with Client ID $val->clientid \n";
+                        $this->sendMessageToClient($query['client_id'], $query);
+                    }
+                    $client_match=true;
+                   
                 }
+            }  
+            
+            if(!$client_match){
+                print "$val->clientid is not active, unregistering \n";
+                $this->unregister($val->clientid);
             }
         }
     }
 
-    // Mock function to fetch new messages from the database
-    protected function getNewMessagesFromDatabase()
-    {
-        // Replace with actual database fetch logic
-        // return [
-        //     ['user_id' => 2, 'content' => 'New message from DB2!'],
-        //     ['user_id' => 3, 'content' => 'New message from DB!3'],
-        //     ['user_id' => 5, 'content' => 'New message from DB!5'],
-        //     ['user_id' => 6, 'content' => 'New message from DB!6']
-        // ];
-        return [];
-    }
-
-    // Mock function to determine if a client should receive the message
-    protected function shouldReceiveMessage($client, $message)
-    {
-        // Add your logic here
-        return true;
-    }
+   
+    // protected function shouldReceiveMessage($client, $message)
+    // {
+    //     // Add your logic here
+    //     return true;
+    // }
 
 
 

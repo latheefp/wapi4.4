@@ -1,10 +1,3 @@
-<!-- <div class="row message-previous">
-      <div class="col-sm-12 previous">
-          <a onclick="previous(this)" id="<?= $contact_stream_id ?>" name="20">
-              Show Previous Message!
-          </a>
-      </div>
-  </div> -->
 
   <?php
   if(is_array(($messages))){

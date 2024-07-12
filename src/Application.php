@@ -133,7 +133,8 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 'sendMessage',
                 'getcontact',
                 'loadchathistory',
-                'newchat'
+                'newchat',
+                'getNewmsg'
             ];
          //   debug("Action is ". $request->getParam('action'));
             $actionToCheck = $request->getParam('action');

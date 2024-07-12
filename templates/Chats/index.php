@@ -13,8 +13,9 @@
     <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <?=
+    #$timestamp = time();
     $this->Html->script([
-          '/js/chat.js',
+        "/js/chat.js",
         '/plugins/jquery/jquery.min',
         '/plugins/bootstrap/js/bootstrap.bundle.min',
         '/plugins/toastr/toastr.min'
