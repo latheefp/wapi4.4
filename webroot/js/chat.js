@@ -68,6 +68,7 @@ $(document).ready(function () {
                         //just ingnore ping.
                         break;
                     case "loadChathistory":
+                    case "livechat": 
                         if (message['error']) {
                             toastr.warning(message.error);
                         } else {

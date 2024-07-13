@@ -19917,3 +19917,7 @@
 127.0.0.1 - - [12/Jul/2024:20:49:56 +0000] "POST /chats/getNewmsg HTTP/1.1" 200 3726 "-" "CakePHP"
 127.0.0.1 - - [12/Jul/2024:20:50:02 +0000] "POST /chats/getNewmsg HTTP/1.1" 200 3726 "-" "CakePHP"
 127.0.0.1 - - [12/Jul/2024:20:50:05 +0000] "POST /chats/uiunregister HTTP/1.1" 200 436 "-" "CakePHP"
+172.27.0.1 - - [12/Jul/2024:21:30:20 +0000] "POST /chats/getcontact HTTP/1.1" 400 420 "-" "PostmanRuntime/7.39.0"
+172.27.0.1 - - [12/Jul/2024:21:31:23 +0000] "POST /chats/getcontact HTTP/1.1" 500 1122477 "-" "PostmanRuntime/7.39.0"
+172.27.0.1 - - [12/Jul/2024:21:41:13 +0000] "POST /chats/getcontact HTTP/1.1" 500 1122467 "-" "PostmanRuntime/7.39.0"
+172.27.0.1 - - [12/Jul/2024:22:05:01 +0000] "POST /chats/getcontact HTTP/1.1" 201 4640 "-" "PostmanRuntime/7.39.0"

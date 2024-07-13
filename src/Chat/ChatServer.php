@@ -154,7 +154,6 @@ class ChatServer implements MessageComponentInterface
     function loadChathistory($query)
     {
         print_r($query);
-      //  $http = new Client();
         $http = new Client([
             'timeout' => 600 // Timeout in seconds
         ]);
@@ -169,7 +168,6 @@ class ChatServer implements MessageComponentInterface
             'timeout' => 600 // Timeout in seconds
         ]);
         $response = $http->post('http://localhost/chats/getcontact', $query);
-       // $this->logmsg($response->getStringBody(), "contact list for initial request");
         $message['type']="contactlist";
         $message['message']=json_decode( $response->getStringBody(),true);
         $this->sendMessageToClient($query['client_id'], $message);
@@ -226,14 +224,14 @@ class ChatServer implements MessageComponentInterface
             $client_match=false;
             foreach ($this->clients as $client) {
                 if ($client->resourceId == $val->clientid ) {
+                    $query['type']="livechat";
                     $query['session_id']=$val->token;
                     $query['client_id']=$val->clientid;
                     $http = new Client([
                         'timeout' => 600 // Timeout in seconds
                     ]);
                     $response = $http->post('http://localhost/chats/getNewmsg', $query);
-                  //  debug($response);
-                    $query['type']="loadChathistory";
+                  
                     $query['html'] = $response->getStringBody();
                     if(empty($query['html'])){
                          print "No new message for $val->account_id \n";
@@ -253,12 +251,6 @@ class ChatServer implements MessageComponentInterface
         }
     }
 
-   
-    // protected function shouldReceiveMessage($client, $message)
-    // {
-    //     // Add your logic here
-    //     return true;
-    // }
 
 
 
@@ -269,9 +261,6 @@ class ChatServer implements MessageComponentInterface
         $response = $http->post('http://localhost/chats/uiregister', $clientinfo);
         $responseCode = $response->getStatusCode();
         if($responseCode==201){
-          //  print ("Response\n");
-            //print_r(json_decode($response->getStringBody(),true));
-            //print ("Response End\n");
             $this->logmsg($response->getStringBody(), null);
             $message['type']="register";
             $message['status']="success";
