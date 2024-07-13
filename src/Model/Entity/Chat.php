@@ -11,6 +11,7 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property string|null $sendarray
  * @property string|null $recievearray
+ * @property string|null $type
  * @property \Cake\I18n\FrozenTime $created
  * @property int|null $contact_stream_id
  * @property int|null $account_id
@@ -18,6 +19,7 @@ use Cake\ORM\Entity;
  *
  * @property \App\Model\Entity\ContactStream $contact_stream
  * @property \App\Model\Entity\Account $account
+ * @property \App\Model\Entity\Stream $stream
  * @property \App\Model\Entity\Session[] $sessions
  */
 class Chat extends Entity
@@ -34,12 +36,14 @@ class Chat extends Entity
     protected $_accessible = [
         'sendarray' => true,
         'recievearray' => true,
+        'type' => true,
         'created' => true,
         'contact_stream_id' => true,
         'account_id' => true,
         'stream_id' => true,
         'contact_stream' => true,
         'account' => true,
+        'stream' => true,
         'sessions' => true,
     ];
 }

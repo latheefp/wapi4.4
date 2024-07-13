@@ -20,6 +20,7 @@ class StreamToChatBehavior extends Behavior
                 'recievearray' => $entity->recievearray,
                 'account_id' => $entity->account_id,
                 'created' => $entity->created,
+                'type' => $entity->type
             ]);
 
             if ($chatsTable->save($chat)) {
@@ -61,8 +62,8 @@ class StreamToChatBehavior extends Behavior
     }
 }
 
-// INSERT INTO chats (contact_stream_id, stream_id, sendarray, recievearray, account_id, created)
-// SELECT contact_stream_id, id, sendarray, recievearray, account_id, created
+// INSERT INTO chats (contact_stream_id, stream_id, sendarray, recievearray, account_id, created, type)
+// SELECT contact_stream_id, id, sendarray, recievearray, account_id, created,type
 // FROM streams
 // WHERE sendarray IS NOT NULL OR recievearray IS NOT NULL
 // ORDER BY created;

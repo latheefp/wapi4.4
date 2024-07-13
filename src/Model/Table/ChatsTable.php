@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\ContactStreamsTable&\Cake\ORM\Association\BelongsTo $ContactStreams
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
+ * @property \App\Model\Table\StreamsTable&\Cake\ORM\Association\BelongsTo $Streams
  * @property \App\Model\Table\SessionsTable&\Cake\ORM\Association\BelongsToMany $Sessions
  *
  * @method \App\Model\Entity\Chat newEmptyEntity()
@@ -83,6 +84,11 @@ class ChatsTable extends Table
             ->scalar('recievearray')
             ->maxLength('recievearray', 4294967295)
             ->allowEmptyString('recievearray');
+
+        $validator
+            ->scalar('type')
+            ->maxLength('type', 18)
+            ->allowEmptyString('type');
 
         $validator
             ->integer('contact_stream_id')

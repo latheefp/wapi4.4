@@ -23,15 +23,19 @@ class TestsController extends AppController
     function test()
     {
         $this->viewBuilder()->setLayout('ajax');
-        $cmd = ROOT . DS . "bin/cake upload -i 34 > /dev/null 2>&1 &";
-        debug($cmd);
-        $cmd = ROOT . DS . "bin/contactupload.sh 34 > /dev/null 2>&1 &";
-        debug($cmd);
-        exec($cmd);
-  
-        $output = shell_exec($cmd);
+        $json = '{"messaging_product":"whatsapp","recipient_type":"individual","type":"image","to":"919745306070","image":{"id":"1085291162545543","caption":"from Sanil Tharayil(919740545247)"}}';
+        $send_array = json_decode($this->_removeTrailingCommas($json), true);
+        debug($send_array);
 
-        debug($output);
+    }
+    function _removeTrailingCommas($json)
+    {
+        //  debug($json);
+        if (isset($json) && is_string($json)) {
+            $json = preg_replace('/,\s*([\]}])/m', '$1', $json);
+            return $json;
+        }
+        return $json;
     }
 
     function redistest()

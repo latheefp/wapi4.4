@@ -39,6 +39,9 @@ use Authentication\Middleware\AuthenticationMiddleware;
 use Cake\Routing\Router;
 use Psr\Http\Message\ServerRequestInterface;
 
+
+use App\Event\ChatEventListener;
+use Cake\Event\EventManager;
 /**
  * Application setup class.
  *
@@ -76,6 +79,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         $this->addPlugin('Authentication');
 
         // Load more plugins here
+
+
+        $eventListener = new ChatEventListener();
+        EventManager::instance()->on($eventListener);
     }
 
     /**
@@ -174,6 +181,8 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         $this->addPlugin('Migrations');
 
         // Load more plugins here
+
+     
     }
 
     public function getAuthenticationService(ServerRequestInterface $request): AuthenticationServiceInterface {

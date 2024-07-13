@@ -27,6 +27,7 @@ class ChatsTableTest extends TestCase
         'app.Chats',
         'app.ContactStreams',
         'app.Accounts',
+        'app.Streams',
         'app.Sessions',
     ];
 

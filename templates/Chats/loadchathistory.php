@@ -16,7 +16,7 @@
                           <div class="message-text" id="<?$val->messageid ?>">
                               <?php
                                 $data['json'] = $val->recievearray;
-                                $data['stream_id'] = $val->id;
+                                $data['stream_id'] = $val->stream_id;
                                 echo $this->RcvDataformat->format($data)
                                 ?>
                           </div>
@@ -37,7 +37,8 @@
                           <div class="message-text" id="<?$val->messageid ?>">
                               <?php
                                 $data['json'] = $val->sendarray;
-                                $data['stream_id'] = $val->id;
+                                $data['stream_id'] = $val->stream_id;
+                              //  debug($val);
                                 echo $this->SendDataformat->format($data)
                                 ?>
                           </div>

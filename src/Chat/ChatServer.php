@@ -12,16 +12,12 @@ use Ratchet\Server\IoServer;
 use React\EventLoop\LoopInterface;
 use Cake\Http\Client;
 
-
+use Cake\Log\LogTrait;
 
 
 
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-
-// $http = new Client([
-//     'timeout' => 300 // Timeout in seconds
-// ]);
 
 
 class ChatServer implements MessageComponentInterface
@@ -30,14 +26,15 @@ class ChatServer implements MessageComponentInterface
     protected $clients;
     protected $loop;
     protected $lastPongTime;
-
+    use LogTrait; // Include the LogTrait
 
 
     public function __construct(LoopInterface $loop)
     {
         $this->clients = new \SplObjectStorage;
         $this->loop = $loop;
-        echo "ChatServer initialized with LoopInterface: " . get_class($loop) . "\n";
+      //  echo "ChatServer initialized with LoopInterface: " . get_class($loop) . "\n";
+        $this->log("ChatServer initialized with LoopInterface: " . get_class($loop), 'debug');
     }
 
 
@@ -217,16 +214,28 @@ class ChatServer implements MessageComponentInterface
     public function pollDatabase()
     {
         
+        
+    }
+
+    function notifyClients($entity){
+        $this->log('The table in ChatServer is  : '. $entity, 'debug');
         $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
+        $activeSessionsCount = $ChatsSessionsTable->find()
+        ->where(['active' => 1])
+        ->count();
+        $this->log("Current active sessions are $activeSessionsCount", 'debug');
         $activeSessions = $ChatsSessionsTable->find()
             ->where(['active' => 1]);
         foreach ($activeSessions as $key => $val) {
             $client_match=false;
             foreach ($this->clients as $client) {
                 if ($client->resourceId == $val->clientid ) {
+                    $this->log("Sending Notifciation to matched client:" .  $val->clientid, 'debug');
                     $query['type']="livechat";
                     $query['session_id']=$val->token;
+                    $query['contact_stream_id']=$entity->contact_stream_id;
                     $query['client_id']=$val->clientid;
+                    $query['chat_id']=$entity->id;
                     $http = new Client([
                         'timeout' => 600 // Timeout in seconds
                     ]);
@@ -234,10 +243,12 @@ class ChatServer implements MessageComponentInterface
                   
                     $query['html'] = $response->getStringBody();
                     if(empty($query['html'])){
-                         print "No new message for $val->account_id \n";
+                       //  print "No new message for $val->account_id \n";
+                         $this->log("No new message for $val->account_id" , 'debug');
                     }else{
-                        print "Sending message to $val->account_id with Client ID $val->clientid \n";
-                        $this->sendMessageToClient($query['client_id'], $query);
+                      //  print "Sending message notification for account id $val->account_id with Client ID $val->clientid \n";
+                      $this->log("Sending message notification for account id $val->account_id with Client ID $val->clientid" , 'debug');
+                     $this->sendMessageToClient($query['client_id'], $query);
                     }
                     $client_match=true;
                    
@@ -245,11 +256,13 @@ class ChatServer implements MessageComponentInterface
             }  
             
             if(!$client_match){
-                print "$val->clientid is not active, unregistering \n";
+              //  print "$val->clientid is not active, unregistering \n";
+                $this->log("$val->clientid is not active, unregistering" , 'debug');
                 $this->unregister($val->clientid);
             }
         }
     }
+
 
 
 
@@ -291,6 +304,8 @@ class ChatServer implements MessageComponentInterface
      //   print_r($response);
         $this->logmsg($response->getStringBody(), null);
     }
+
+
 
  
     

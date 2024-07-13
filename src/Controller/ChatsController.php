@@ -121,7 +121,7 @@ class ChatsController extends AppController
                 $this->response->withStatus(500) // OK status code
                     ->withType('application/json')
                     ->withStringBody(json_encode([
-                        'message' => 'Record not found to delete the session ' + $data['client_id']
+                        'message' => 'Record not found to delete the session ' . $data['client_id']
                     ]))
             );
         }
@@ -195,15 +195,18 @@ class ChatsController extends AppController
             $query->where([
                 'contact_stream_id' => $postData['contact_stream_id'],
                 'account_id' => $account_id,
-                'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
+               // 'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
             ]); //conditions.
             $query->andWhere(function ($exp, $q) {
-                return $exp->or_([
+                return $exp->or([
                     'sendarray IS NOT' => null,
                     'recievearray IS NOT' => null
                 ]);
             });
-            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created']);
+
+
+           
+            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created','stream_id','type']);
             if (!isset($postData['direction'])) {
                 $postData['direction'] = "up";
             }
@@ -340,17 +343,19 @@ $query = $this->Chats->find()
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
         //  debug($tokeninfo);
         if ($tokeninfo) {
-            //   $this->viewBuilder()->setLayout('ajax');
-            $query = $this->Chats->find()
-                ->where([
-                    'OR' => [
-                        'Chats.sendarray IS NOT NULL',
-                        'Chats.recievearray IS NOT NULL'
-                    ],
-                    'Chats.notified' => false,
-                    'account_id' => $tokeninfo->account_id
-                ])
-                ->order(['Chats.id' => 'ASC']);
+               $this->viewBuilder()->setLayout('ajax');
+            // $query = $this->Chats->find('')
+            //     ->where([
+            //         'OR' => [
+            //             'Chats.sendarray IS NOT NULL',
+            //             'Chats.recievearray IS NOT NULL'
+            //         ],
+            //         'Chats.notified' => false,
+            //         'account_id' => $tokeninfo->account_id
+            //     ])
+            //     ->order(['Chats.id' => 'ASC']);
+            $query = $this->Chats->find($postData['chat_id']);
+
             $newMessages = $query->all();
             $this->set('messages', $newMessages);
 
@@ -358,10 +363,11 @@ $query = $this->Chats->find()
 
 
             // Update all newMessages to set notified to true
-            $ids = $query->extract('id')->toList();
-            if (!empty($ids)) {
-                $this->Chats->updateAll(['notified' => true], ['id IN' => $ids]);
-            }
+          //  $ids = $query->extract('id')->toList();
+          //  $ids = $newMessages->extract('id')->toList();
+            // if (!empty($ids)) {
+            //     $this->Chats->updateAll(['notified' => true], ['id IN' => $ids]);
+            // }
         } else {
             $this->autoRender = false;
             $this->setResponse(

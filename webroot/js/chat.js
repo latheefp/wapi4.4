@@ -68,16 +68,25 @@ $(document).ready(function () {
                         //just ingnore ping.
                         break;
                     case "loadChathistory":
-                    case "livechat": 
                         if (message['error']) {
                             toastr.warning(message.error);
                         } else {
                             $('#loading-icon').hide();
                             updateConversation(message);
-                           attachScrollEventListeners();
+                            attachScrollEventListeners();
                         }
 
                         break;
+                    case "livechat":
+                        if (message['error']) {
+                            toastr.warning(message.error);
+                        } else {
+                            //   updateConversation(message);
+                            // attachScrollEventListeners();
+                        }
+
+                        break;
+
                     case "appendchat":
                         if (message['error']) {
                             toastr.warning(message.error);
