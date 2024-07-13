@@ -27,7 +27,17 @@ class ChatCommand extends Command
 
     public function execute(Arguments $args, ConsoleIo $io)
     {
-        $this->start($io);
+      
+            if (intval(getenv('WSENABLED')) == true) {  //WebSocketEnabled in Env
+                print "SNDQRUN Enabled, processing";
+                $this->start($io);
+            }else{
+                $io->out("WSENABLED is disabled");
+                return Command::CODE_ERROR;
+            }
+        
+
+       
     }
 
 
@@ -55,30 +65,7 @@ class ChatCommand extends Command
         $loop->run();
     }
 
-    // public function startold($io)
-    // {
-
-
-    //     // Create the event loop
-    //     $loop = Factory::create();
-
-    //     // Initialize the ChatServer
-    //    # $chatServer = new ChatServer($loop);
-    //     $chatServer = ChatServer::getInstance($loop);
-
-    //     // Add a periodic timer to poll the database every 5 seconds
-    //     $loop->addPeriodicTimer(5, function () use ($chatServer) {
-    //         $chatServer->pollDatabase();
-    //     });
-
-    //     // Run the server (this will block until the server is stopped)
-    //     $io->out('Starting WebSocket server...');
-    //     $chatServer->run();
-
-    //     // Run the event loop (this will block until the server is stopped)
-    //     $io->out('Running Loop');
-    //     $loop->run();
-    // }
+ 
     
 
 }

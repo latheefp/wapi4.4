@@ -28,10 +28,18 @@ class MetricsCommand extends Command
 
     public function execute(Arguments $args, ConsoleIo $io)
     {
-        while (true) {
-            debug('Running metrics capturing');
-            $this->updatemetrics();
-            sleep (60);
+        
+
+        if (intval(getenv('METRICSENABLED')) == true) {  //WebSocketEnabled in Env
+            print "METRICSENABLED Enabled, processing";
+            while (true) {
+                debug('Running metrics capturing');
+                $this->updatemetrics();
+                sleep (60);
+            }
+        }else{
+            $io->out("METRICSENABLED is disabled");
+            return Command::CODE_ERROR;
         }
 
     }
