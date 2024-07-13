@@ -20148,3 +20148,4 @@
 127.0.0.1 - - [13/Jul/2024:03:43:34 +0000] "POST /chats/getNewmsg HTTP/1.1" 200 249 "-" "CakePHP"
 127.0.0.1 - - [13/Jul/2024:03:43:39 +0000] "POST /chats/getNewmsg HTTP/1.1" 200 249 "-" "CakePHP"
 127.0.0.1 - - [13/Jul/2024:03:43:44 +0000] "POST /chats/getNewmsg HTTP/1.1" 200 249 "-" "CakePHP"
+127.0.0.1 - - [13/Jul/2024:03:44:34 +0000] "POST /chats/uiunregister HTTP/1.1" 200 436 "-" "CakePHP"

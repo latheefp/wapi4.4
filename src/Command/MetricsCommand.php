@@ -31,7 +31,7 @@ class MetricsCommand extends Command
         
 
         if (intval(getenv('METRICSENABLED')) == true) {  //WebSocketEnabled in Env
-            print "METRICSENABLED Enabled, processing";
+             $io->out("METRICSENABLED Enabled, processing");
             while (true) {
                 debug('Running metrics capturing');
                 $this->updatemetrics();

@@ -29,7 +29,7 @@ class ChatCommand extends Command
     {
       
             if (intval(getenv('WSENABLED')) == true) {  //WebSocketEnabled in Env
-                print "SNDQRUN Enabled, processing";
+                $io->out("SNDQRUN Enabled, processing");
                 $this->start($io);
             }else{
                 $io->out("WSENABLED is disabled");

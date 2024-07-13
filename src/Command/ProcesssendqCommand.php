@@ -33,10 +33,10 @@ class ProcesssendqCommand extends Command {
 
         while (true) {
             if (intval(getenv('SNDQRUN')) == true) {
-                print "SNDQRUN Enabled, processing";
+                 $io->out("SNDQRUN Enabled, processing");
                 $this->process_sendq();
             }else{
-                print("SNDQRUN is disabled,  waiting 300 seconds");
+                $io->out("SNDQRUN is disabled,  waiting 300 seconds");
                 sleep (300);
             }
         }
