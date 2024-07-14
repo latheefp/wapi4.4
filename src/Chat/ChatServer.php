@@ -186,7 +186,8 @@ class ChatServer implements MessageComponentInterface
     public function onClose(ConnectionInterface $conn)
     {
         $this->clients->detach($conn);
-        echo "Connection {$conn->resourceId} has disconnected\n";
+        //echo "Connection {$conn->resourceId} has disconnected\n";
+        $this->log("Connection {$conn->resourceId} has disconnected", 'debug');
         $this->unregister($conn->resourceId);
     }
 
@@ -213,53 +214,61 @@ class ChatServer implements MessageComponentInterface
 
     public function pollDatabase()
     {
-        
-        
+
+        $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
+        $activeSessions = $ChatsSessionsTable->find()->all();
+        foreach ($activeSessions as $key => $val) {
+            //$this->log("DB sesions " . $val->clientid, 'debug');
+        }
+
+        $active_clients = [];
+        foreach ($this->clients as $client) {
+          //  $this->log("Pinging Client " . $client->resourceId,  'debug');
+            $active_clients[$client->resourceId] = $client->resourceId;
+        }
+        //print_r($active_clients);
+
+        $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
+        $activeSessions = $ChatsSessionsTable->find()->all();
+        foreach ($activeSessions as $key => $val) {
+            if (!isset($active_clients[$val->clientid])) {
+                $this->log("Client is not active, deleting:  " . $val->clientid, 'debug');
+                $this->unregister($val->clientid);
+            }
+        }
     }
 
     function notifyClients($entity){
         $this->log('The table in ChatServer is  : '. $entity, 'debug');
         $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
         $activeSessionsCount = $ChatsSessionsTable->find()
-        ->where(['active' => 1])
+        ->where(['active' => 1, 'account_id' => $entity->account_id])
         ->count();
-        $this->log("Current active sessions are $activeSessionsCount", 'debug');
+        $this->log("Current active sessions from DB info $activeSessionsCount", 'debug');
         $activeSessions = $ChatsSessionsTable->find()
-            ->where(['active' => 1]);
+            ->where(['active' => 1, 'account_id' => $entity->account_id]);
         foreach ($activeSessions as $key => $val) {
-            $client_match=false;
-            foreach ($this->clients as $client) {
-                if ($client->resourceId == $val->clientid ) {
-                    $this->log("Sending Notifciation to matched client:" .  $val->clientid, 'debug');
-                    $query['type']="livechat";
-                    $query['session_id']=$val->token;
-                    $query['contact_stream_id']=$entity->contact_stream_id;
-                    $query['client_id']=$val->clientid;
-                    $query['chat_id']=$entity->id;
-                    $http = new Client([
-                        'timeout' => 600 // Timeout in seconds
-                    ]);
-                    $response = $http->post('http://localhost/chats/getNewmsg', $query);
-                  
-                    $query['html'] = $response->getStringBody();
-                    if(empty($query['html'])){
-                       //  print "No new message for $val->account_id \n";
-                         $this->log("No new message for $val->account_id" , 'debug');
-                    }else{
-                      //  print "Sending message notification for account id $val->account_id with Client ID $val->clientid \n";
-                      $this->log("Sending message notification for account id $val->account_id with Client ID $val->clientid" , 'debug');
-                     $this->sendMessageToClient($query['client_id'], $query);
-                    }
-                    $client_match=true;
-                   
-                }
-            }  
-            
-            if(!$client_match){
-              //  print "$val->clientid is not active, unregistering \n";
-                $this->log("$val->clientid is not active, unregistering" , 'debug');
-                $this->unregister($val->clientid);
+            $this->log("Sending Notifciation to matched client:" .  $val->clientid, 'debug');
+            $query['type'] = "livechat";
+            $query['session_id'] = $val->token;
+            $query['contact_stream_id'] = $entity->contact_stream_id;
+            $query['client_id'] = $val->clientid;
+            $query['chat_id'] = $entity->id;
+            $http = new Client([
+                'timeout' => 600 // Timeout in seconds
+            ]);
+            $response = $http->post('http://localhost/chats/loadchathistory', $query);
+
+            $query['html'] = $response->getStringBody();
+            if (empty($query['html'])) {
+                //  print "No new message for $val->account_id \n";
+                $this->log("No new message for $val->account_id", 'debug');
+            } else {
+                //  print "Sending message notification for account id $val->account_id with Client ID $val->clientid \n";
+                $this->log("Sending message notification for account id $val->account_id with Client ID $val->clientid", 'debug');
+                $this->sendMessageToClient($query['client_id'], $query);
             }
+            $client_match = true;
         }
     }
 
@@ -270,7 +279,10 @@ class ChatServer implements MessageComponentInterface
     function registerclient($clientinfo)
     {
        # print_r($clientinfo);
-        $http = new Client();
+       $this->log("Registering  ".json_encode($clientinfo), 'debug');
+       $http = new Client([
+        'timeout' => 600 // Timeout in seconds
+    ]);
         $response = $http->post('http://localhost/chats/uiregister', $clientinfo);
         $responseCode = $response->getStatusCode();
         if($responseCode==201){
@@ -298,8 +310,11 @@ class ChatServer implements MessageComponentInterface
 
     function unregister($resourceId)
     {
+        $this->log("Unregistering $resourceId", 'debug');
         $clientinfo['client_id'] = $resourceId;
-        $http = new Client();
+        $http = new Client([
+            'timeout' => 600 // Timeout in seconds
+        ]);
         $response = $http->post('http://localhost/chats/uiunregister', $clientinfo);
      //   print_r($response);
         $this->logmsg($response->getStringBody(), null);

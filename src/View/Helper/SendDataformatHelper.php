@@ -9,21 +9,24 @@ use Cake\ORM\TableRegistry as TableRegistry;
 use Cake\Log\LogTrait;
 class SendDataformatHelper extends Helper
 {
+    
 
     public function initialize(array $config): void
     {
         //     debug($config);
+        
     }
 
     function format($data)
     {
+        
       //  $sendarray = json_decode($data['json'], true);
         $send_array = json_decode($this->_removeTrailingCommas($data['json']), true);
         
         if(!isset($send_array)){  //sometime json_decode is empty, need to investigate.
             debug($data['json']);
             print "Error:null json on stream id:".$data['stream_id'];
-            $this->log("Wrong Record sendArray".$data['stream_id'], 'error');
+          //  $this->log("Wrong Record sendArray".$data['stream_id'], 'error');
             return false;
         }
         $msg = null;

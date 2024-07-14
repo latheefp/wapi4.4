@@ -1,11 +1,13 @@
 
   <?php
+
+  //debug($messages);
   if(is_array(($messages))){
     $messages = array_reverse($messages);
   }
    
     foreach ($messages as $key => $val) {
-   //     debug($val);
+    //    debug($val);
         switch ($val->type) {
 
             case "receive":

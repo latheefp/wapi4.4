@@ -191,12 +191,28 @@ class ChatsController extends AppController
         if ($tokeninfo) {
             //   debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
+
+
+            if(!isset($postData['page'])){
+                $postData['page']=1;
+            }
+
+
+
             $query = $this->getTableLocator()->get('Chats')->find();
             $query->where([
                 'contact_stream_id' => $postData['contact_stream_id'],
                 'account_id' => $account_id,
                // 'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
             ]); //conditions.
+
+            if(isset($postData['chat_id'])){
+                $query->andWhere(['id'=>$postData['chat_id']]);
+            }
+
+
+
+
             $query->andWhere(function ($exp, $q) {
                 return $exp->or([
                     'sendarray IS NOT' => null,
@@ -221,7 +237,7 @@ class ChatsController extends AppController
                 $query->order(['id' => 'DESC']);
             }
             //   debug($query->sql();)
-            $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
+          //  $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
 
             $query->limit(50);
             $query->page($postData['page']);
@@ -328,57 +344,46 @@ $query = $this->Chats->find()
         }
     }
 
-    function getNewmsg()
-    {
-        $this->request->allowMethod(['post']);
-        // Use $this->request->getData() to retrieve POST data
-        $postData = $this->request->getData();
+    // function getNewmsg()
+    // {
+    //     $this->request->allowMethod(['post']);
+    //     // Use $this->request->getData() to retrieve POST data
+    //     $postData = $this->request->getData();
 
-        //debug($postData);
-
-        $this->viewBuilder()->setLayout('ajax');
-
-
-        // Validate the token
-        $tokeninfo = $this->Token->validateToken($postData['session_id']);
-        //  debug($tokeninfo);
-        if ($tokeninfo) {
-               $this->viewBuilder()->setLayout('ajax');
-            // $query = $this->Chats->find('')
-            //     ->where([
-            //         'OR' => [
-            //             'Chats.sendarray IS NOT NULL',
-            //             'Chats.recievearray IS NOT NULL'
-            //         ],
-            //         'Chats.notified' => false,
-            //         'account_id' => $tokeninfo->account_id
-            //     ])
-            //     ->order(['Chats.id' => 'ASC']);
-            $query = $this->Chats->find($postData['chat_id']);
-
-            $newMessages = $query->all();
-            $this->set('messages', $newMessages);
-
-            $this->render('loadchathistory');
+    //     //debug($postData);
+    //     $this->log("Get new message with postdata, ".json_encode($postData), 'debug');
+    //     $this->viewBuilder()->setLayout('ajax');
 
 
-            // Update all newMessages to set notified to true
-          //  $ids = $query->extract('id')->toList();
-          //  $ids = $newMessages->extract('id')->toList();
-            // if (!empty($ids)) {
-            //     $this->Chats->updateAll(['notified' => true], ['id IN' => $ids]);
-            // }
-        } else {
-            $this->autoRender = false;
-            $this->setResponse(
-                $this->response->withStatus(201) // Created status code
-                    ->withType('application/json')
-                    ->withStringBody(json_encode([
-                        'error' => 'Wrong token'
-                    ]))
-            );
-        }
-    }
+    //     // Validate the token
+    //     $tokeninfo = $this->Token->validateToken($postData['session_id']);
+    //     //  debug($tokeninfo);
+    //     if ($tokeninfo) {
+    //         $this->viewBuilder()->setLayout('ajax');
+    //         $query = $this->getTableLocator()->get('Chats')->find()
+    //             ->where([
+    //                 'id' => $postData['chat_id']
+    //             ])
+    //             ->order(['Chats.id' => 'ASC']);
+    //             $query->sql();
+    //         $newMessages= $query->all()->toArray();
+    //         $this->log("SQL is, ".$query->sql(), 'debug');
+
+    //         $this->log("Data is, ". json_encode($query->toArray()), 'debug');
+    //         $this->set('messages', $newMessages);
+
+    //         $this->render('loadchathistory');
+    //     } else {
+    //         $this->autoRender = false;
+    //         $this->setResponse(
+    //             $this->response->withStatus(201) // Created status code
+    //                 ->withType('application/json')
+    //                 ->withStringBody(json_encode([
+    //                     'error' => 'Wrong token'
+    //                 ]))
+    //         );
+    //     }
+    // }
 
 
 
