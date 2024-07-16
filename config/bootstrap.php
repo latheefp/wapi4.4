@@ -255,3 +255,14 @@ Configure::write('Locale.validation.dateFormat', 'Y-m-j');
 //$container = \Cake\Core\ContainerInterface::class;
 //$container->add(RedisService::class, new RedisService());
 
+
+//bootstrap configuration.
+
+// Configure::write('WebSocket', [
+//     'my-realtime-app' => [
+//         'className' => 'MyRealtimeApp\WebSocket\MyRealtimeAppSocket',
+//         'host' => 'localhost',
+//         'port' => 3001,
+//     //    'origin' => 'http://localhost:8765',
+//     ],
+// ])

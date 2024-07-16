@@ -15,7 +15,8 @@
         "mobiledetect/mobiledetectlib": "^2.8",
         "phpoffice/phpspreadsheet": "^2.0",
         "predis/predis": "^2.2",
-        "react/event-loop": "^1.5"
+        "react/event-loop": "^1.5",
+        "textalk/websocket": "^1.6"
     },
     "require-dev": {
         "cakephp/bake": "^2.6",

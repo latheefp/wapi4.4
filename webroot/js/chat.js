@@ -81,8 +81,8 @@ $(document).ready(function () {
                         if (message['error']) {
                             toastr.warning(message.error);
                         } else {
-                            //   updateConversation(message);
-                            // attachScrollEventListeners();
+                            updateConversation(message);
+                            attachScrollEventListeners();
                         }
 
                         break;

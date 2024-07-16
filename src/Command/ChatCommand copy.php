@@ -12,6 +12,7 @@ use React\EventLoop\Factory;
 
 
 
+use App\Service\ServiceContainer;
 
 
 
@@ -48,6 +49,15 @@ class ChatCommand extends Command
         $loop = Factory::create();
         $chatServer = ChatServer::getInstance($loop);
 
+        ServiceContainer::set('ChatServer', $chatServer);
+
+        $retrievedChatServer = ServiceContainer::get('ChatServer');
+        if ($retrievedChatServer !== null) {
+            $io->out('ChatServer instance has been set correctly.');
+        } else {
+            $io->out('Failed to set ChatServer instance.');
+        }
+        
         $loop->addPeriodicTimer(5, function () use ($chatServer) {
             $chatServer->pollDatabase();
         });
@@ -59,30 +69,30 @@ class ChatCommand extends Command
         $loop->run();
     }
 
-    public function startold($io)
-    {
+    // public function startold($io)
+    // {
 
 
-        // Create the event loop
-        $loop = Factory::create();
+    //     // Create the event loop
+    //     $loop = Factory::create();
 
-        // Initialize the ChatServer
-       # $chatServer = new ChatServer($loop);
-        $chatServer = ChatServer::getInstance($loop);
+    //     // Initialize the ChatServer
+    //    # $chatServer = new ChatServer($loop);
+    //     $chatServer = ChatServer::getInstance($loop);
 
-        // Add a periodic timer to poll the database every 5 seconds
-        $loop->addPeriodicTimer(5, function () use ($chatServer) {
-            $chatServer->pollDatabase();
-        });
+    //     // Add a periodic timer to poll the database every 5 seconds
+    //     $loop->addPeriodicTimer(5, function () use ($chatServer) {
+    //         $chatServer->pollDatabase();
+    //     });
 
-        // Run the server (this will block until the server is stopped)
-        $io->out('Starting WebSocket server...');
-        $chatServer->run();
+    //     // Run the server (this will block until the server is stopped)
+    //     $io->out('Starting WebSocket server...');
+    //     $chatServer->run();
 
-        // Run the event loop (this will block until the server is stopped)
-        $io->out('Running Loop');
-        $loop->run();
-    }
+    //     // Run the event loop (this will block until the server is stopped)
+    //     $io->out('Running Loop');
+    //     $loop->run();
+    // }
     
 
 }

@@ -22,32 +22,44 @@ use Cake\ORM\TableRegistry;
 
 class ChatServer implements MessageComponentInterface
 {
-    protected static $instance = null;
-    protected $clients;
-    protected $loop;
+    private static $instance = null;
+    private $clients;
+    private $loop;
     protected $lastPongTime;
     use LogTrait; // Include the LogTrait
 
 
-    public function __construct(LoopInterface $loop)
+
+
+    protected function __construct()
+
     {
         $this->clients = new \SplObjectStorage;
-        $this->loop = $loop;
-      //  echo "ChatServer initialized with LoopInterface: " . get_class($loop) . "\n";
-        $this->log("ChatServer initialized with LoopInterface: " . get_class($loop), 'debug');
+        $this->log("ChatServer initialized", 'debug');
     }
+
+
 
 
     public static function getInstance(LoopInterface $loop = null)
     {
         if (self::$instance === null) {
-            if ($loop === null) {
+            self::$instance = new self();
+            if ($loop !== null) {
+                self::$instance->setLoop($loop);
+            } else {
                 throw new \Exception("LoopInterface is required for the first instance creation.");
             }
-            self::$instance = new self($loop);
         }
         return self::$instance;
     }
+
+    public function setLoop(LoopInterface $loop)
+    {
+        $this->loop = $loop;
+        $this->log("LoopInterface set in ChatServer", 'debug');
+    }
+
 
     public function run()
     {
@@ -73,6 +85,11 @@ class ChatServer implements MessageComponentInterface
             $client->send(json_encode(['type' => 'ping']));
             $this->lastPongTime[$client->resourceId] = time();
         }
+    }
+
+    public function getClients()
+    {
+        return $this->clients;
     }
 
     protected function checkPongResponses()
@@ -129,6 +146,11 @@ class ChatServer implements MessageComponentInterface
              //   print_r($msgArray);
                 $this->newChat($msgArray);
                 break;
+           case "ProcessChatsID":
+                    $msgArray['client_id'] = $from->resourceId;
+                 //   print_r($msgArray);
+                    $this->ProcessChatsID($msgArray);
+                    break;    
             default:
 
                 print "No action defined for " . $msgArray['type'] . " Sending to Client";
@@ -173,14 +195,22 @@ class ChatServer implements MessageComponentInterface
     }
 
     public function sendMessageToClient($clientId, $message)
-    {
+    {          
+       // $clientMatch=false;
+      
+        
         foreach ($this->clients as $client) {
             if ($client->resourceId == $clientId) {
-                print "Sending message to  $clientId \n";
+                print( "Send Msg: $client->resourceId");
+             //   print "Sending message to  $clientId \n";
+                $this->log("Sending message to  $clientId ", 'debug');
                 $client->send(json_encode($message));
-                break;
+                $clientMatch=true;
             }
         }
+
+     //   $this->log("Client Match is   $clientMatch ", 'debug');
+
     }
 
     public function onClose(ConnectionInterface $conn)
@@ -236,24 +266,28 @@ class ChatServer implements MessageComponentInterface
                 $this->unregister($val->clientid);
             }
         }
+
+      //  print_r($this->getClients());
     }
 
-    function notifyClients($entity){
-        $this->log('The table in ChatServer is  : '. $entity, 'debug');
+    function ProcessChatsID($entity){
+        print_r($entity);
+        print( "Notify Client: ".json_encode($this->clients));
+      //  $this->log('The table in ChatServer is  : '. $entity, 'debug');
         $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
         $activeSessionsCount = $ChatsSessionsTable->find()
-        ->where(['active' => 1, 'account_id' => $entity->account_id])
+        ->where(['active' => 1, 'account_id' => $entity['account_id']])
         ->count();
         $this->log("Current active sessions from DB info $activeSessionsCount", 'debug');
         $activeSessions = $ChatsSessionsTable->find()
-            ->where(['active' => 1, 'account_id' => $entity->account_id]);
+            ->where(['active' => 1, 'account_id' => $entity['account_id']]);
         foreach ($activeSessions as $key => $val) {
             $this->log("Sending Notifciation to matched client:" .  $val->clientid, 'debug');
             $query['type'] = "livechat";
             $query['session_id'] = $val->token;
-            $query['contact_stream_id'] = $entity->contact_stream_id;
+            $query['contact_stream_id'] = $entity['contact_stream_id'];
             $query['client_id'] = $val->clientid;
-            $query['chat_id'] = $entity->id;
+            $query['chat_id'] = $entity['id'];
             $http = new Client([
                 'timeout' => 600 // Timeout in seconds
             ]);
@@ -271,6 +305,7 @@ class ChatServer implements MessageComponentInterface
             $client_match = true;
         }
     }
+    
 
 
 
@@ -321,7 +356,10 @@ class ChatServer implements MessageComponentInterface
     }
 
 
-
+// function ProcessChatsID($data){
+//     print_r($data);
+//     print_r($this->getClients());
+// }
  
     
 }

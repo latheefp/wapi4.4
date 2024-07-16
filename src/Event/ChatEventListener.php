@@ -6,28 +6,33 @@ use React\EventLoop\Factory;
 use Cake\Event\EventListenerInterface;
 use App\Chat\ChatServer;
 use Cake\Log\LogTrait;
+use WebSocket\Client;
+
 class ChatEventListener implements EventListenerInterface
 {
     use LogTrait; // Include the LogTrait
     public function implementedEvents(): array
     {
         return [
-            'Model.afterSave' => 'onAfterSave' //expect no edit happends to chats tables, only creatoin. 
+            'Model.afterSave' => 'onAfterSave' //expect no edit happends to chats tables, only creation. 
         ];
     }
+
 
     public function onAfterSave($event, $entity, $options)
     {
         // Check if it's the specific table you are interested in
         if ($event->getSubject()->getTable() === 'chats') {
             $this->log('The table is : ' . $event->getSubject()->getTable(), 'debug');
-            // Get the loop instance from your ChatServer singleton
-            $loop = Factory::create();
-            $chatServer = ChatServer::getInstance($loop);
-            // Call a method on your ChatServer
-           $result=$chatServer->notifyClients($entity);
-           $this->log('The result is : ' . $result, 'debug');
-       //     debug($failed);
+            $entityArray = $entity->toArray();
+            $entityArray['type'] = 'ProcessChatsID';
+            $data = json_encode($entityArray);
+            $client = new Client("ws://localhost:8080");
+       //     $data = json_encode(['type' => 'ProcessChatsID', 'recordId' => $entity->id]);
+            $client->send($data);
+        
+        //    $response = $client->receive();
+          //  echo "Received response: $response\n";
         }else{
           //  $this->log('The table is : ' . $event->getSubject()->getTable(), 'debug');
         }
