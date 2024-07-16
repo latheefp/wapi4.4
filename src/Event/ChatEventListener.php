@@ -28,11 +28,11 @@ class ChatEventListener implements EventListenerInterface
             $entityArray['type'] = 'ProcessChatsID';
             $data = json_encode($entityArray);
             $client = new Client(getenv('CHAT_INTERNAL_URL'));
-       //     $data = json_encode(['type' => 'ProcessChatsID', 'recordId' => $entity->id]);
+            $this->log("Calling websocket: ".getenv('CHAT_INTERNAL_URL'),'debug');
             $client->send($data);
-        
-        //    $response = $client->receive();
-          //  echo "Received response: $response\n";
+            $response = $client->receive();
+            $this->log("Received response: $response",'debug');
+    
         }else{
           //  $this->log('The table is : ' . $event->getSubject()->getTable(), 'debug');
         }

@@ -123,7 +123,7 @@ class ChatServer implements MessageComponentInterface
 
 
         $msgArray = json_decode($msg, true);
-        print_r($msg);
+      //  print_r($msg);
         switch($msgArray['type']){
             case "register":
                 $clientinfo['client_id'] = $from->resourceId;
