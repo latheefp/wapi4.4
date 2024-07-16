@@ -27,7 +27,7 @@ class ChatEventListener implements EventListenerInterface
             $entityArray = $entity->toArray();
             $entityArray['type'] = 'ProcessChatsID';
             $data = json_encode($entityArray);
-            $client = new Client("ws://localhost:8080");
+            $client = new Client(getenv('CHAT_INTERNAL_URL'));
        //     $data = json_encode(['type' => 'ProcessChatsID', 'recordId' => $entity->id]);
             $client->send($data);
         
