@@ -237,7 +237,7 @@ class ChatsController extends AppController
                 $query->order(['id' => 'DESC']);
             }
             //   debug($query->sql();)
-          //  $this->log('Contact list query result ' . json_encode($query->all()->toArray()), 'debug');
+            $this->log('SQL ' . $query->sql(), 'debug');
 
             $query->limit(50);
             $query->page($postData['page']);
