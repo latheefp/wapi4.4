@@ -119,10 +119,15 @@ class ChatServer implements MessageComponentInterface
     {
         $data = json_decode($msg, true);
 
-        $this->logmsg($msg, "first message from ".$from->resourceId);
+        
 
 
         $msgArray = json_decode($msg, true);
+        $this->log("Message type ".$msgArray['type'] ." From ".$from->resourceId,'debug');
+        $response = [
+            'status' => 'success',
+            'message' => 'Data submitted for '.$msgArray['type']
+        ];
       //  print_r($msg);
         switch($msgArray['type']){
             case "register":
@@ -160,6 +165,8 @@ class ChatServer implements MessageComponentInterface
                     }
                 }
         }
+
+        $from->send(json_encode($response));
         
     }
 

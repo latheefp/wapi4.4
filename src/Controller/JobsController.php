@@ -336,7 +336,7 @@ class JobsController extends AppController
             //   debug($streamrow);
             $contact = $streams_table->get($streamrow->id);
             $templateQuery = [];
-            $return['result'] = $this->_despatch_msg($contact, $sendarray, $templateQuery, $FBsettings, $type = "forward");
+            $return['result'] = $this->_despatch_msg($contact, $sendarray, $templateQuery, $FBsettings, $type = "forward"); 
             //  debug($return);
 
         } else {
@@ -418,7 +418,7 @@ class JobsController extends AppController
         // $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
         $data = json_decode($record->form_data, true);
-        debug($data);
+    //    debug($data);
         if(!isset($data['contact_stream_id'])){ //chat client provide contact_stream_id instead of mobile number.
             if (!isset($data['mobile_number'])) {
                 $return['result']['error'] = "No mobile number provided";
@@ -520,7 +520,7 @@ class JobsController extends AppController
             }
 
        //     debug($formarray);
-            $return['result'] = $this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings);
+            $return['result'] = $this->_despatch_msg($contact, $formarray, $templateQuery, $FBSettings,'template');
             return $return;
         }
     }
