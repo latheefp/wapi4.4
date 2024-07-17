@@ -237,12 +237,15 @@ class ChatsController extends AppController
                 $query->order(['id' => 'DESC']);
             }
             //   debug($query->sql();)
-            $this->log('PostData ' . json_encode($postData), 'debug');
-            $this->log('SQL ' . $query->sql(), 'debug');
+           
 
             $query->limit(50);
             $query->page($postData['page']);
             $messages = $query->all()->toArray();
+            $this->log('PostData ' . json_encode($postData), 'debug');
+            $this->log('SQL ' . $query->sql(), 'debug');
+            $this->log('Messages '. json_encode($messages) ,'debug');
+
             $this->set('messages', $messages);
             //    $this->set('contact_stream_id',$postData['contact_stream_id']);
         } else {
