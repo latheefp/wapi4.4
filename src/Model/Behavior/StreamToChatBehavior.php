@@ -14,9 +14,9 @@ class StreamToChatBehavior extends Behavior
     {
         $chatsTable = TableRegistry::getTableLocator()->get('Chats');
         //Log::debug("Save failed due to missing data during adding". $entity);
-        Log::debug("New Change: ".$entity);
+     //   Log::debug("New Change: ".$entity);
         if ($entity->isNew()) {
-            Log::debug("New record: ".$entity);
+          //  Log::debug("New record: ".$entity);
             if (!empty($entity->contact_stream_id) && !empty($entity->account_id) && (!empty($entity->recievearray) || !empty($entity->sendarray))) {
                 $chat = $chatsTable->newEntity([
                     'contact_stream_id' => $entity->contact_stream_id,
@@ -40,7 +40,7 @@ class StreamToChatBehavior extends Behavior
 
 
         } else {
-            Log::debug("Edit record from Streams: ".$entity);
+          //  Log::debug("Edit record from Streams: ".$entity);
             if (isset($entity->recievearray) || isset($entity->sendarray)) {
                 $chat = $chatsTable->find()
                     ->where(['stream_id' => $entity->id])
@@ -59,7 +59,7 @@ class StreamToChatBehavior extends Behavior
                         if ($chatsTable->save($chat)) {
                             // Successfully updated
                         } else {
-                            debug($chat->getErrors());
+                            Log::debug("SAve failed due to missing data during edit ".$entity);
                         }
 
                     }else{
@@ -78,13 +78,13 @@ class StreamToChatBehavior extends Behavior
                     ]);
         
                     if ($chatsTable->save($chat)) {
-                        Log::debug("Saved new row to Chats $chat");
+                //        Log::debug("Saved new row to Chats $chat");
                     } else {
-                        Log::debug("Failed to create new Chats $chat");
+                        Log::debug("Add failed due to missing data during edit ".$entity);
                     }
                 }
             }else{
-                debug($entity);
+        //        debug($entity);
             }
         }
     }
