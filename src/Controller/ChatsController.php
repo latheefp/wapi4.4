@@ -242,8 +242,10 @@ class ChatsController extends AppController
             $query->limit(50);
             $query->page($postData['page']);
             $messages = $query->all()->toArray();
+
+           // debug( $query);
             $this->log('PostData ' . json_encode($postData), 'debug');
-            $this->log('SQL ' . $query->sql(), 'debug');
+            $this->log('Query ' .$query, 'debug');
             $this->log('Messages '. json_encode($messages) ,'debug');
 
             $this->set('messages', $messages);
