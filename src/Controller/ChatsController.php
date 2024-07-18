@@ -206,9 +206,14 @@ class ChatsController extends AppController
                // 'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
             ]); //conditions.
 
-            if(isset($postData['chat_id'])){
-                $query->andWhere(['id'=>$postData['chat_id']]);
+            // if(isset($postData['chat_id'])){
+            //     $query->andWhere(['id'=>$postData['chat_id']]);
+            // }
+
+            if (isset($postData['chat_id'])) {
+                $query->andWhere(['id' => $postData['chat_id']]);
             }
+            
 
 
 
@@ -243,10 +248,23 @@ class ChatsController extends AppController
             $query->page($postData['page']);
             $messages = $query->all()->toArray();
 
+
+            // Log the query and bound values
+            $boundValues = [
+                ':c0' => $postData['contact_stream_id'],
+                ':c1' => $tokeninfo->account_id,
+                ':c2' => $postData['chat_id']
+            ];
+
            // debug( $query);
-            $this->log('PostData ' . json_encode($postData), 'debug');
-            $this->log('Query ' .$query, 'debug');
-            $this->log('Messages '. json_encode($messages) ,'debug');
+           $this->log('HIST-Tokceninfo ' . $tokeninfo, 'debug');
+            $this->log('HIST-PostData ' . json_encode($postData), 'debug');
+            $this->log('HIST-Query ' .$query, 'debug');
+            $this->log('HIST-Bound Values: ' . json_encode($boundValues), 'debug');
+            $this->log('HIST-Messages '. json_encode($messages) ,'debug');
+
+
+            
 
             $this->set('messages', $messages);
             //    $this->set('contact_stream_id',$postData['contact_stream_id']);
