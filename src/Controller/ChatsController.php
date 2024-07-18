@@ -189,7 +189,7 @@ class ChatsController extends AppController
         $this->viewBuilder()->setLayout('ajax');
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
         if ($tokeninfo) {
-               debug($tokeninfo);
+         //      debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
 
 
