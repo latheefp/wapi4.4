@@ -189,7 +189,7 @@ class ChatsController extends AppController
         $this->viewBuilder()->setLayout('ajax');
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
         if ($tokeninfo) {
-            //   debug($tokeninfo);
+               debug($tokeninfo);
             $account_id = $tokeninfo->account_id;
 
 
@@ -206,12 +206,10 @@ class ChatsController extends AppController
                // 'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
             ]); //conditions.
 
-            // if(isset($postData['chat_id'])){
-            //     $query->andWhere(['id'=>$postData['chat_id']]);
-            // }
-
             if (isset($postData['chat_id'])) {
                 $query->andWhere(['id' => $postData['chat_id']]);
+            }else{
+                $postData['chat_id']=null; //chat ID will be not set in when the chat history loaded for more than one line. 
             }
             
 
@@ -257,7 +255,7 @@ class ChatsController extends AppController
             ];
 
            // debug( $query);
-           $this->log('HIST-Tokceninfo ' . $tokeninfo, 'debug');
+         //   $this->log('HIST-Tokceninfo ' . $tokeninfo, 'debug');
             $this->log('HIST-PostData ' . json_encode($postData), 'debug');
             $this->log('HIST-Query ' .$query, 'debug');
             $this->log('HIST-Bound Values: ' . json_encode($boundValues), 'debug');
