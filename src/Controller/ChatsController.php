@@ -184,88 +184,98 @@ class ChatsController extends AppController
 
     public function loadchathistory()
     {
+        $this->log("loadchathistory is got the request", 'debug');
         $this->request->allowMethod(['post']);
         $postData = $this->request->getData();
         $this->viewBuilder()->setLayout('ajax');
         $tokeninfo = $this->Token->validateToken($postData['session_id']);
+
         if ($tokeninfo) {
-         //      debug($tokeninfo);
-            $account_id = $tokeninfo->account_id;
+            if (isset($postData['chat-id'])) {
+                
+                $query = $this->getTableLocator()->get('Chats')->find();
+                $query->where([
+                    'id' => $postData['chat-id']
+                ]); //conditions.
 
+                $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created', 'stream_id', 'type']);
+                $messages = $query->all()->toArray();
+                $this->set('messages', $messages);
 
-            if(!isset($postData['page'])){
-                $postData['page']=1;
-            }
-
-
-
-            $query = $this->getTableLocator()->get('Chats')->find();
-            $query->where([
-                'contact_stream_id' => $postData['contact_stream_id'],
-                'account_id' => $account_id,
-               // 'notified' => true //we will process notnotified message in diffrent request to avoid hug db change query to notified=true.  
-            ]); //conditions.
-
-            if (isset($postData['chat_id'])) {
-                $query->andWhere(['id' => $postData['chat_id']]);
-            }else{
-                $postData['chat_id']=null; //chat ID will be not set in when the chat history loaded for more than one line. 
-            }
-            
-
-
-
-
-            $query->andWhere(function ($exp, $q) {
-                return $exp->or([
-                    'sendarray IS NOT' => null,
-                    'recievearray IS NOT' => null
-                ]);
-            });
-
-
-           
-            $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created','stream_id','type']);
-            if (!isset($postData['direction'])) {
-                $postData['direction'] = "up";
-            }
-
-            if (!isset($postData['page'])) { //bookmark show where to start the message from.
-                if ($postData['direction'] == "up") { //scrooling up, old messages
-                    $query->order(['modified' => 'DESC']);
-                } else {
-                    $query->order(['modified' => 'ASC']);
-                }
             } else {
-                $query->order(['id' => 'DESC']);
+            //    debug("Chat ID is set");
+                $account_id = $tokeninfo->account_id;
+
+
+                if (!isset($postData['page'])) {
+                    $postData['page'] = 1;
+                }
+
+
+
+                $query = $this->getTableLocator()->get('Chats')->find();
+                $query->where([
+                    'contact_stream_id' => $postData['contact_stream_id'],
+                    'account_id' => $account_id
+                               ]); //conditions.
+            //    debug($postData);
+
+
+
+
+
+
+                $query->andWhere(function ($exp, $q) {
+                    return $exp->or([
+                        'sendarray IS NOT' => null,
+                        'recievearray IS NOT' => null
+                    ]);
+                });
+
+
+
+                $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created', 'stream_id', 'type']);
+                if (!isset($postData['direction'])) {
+                    $postData['direction'] = "up";
+                }
+
+                if (!isset($postData['page'])) { //bookmark show where to start the message from.
+                    if ($postData['direction'] == "up") { //scrooling up, old messages
+                        $query->order(['modified' => 'DESC']);
+                    } else {
+                        $query->order(['modified' => 'ASC']);
+                    }
+                } else {
+                    $query->order(['id' => 'DESC']);
+                }
+              //  debug($query->sql());
+
+
+                $query->limit(50);
+                $query->page($postData['page']);
+                $messages = $query->all()->toArray();
+
+
+                // Log the query and bound values
+                // $boundValues = [
+                //     ':c0' => $postData['contact_stream_id'],
+                //     ':c1' => $tokeninfo->account_id,
+                //     ':c2' => $postData['chat_id']
+                // ];
+
+                // debug($query);
+                // //   $this->log('HIST-Tokceninfo ' . $tokeninfo, 'debug');
+                // $this->log('HIST-PostData ' . json_encode($postData), 'debug');
+                // $this->log('HIST-Query ' . $query, 'debug');
+                // $this->log('HIST-Bound Values: ' . json_encode($boundValues), 'debug');
+                // $this->log('HIST-Messages ' . json_encode($messages), 'debug');
+
+
+
+
+                $this->set('messages', $messages);
+                //    $this->set('contact_stream_id',$postData['contact_stream_id']);
             }
-            //   debug($query->sql();)
-           
-
-            $query->limit(50);
-            $query->page($postData['page']);
-            $messages = $query->all()->toArray();
-
-
-            // Log the query and bound values
-            $boundValues = [
-                ':c0' => $postData['contact_stream_id'],
-                ':c1' => $tokeninfo->account_id,
-                ':c2' => $postData['chat_id']
-            ];
-
-           // debug( $query);
-         //   $this->log('HIST-Tokceninfo ' . $tokeninfo, 'debug');
-            $this->log('HIST-PostData ' . json_encode($postData), 'debug');
-            $this->log('HIST-Query ' .$query, 'debug');
-            $this->log('HIST-Bound Values: ' . json_encode($boundValues), 'debug');
-            $this->log('HIST-Messages '. json_encode($messages) ,'debug');
-
-
-            
-
-            $this->set('messages', $messages);
-            //    $this->set('contact_stream_id',$postData['contact_stream_id']);
         } else {
 
             $this->autoRender = false;
@@ -277,7 +287,6 @@ class ChatsController extends AppController
                     ]))
             );
         }
-        //    debug($query->sql());
     }
 
 
@@ -300,31 +309,31 @@ class ChatsController extends AppController
 
 
             // Subquery to get the latest chat ID for each contact_stream_id
-    $subquery = $this->Chats->find()
-    ->select(['latest_id' => 'MAX(id)'])
-    ->where(['account_id' => $account_id])
-    ->group(['contact_stream_id']);
+            $subquery = $this->Chats->find()
+                ->select(['latest_id' => 'MAX(id)'])
+                ->where(['account_id' => $account_id])
+                ->group(['contact_stream_id']);
 
-// Main query to join the subquery with the chats table and contact_streams table
-$query = $this->Chats->find()
-    ->select([
-        'Chats.id',
-        'Chats.created',
-        'Chats.contact_stream_id',
-        'ContactStreams.profile_name',
-        'ContactStreams.name',
-        'ContactStreams.contact_number'
-    ])
-    ->join([
-        'table' => 'contact_streams',
-        'alias' => 'ContactStreams',
-        'type' => 'INNER',
-        'conditions' => 'Chats.contact_stream_id = ContactStreams.id',
-    ])
-    ->where([
-        'Chats.id IN' => $subquery
-    ])
-    ->order(['Chats.id' => 'DESC']);
+            // Main query to join the subquery with the chats table and contact_streams table
+            $query = $this->Chats->find()
+                ->select([
+                    'Chats.id',
+                    'Chats.created',
+                    'Chats.contact_stream_id',
+                    'ContactStreams.profile_name',
+                    'ContactStreams.name',
+                    'ContactStreams.contact_number'
+                ])
+                ->join([
+                    'table' => 'contact_streams',
+                    'alias' => 'ContactStreams',
+                    'type' => 'INNER',
+                    'conditions' => 'Chats.contact_stream_id = ContactStreams.id',
+                ])
+                ->where([
+                    'Chats.id IN' => $subquery
+                ])
+                ->order(['Chats.id' => 'DESC']);
 
 
 

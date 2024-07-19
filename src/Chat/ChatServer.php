@@ -280,7 +280,7 @@ class ChatServer implements MessageComponentInterface
     function ProcessChatsID($entity){
      ///   print_r($entity);
        // print( "Notify Client: ".json_encode($this->clients));
-      //  $this->log('The table in ChatServer is  : '. $entity, 'debug');
+       $this->log('Calling ProcessChatsID with'.  $entity['id'], 'debug');
         $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
         $activeSessionsCount = $ChatsSessionsTable->find()
         ->where(['active' => 1, 'account_id' => $entity['account_id']])
@@ -299,6 +299,7 @@ class ChatServer implements MessageComponentInterface
             $http = new Client([
                 'timeout' => 600 // Timeout in seconds
             ]);
+            $this->log("calling http://localhost/chats/loadchathistory", 'debug');
             $response = $http->post('http://localhost/chats/loadchathistory', $query);
 
             $query['html'] = $response->getStringBody();
