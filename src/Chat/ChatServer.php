@@ -294,7 +294,7 @@ class ChatServer implements MessageComponentInterface
             $query['session_id'] = $val->token;
             $query['contact_stream_id'] = $entity['contact_stream_id'];
             $query['client_id'] = $val->clientid;
-            $query['chat_id'] = $entity['id'];
+            $query['chat-id'] = $entity['id'];
             $query['page'] = 1; //to be validated. make sure, it will not reset the page limit of chat history loaded by chat console.
             $http = new Client([
                 'timeout' => 600 // Timeout in seconds
