@@ -9,8 +9,11 @@ use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use App\Chat\ChatServer;
 use React\EventLoop\Factory;
+use WebSocket\Client; //used on send function
 
 //use App\Service\ServiceContainer;
+
+//use josegonzalez\Dotenv\Loader as Dotenv;
 
 class ChatCommand extends Command
 {
@@ -22,15 +25,22 @@ class ChatCommand extends Command
         $parser->addOption('action', [
             'short' => 'a',
             'help' => 'Specify action: start or send',
-            'choices' => ['start', 'send'],
+            'choices' => ['start', 'newchat'],
             'default' => 'start'
         ]);
         
         $parser->addOption('record', [
-            'short' => 'r',
+            'short' => 'r', //newchat id
             'help' => 'DB record ID of Chats DB to process the BData',
             'default' => null
         ]);
+
+        // $parser->addOption('link', [
+        //     'short' => 'i', //newchat id
+        //     'help' => 'Remote webhook endpoint to send the chat',
+        //     'default' => null
+        // ]);
+
 
         return $parser;
     }
@@ -39,109 +49,89 @@ class ChatCommand extends Command
     {
         $action = $args->getOption('action');
         $recordId = $args->getOption('record');
+     //   $webhookurl = $args->getOption('link');
 
-        if (intval(getenv('WSENABLED')) == true) {
-            $io->out("WSENABLED Enabled, processing");
+        
 
             if ($action === 'start') {
                 $this->start($io);
-            } elseif ($action === 'send') {
-                $this->send($io, $recordId);
+            } elseif ($action === 'newchat') {
+                $io->out("Running newchat");
+                $this->log("ChatCommand: Running newchat. $recordId", 'debug');
+                $this->newchat($io, $recordId);
+                
             } else {
                 $io->out("Unknown action: $action");
                 return Command::CODE_ERROR;
             }
-        } else {
-            $io->out("WSENABLED is disabled");
-            return Command::CODE_ERROR;
-        }
+       
     }
 
     public function start(ConsoleIo $io)
     {
-        $io->out('Starting WebSocket server...');
 
-        $loop = Factory::create();
-        $chatServer = ChatServer::getInstance($loop);
+        if (intval(getenv('WSENABLED')) == true) {
+            $io->out("WSENABLED Enabled, processing");
+            $io->out('Starting WebSocket server...');
 
-        // Register the ChatServer in the service container
-     //   ServiceContainer::set('ChatServer', $chatServer);
+            $loop = Factory::create();
+            $chatServer = ChatServer::getInstance($loop);
+    
+    
+    
+            $loop->addPeriodicTimer(5, function () use ($chatServer) {
+                $chatServer->pollDatabase();
+            });
+    
+            $io->out('Running WebSocket server...');
+            $chatServer->run();
+    
+            $io->out('Running Loop with LoopInterface: ' . get_class($loop));
+            $loop->run();
 
-        // Check if it was set correctly
-   //     $retrievedChatServer = ServiceContainer::get('ChatServer');
-
-     //   debug($retrievedChatServer);
-        // if ($retrievedChatServer !== null) {
-        //     $io->out('ChatServer instance has been set correctly.');
-        // } else {
-        //     $io->out('Failed to set ChatServer instance.');
-        // }
-
-        $loop->addPeriodicTimer(5, function () use ($chatServer) {
-            $chatServer->pollDatabase();
-        });
-
-        $io->out('Running WebSocket server...');
-        $chatServer->run();
-
-        $io->out('Running Loop with LoopInterface: ' . get_class($loop));
-        $loop->run();
+        } else {
+            $io->out("WSENABLED is disabled");
+            return Command::CODE_ERROR;
+        }
+        
     }
 
 
-    // public function start(ConsoleIo $io)
-    // {
-    //     $io->out('Starting WebSocket server...');
-
-    //     $loop = Factory::create();
+   
 
 
-    //     $loop = Factory::create();
-    //     // Get LoopInterface from service container (assuming it's registered)
-    //     $eventLoop = ServiceContainer::get('LoopInterface');
-
-    //     $chatServer = new ChatServer($eventLoop);
-
-
-    //     #  $chatServer = ChatServer::getInstance($loop);
-
-    //     // Schedule periodic database polling
-    //     $loop->addPeriodicTimer(5, function () use ($chatServer) {
-    //         $chatServer->pollDatabase();
-    //     });
-
-    //     $io->out('Running WebSocket server...');
-    //     $chatServer->run();
-
-    //     $io->out('Running Loop with LoopInterface: ' . get_class($loop));
-    //     $loop->run();
-    // }
-
-
-    // public function send(ConsoleIo $io, $recordId)
-    // {
-    //     $io->out('Sending data...');
-
-    //     // Retrieve the ChatServer instance from the service container
-    //     // $chatServer = ServiceContainer::get('ChatServer');
-    //     // $client = $chatServer->getClient();
-    //     // debug($client);
-    //     $chatServer = ChatServer::getInstance(); // Reuse the existing instance
-    //     $client = $chatServer->getClient(); // Access clients if needed
-
-    //     // if ($chatServer !== null) {
-    //     //     if ($recordId !== null) {
-    //     //         $io->out("Processing record ID: $recordId");
-    //     //         // Logic to process the record ID and send data
-    //     //         // Example:
-    //     //         $result = $chatServer->processAndSendData($recordId);
-    //     //         $io->out("Result: " . print_r($result, true));
-    //     //     } else {
-    //     //         $io->out("No record ID provided. Cannot process data.");
-    //     //     }
-    //     // } else {
-    //     //     $io->out('ChatServer instance is not available.');
-    //     // }
-    // }
+    public function newchat(ConsoleIo $io, ?string $recordId)
+    {
+        if (empty($recordId)) {
+            $io->out('Record ID is required.');
+            return Command::CODE_ERROR;
+        }
+    
+        $io->out('Sending data...');
+ 
+        $webhookurl=getenv('CHAT_INTERNAL_URL');
+        $options = ['timeout' => 30];
+        $client = new Client($webhookurl, $options);
+        $data['type'] = 'ProcessChatsID';
+        $data['id']=$recordId;
+        $data = json_encode($data);
+        try {
+            $io->out("Sending data to WebSocket server: " .$webhookurl);
+            $this->log("ChatCommand: Sending webhook.".   $webhookurl, 'debug');
+            $client->send($data);
+    
+            // Receive response (optional)
+            $response = $client->receive();
+            $io->out("Received response: $response");
+            $this->log("ChatCommand: Success Response.".  $response, 'debug');
+    
+        } catch (Exception $e) {
+            $io->out('Error sending data to WebSocket server: ' . $e->getMessage());
+            $this->log("ChatCommand: Failed Response.".  Command::CODE_ERROR, 'debug');
+            return Command::CODE_ERROR;
+        }
+    
+        return Command::CODE_SUCCESS;
+    }
    
 }

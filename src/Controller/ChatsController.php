@@ -17,7 +17,7 @@ use Cake\I18n\FrozenTime;
 // use Cake\Core\Configure;
 // use Cake\Event\Event;
 
-
+use Cake\Log\Log;
 
 class ChatsController extends AppController
 {
@@ -192,7 +192,7 @@ class ChatsController extends AppController
 
         if ($tokeninfo) {
             if (isset($postData['chat-id'])) {
-                
+                $this->log("Chat ID is set as  ".$postData['chat-id'], 'debug');
                 $query = $this->getTableLocator()->get('Chats')->find();
                 $query->where([
                     'id' => $postData['chat-id']
@@ -200,10 +200,25 @@ class ChatsController extends AppController
 
                 $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created', 'stream_id', 'type']);
                 $messages = $query->all()->toArray();
-                $this->set('messages', $messages);
+                $this->log("Messages are   ".json_encode($messages), 'debug');
+                if(empty($messages)){
+                    $this->autoRender = false;
+                    $this->setResponse(
+                        $this->response->withStatus(203) // Created status code
+                            ->withType('application/json')
+                            ->withStringBody(json_encode([
+                                'error' => 'No message'
+                            ]))
+                    );
+                }else{
+                    $this->set('messages', $messages);
+                }
+                
+
 
             } else {
             //    debug("Chat ID is set");
+            $this->log("No Chat ID set", 'debug');
                 $account_id = $tokeninfo->account_id;
 
 

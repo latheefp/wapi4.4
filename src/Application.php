@@ -38,6 +38,7 @@ use Authentication\Middleware\AuthenticationMiddleware;
 //use Cake\Http\MiddlewareQueue;
 use Cake\Routing\Router;
 use Psr\Http\Message\ServerRequestInterface;
+use Cake\Core\Plugin;
 
 
 use App\Event\ChatEventListener;
@@ -59,7 +60,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
     public function bootstrap(): void {
         // Call parent to load bootstrap from files.
         parent::bootstrap();
-
+      //  $this->addPlugin('Queue');
         if (PHP_SAPI === 'cli') {
             $this->bootstrapCli();
         } else {
@@ -81,8 +82,16 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         // Load more plugins here
 
 
-        $eventListener = new ChatEventListener();
-        EventManager::instance()->on($eventListener);
+     //   $eventListener = new ChatEventListener(); //temp disabled
+     ///   EventManager::instance()->on($eventListener);
+
+       // $this->addPlugin('Queue');  //added for quing purpose.
+
+      // $this->addPlugin('Queue', ['bootstrap' => true, 'routes' => true]);
+      // $this->addPlugin('Queue', ['bootstrap' => true, 'routes' => true]);
+     //  $this->addPlugin('Queue');
+
+
     }
 
     /**

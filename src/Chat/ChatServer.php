@@ -12,6 +12,8 @@ use Ratchet\Server\IoServer;
 use React\EventLoop\LoopInterface;
 use Cake\Http\Client;
 
+use Cake\Datasource\Exception\RecordNotFoundException;
+
 use Cake\Log\LogTrait;
 
 
@@ -269,7 +271,7 @@ class ChatServer implements MessageComponentInterface
         $activeSessions = $ChatsSessionsTable->find()->all();
         foreach ($activeSessions as $key => $val) {
             if (!isset($active_clients[$val->clientid])) {
-                $this->log("Client is not active, deleting:  " . $val->clientid, 'debug');
+                $this->log("pollDatabase: Client is not active, deleting:  " . $val->clientid, 'debug');
                 $this->unregister($val->clientid);
             }
         }
@@ -277,38 +279,104 @@ class ChatServer implements MessageComponentInterface
       //  print_r($this->getClients());
     }
 
-    function ProcessChatsID($entity){
+    function ProcessChatsIDold($entity){
      ///   print_r($entity);
        // print( "Notify Client: ".json_encode($this->clients));
-       $this->log('Calling ProcessChatsID with'.  $entity['id'], 'debug');
+       $this->log('ProcessChatsID: called ProcessChatsID with chat ID:'.  $entity['id'], 'debug');
         $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
         $activeSessionsCount = $ChatsSessionsTable->find()
         ->where(['active' => 1, 'account_id' => $entity['account_id']])
         ->count();
-        $this->log("Current active sessions from DB info $activeSessionsCount", 'debug');
+        
+        if($activeSessionsCount == 0){
+            $this->log("ProcessChatsID: Current active clients from db is zero, no action will be triggered.. $activeSessionsCount", 'debug');
+        }else{
+            $this->log("ProcessChatsID: Current active clients from db. $activeSessionsCount", 'debug');
+        }
         $activeSessions = $ChatsSessionsTable->find()
             ->where(['active' => 1, 'account_id' => $entity['account_id']]);
+            
         foreach ($activeSessions as $key => $val) {
-            $this->log("Sending Notifciation to matched client:" .  $val->clientid, 'debug');
+            
             $query['type'] = "livechat";
             $query['session_id'] = $val->token;
             $query['contact_stream_id'] = $entity['contact_stream_id'];
             $query['client_id'] = $val->clientid;
             $query['chat-id'] = $entity['id'];
             $query['page'] = 1; //to be validated. make sure, it will not reset the page limit of chat history loaded by chat console.
+            $this->log("ProcessChatsID: Preparing to Sendi Notifciation to matched client with query:" . json_encode($query), 'debug');
+
+           
+
+            $ChatssTable = TableRegistry::getTableLocator()->get('Chats');
+            $id = (int)$entity['id'];
+            try {
+                $data=$ChatssTable->get($id)->toArray();
+            } catch (RecordNotFoundException $e) {
+                // Handle the case where the record is not found
+                $this->log("ProcessChatsID: Record with ID  $id  not found: " . $e->getMessage(), 'debug');
+                return false;
+               // echo "Error: Record not found.";
+            } catch (Exception $e) {
+                $this->log("ProcessChatsID: An error occurred: No Data found with key, $id  " . $e->getMessage(), 'debug');
+                return false;
+            }
+
+
+
+            // $ChatssTable = TableRegistry::getTableLocator()->get('Chats');
+            // $id = (int)$entity['id'];
+            // $maxRetries = 100; // Maximum number of retries
+            // $retryCount = 0; // Initial retry count
+
+
+
+            // while ($retryCount < $maxRetries) {
+            //     try {
+            //         $data = $ChatssTable->get($id)->toArray();
+            //         // Record found, process the data
+            //         // ...
+            //         break; // Exit the loop if the record is found
+            //     } catch (RecordNotFoundException $e) {
+            //         $retryCount++;
+            //         $this->log("ProcessChatsID: Record with ID $id not found, retrying... ($retryCount/$maxRetries)", 'debug');
+            //         sleep(1); // Wait for 1 second before retrying
+            //     } catch (Exception $e) {
+            //         $this->log("ProcessChatsID: An error occurred: No Data found with key, $id " . $e->getMessage(), 'debug');
+            //         return false; // Exit the function if any other exception occurs
+            //     }
+            // }
+            
+            // if ($retryCount === $maxRetries) {
+            //     $this->log("ProcessChatsID: Record with ID $id not found after $maxRetries retries.", 'debug');
+            //     return false; // Return false if the maximum number of retries is reached without success
+            // }
+
+
+
+
+
+
+
+
+
+          //  print_r($data);
+            $this->log("ProcessChatsID: Data before calling chathistory". $query['chat-id']. ":". json_encode($data), 'debug');
+            $this->log("ProcessChatsID: calling http://localhost/chats/loadchathistory", 'debug');
+
+            
             $http = new Client([
                 'timeout' => 600 // Timeout in seconds
             ]);
-            $this->log("calling http://localhost/chats/loadchathistory", 'debug');
             $response = $http->post('http://localhost/chats/loadchathistory', $query);
-
+            $this->log("ProcessChatsID: No new message for ". $response->getStringBody(), 'debug');
             $query['html'] = $response->getStringBody();
             if (empty($query['html'])) {
                 //  print "No new message for $val->account_id \n";
-                $this->log("No new message for $val->account_id", 'debug');
+                $this->log("ProcessChatsID: No new message for $val->account_id", 'debug');
             } else {
                 //  print "Sending message notification for account id $val->account_id with Client ID $val->clientid \n";
-                $this->log("Sending message notification for account id $val->account_id with Client ID $val->clientid", 'debug');
+                $this->log("ProcessChatsID: Sending message notification for account id $val->account_id with Client ID $val->clientid", 'debug');
                 $this->sendMessageToClient($query['client_id'], $query);
             }
             $client_match = true;
@@ -317,6 +385,74 @@ class ChatServer implements MessageComponentInterface
     
 
 
+    function ProcessChatsID($entity){
+          $this->log('ProcessChatsID: called ProcessChatsID with chat ID:'.  $entity['id'], 'debug');
+
+          $ChatssTable = TableRegistry::getTableLocator()->get('Chats');
+          $id = $entity['id'];
+          try {
+              $data=$ChatssTable->get($id)->toArray();
+          } catch (RecordNotFoundException $e) {
+              // Handle the case where the record is not found
+              $this->log("ProcessChatsID: Record with ID  $id  not found: " . $e->getMessage(), 'debug');
+              return false;
+             // echo "Error: Record not found.";
+          } catch (Exception $e) {
+              $this->log("ProcessChatsID: An error occurred: No Data found with key, $id  " . $e->getMessage(), 'debug');
+              return false;
+          }
+
+
+
+
+
+           $ChatsSessionsTable = TableRegistry::getTableLocator()->get('ChatsSessions');
+           $activeSessionsCount = $ChatsSessionsTable->find()
+           ->where(['active' => 1, 'account_id' => $data['account_id']])
+           ->count();
+           
+           if($activeSessionsCount == 0){
+               $this->log("ProcessChatsID: Current active clients from db is zero, no action will be triggered.. $activeSessionsCount", 'debug');
+           }else{
+               $this->log("ProcessChatsID: Current active clients from db. $activeSessionsCount", 'debug');
+           }
+           $activeSessions = $ChatsSessionsTable->find()
+               ->where(['active' => 1, 'account_id' => $data['account_id']]);
+               
+           foreach ($activeSessions as $key => $val) {
+               
+               $query['type'] = "livechat";
+               $query['session_id'] = $val->token;
+               $query['contact_stream_id'] = $val->contact_stream_id;
+               $query['client_id'] = $val->clientid;
+               $query['chat-id'] = $entity['id'];
+               $query['page'] = 1; //to be validated. make sure, it will not reset the page limit of chat history loaded by chat console.
+               $this->log("ProcessChatsID: Preparing to Sendi Notifciation to matched client with query:" . json_encode($query), 'debug');
+   
+   
+             //  print_r($data);
+               $this->log("ProcessChatsID: Data before calling chathistory". $query['chat-id']. ":". json_encode($data), 'debug');
+               $this->log("ProcessChatsID: calling http://localhost/chats/loadchathistory", 'debug');
+   
+               
+               $http = new Client([
+                   'timeout' => 600 // Timeout in seconds
+               ]);
+               $response = $http->post('http://localhost/chats/loadchathistory', $query);
+               $this->log("ProcessChatsID: No new message for ". $response->getStringBody(), 'debug');
+               $query['html'] = $response->getStringBody();
+               if (empty($query['html'])) {
+                   //  print "No new message for $val->account_id \n";
+                   $this->log("ProcessChatsID: No new message for $val->account_id", 'debug');
+               } else {
+                   //  print "Sending message notification for account id $val->account_id with Client ID $val->clientid \n";
+                   $this->log("ProcessChatsID: Sending message notification for account id $val->account_id with Client ID $val->clientid", 'debug');
+                   $this->sendMessageToClient($query['client_id'], $query);
+               }
+               $client_match = true;
+           }
+       }
+       
 
 
 
@@ -354,14 +490,14 @@ class ChatServer implements MessageComponentInterface
 
     function unregister($resourceId)
     {
-        $this->log("Unregistering $resourceId", 'debug');
+        $this->log("unregister: Unregistering $resourceId", 'debug');
         $clientinfo['client_id'] = $resourceId;
         $http = new Client([
             'timeout' => 600 // Timeout in seconds
         ]);
         $response = $http->post('http://localhost/chats/uiunregister', $clientinfo);
      //   print_r($response);
-        $this->logmsg($response->getStringBody(), null);
+       // $this->logmsg($response->getStringBody(), null);
     }
 
 

@@ -145,7 +145,8 @@ class MetricsCommand extends Command
 
     }
 
-    function savemetric($module, $account_id=0, $value)
+   // function savemetric($module, $account_id=0, $value)
+    function savemetric($module, $account_id, $value)
     {
         $metricTable = $this->getTableLocator()->get('Metrics');
         $newRow = $metricTable->newEmptyEntity();

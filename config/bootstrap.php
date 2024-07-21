@@ -45,6 +45,7 @@ use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
+use Cake\Core\Plugin;
 
 /*
  * See https://github.com/josegonzalez/php-dotenv for API details.
@@ -61,14 +62,46 @@ use Cake\Utility\Security;
  * for more information for recommended practices.
  */
 
-if (!env('APP_NAME') && file_exists(CONFIG . 'k8s/.env')) {
-    $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . 'k8s/.env']);
-    $dotenv->parse()
-            ->putenv()
-            ->toEnv()
+
+
+
+// if (!env('APP_NAME') && file_exists(CONFIG . 'k8s/.env')) {
+//     $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . 'k8s/.env']);
+//     $dotenv->parse()
+//             ->putenv()
+//             ->toEnv()
           
-            ->toServer();
+//             ->toServer();
+// }
+
+
+// config/bootstrap.php //
+// if (!getenv('APP_NAME') && file_exists(CONFIG . 'k8s/.env')) {
+//     $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . 'k8s/.env']);
+//     $dotenv->parse()
+//            ->putenv()
+//            ->toEnv()
+//            ->toServer();
+// }
+
+//fix for  repeated defnision of variables when loading from console.
+if (!getenv('APP_NAME') && file_exists(CONFIG . 'k8s/.env')) {
+    if (!getenv('ENV_LOADED')) {
+        // Load environment variables from .env file
+        $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . 'k8s/.env']);
+        $dotenv->parse()
+            ->putenv(true)
+            ->toEnv(true)
+            ->toServer(true);
+
+        // Set the ENV_LOADED variable to indicate that the environment variables have been loaded
+        putenv('ENV_LOADED=true');
+        $_ENV['ENV_LOADED'] = true;
+        $_SERVER['ENV_LOADED'] = true;
+    }
 }
+
+
 
 
 
@@ -106,6 +139,29 @@ try {
 if (file_exists(CONFIG . 'app_local.php')) {
     Configure::load('app_local', 'default');
 }
+
+
+
+
+// if (file_exists(CONFIG . 'queue.php')) {
+//     Configure::load('queue', 'default');
+//     // Debugging
+//     Log::debug('Queue configuration loaded');
+// } else {
+//     // Debugging
+//     Log::debug('Queue configuration file not found');
+// }
+
+
+// if (file_exists(CONFIG . 'queue.php')) {
+//     Configure::load('queue', 'default');
+//     echo 'Queue configuration loaded: ' . json_encode(Configure::read('Queue'));
+//     // You might want to use exit() here to stop further execution while testing
+//    // exit();
+// } else {
+//     echo 'Queue configuration file not found';
+//    // exit();
+// }
 
 /*
  * When debug = true the metadata cache should only last
@@ -266,3 +322,10 @@ Configure::write('Locale.validation.dateFormat', 'Y-m-j');
 //     //    'origin' => 'http://localhost:8765',
 //     ],
 // ])
+
+
+// File: config/bootstrap.php
+//use Cake\Core\Plugin;
+
+// Load the Queue plugin
+///Plugin::load('Queue', ['autoload' => true, 'routes' => true]);

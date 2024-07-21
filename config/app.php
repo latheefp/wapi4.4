@@ -402,6 +402,13 @@ return [
             'url' => env('LOG_QUERIES_URL', null),
             'scopes' => ['queriesLog'],
         ],
+        'default' => [
+            'className' => 'File',
+            'path' => LOGS,
+            'file' => 'debug',
+            'levels' => ['debug', 'info', 'notice'],
+            'size' => '10MB',
+        ]
     ],
 
     /*
@@ -447,7 +454,33 @@ return [
         'defaults' => 'database',
         'timeout' => 1440 #one day.
     ],
+    // 'Queue' => [
+    //     'workermaxruntime' => 120,
+    //     'cleanuptimeout' => 2592000, // 30 days
+    //     'gcprob' => 10,
+    //     'defaultworkertimeout' => 1800,
+    //     'defaultworkerretries' => 4,
+    //     'sleeptime' => 10,
+    //     'exitwhennothingtodo' => false,
+    //     'log' => true,
+    //     'notify' => 'php',
+    //     'email' => 'you@yourdomain.com',
+    //     'skipworkerifcantlock' => true,
+    //     'cakeResque' => false,
+    //     'maxworkers'=>5,
+    //     'queue' => [
+    //         'default' => [
+    //             'url' => 'redis://localhost:6379',
+    //             'queue' => 'default',
+    //         ],
+    //     ],
+    //     'task' => [
+    //         'types' => [
+    //             'ProcessChat' => \App\Job\ProcessChatJob::class,
+    //             // Add other job types here
+    //         ],
+    //     ],
+    // ],
+
+
 ];
-
-
-

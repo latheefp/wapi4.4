@@ -368,7 +368,6 @@ function disableScroll(conversationDiv) {
 
 
 
-//function loadchatold(contact_stream_id, profile) {
  function loadchat(contact_stream_id, name, profile) {    
     $('#loading-icon').show();
     console.log(contact_stream_id+ " " + name+ " "+ profile);
@@ -446,6 +445,7 @@ function disableScroll(conversationDiv) {
         };
         sendMsg(message);
     } else {
+        $('#loading-icon').hide(); //no other action needed. listen for scrolling. 
         console.log(conversationDiv.length + " is not zero Inintial loading is done, please scrollup for more loading.")
     }
 

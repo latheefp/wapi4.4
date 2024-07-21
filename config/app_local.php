@@ -9,23 +9,46 @@
 
 
 
-if (env('ENVIRONMENT') == "DEV") {
+// if (env('ENVIRONMENT') == "DEV") {
+//     $defaultDB = [
+//         'timezone' => 'UTC',
+//         'host' => env('DB_HOST'), // Replace 'db' with the name of the environment variable
+//         'username' => env('DB_USERNAME'), // Replace 'root' with the name of the environment variable
+//         'password' => env('DB_PASS'), // Replace 'rootPassword' with the name of the environment variable
+//         'database' => env('DB_DATABASE'), // Replace 'wapi' with the name of the environment variable
+//         'encoding' => 'utf8mb4',
+//         'cacheMetadata' => true,
+//     ];
+// }elseif(env('ENVIRONMENT') == "PROD") {
+//     $defaultDB = [
+//         'timezone' => 'UTC',
+//         'host' => env('DB_HOST'), // Replace 'db' with the name of the environment variable
+//         'username' => env('DB_USERNAME'), // Replace 'root' with the name of the environment variable
+//         'password' => env('DB_PASS'), // Replace 'rootPassword' with the name of the environment variable
+//         'database' => env('DB_DATABASE'), // Replace 'wapi' with the name of the environment variable
+//         'encoding' => 'utf8mb4',
+//         'cacheMetadata' => true,
+//     ];
+// }
+
+
+if (getenv('ENVIRONMENT') == "DEV") {
     $defaultDB = [
         'timezone' => 'UTC',
-        'host' => env('DB_HOST'), // Replace 'db' with the name of the environment variable
-        'username' => env('DB_USERNAME'), // Replace 'root' with the name of the environment variable
-        'password' => env('DB_PASS'), // Replace 'rootPassword' with the name of the environment variable
-        'database' => env('DB_DATABASE'), // Replace 'wapi' with the name of the environment variable
+        'host' => getenv('DB_HOST'), // Replace 'db' with the name of the environment variable
+        'username' => getenv('DB_USERNAME'), // Replace 'root' with the name of the environment variable
+        'password' => getenv('DB_PASS'), // Replace 'rootPassword' with the name of the environment variable
+        'database' => getenv('DB_DATABASE'), // Replace 'wapi' with the name of the environment variable
         'encoding' => 'utf8mb4',
         'cacheMetadata' => true,
     ];
-}elseif(env('ENVIRONMENT') == "PROD") {
+}elseif(getenv('ENVIRONMENT') == "PROD") {
     $defaultDB = [
         'timezone' => 'UTC',
-        'host' => env('DB_HOST'), // Replace 'db' with the name of the environment variable
-        'username' => env('DB_USERNAME'), // Replace 'root' with the name of the environment variable
-        'password' => env('DB_PASS'), // Replace 'rootPassword' with the name of the environment variable
-        'database' => env('DB_DATABASE'), // Replace 'wapi' with the name of the environment variable
+        'host' => getenv('DB_HOST'), // Replace 'db' with the name of the environment variable
+        'username' => getenv('DB_USERNAME'), // Replace 'root' with the name of the environment variable
+        'password' => getenv('DB_PASS'), // Replace 'rootPassword' with the name of the environment variable
+        'database' => getenv('DB_DATABASE'), // Replace 'wapi' with the name of the environment variable
         'encoding' => 'utf8mb4',
         'cacheMetadata' => true,
     ];

@@ -8,6 +8,8 @@ services:
       - D:\web\wa4.4\docker\000-default.conf:/etc/apache2/sites-enabled/000-default.conf
     build: .
     image: latheefp/wapi:latest
+    # env_file:
+    #   - docker/env.sh
     ports:
       - "8090:80"
       - "8080:8080"
