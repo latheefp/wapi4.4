@@ -10,6 +10,7 @@ use Cake\Console\ConsoleOptionParser;
 use App\Chat\ChatServer;
 use React\EventLoop\Factory;
 use WebSocket\Client; //used on send function
+use Cake\ORM\TableRegistry;
 
 //use App\Service\ServiceContainer;
 
@@ -106,32 +107,68 @@ class ChatCommand extends Command
             $io->out('Record ID is required.');
             return Command::CODE_ERROR;
         }
-    
-        $io->out('Sending data...');
+
+      //  $io->out('Sending data...');
+
+        //if ($this->updateSendinfo($recordId)) {
+
+            $webhookurl = getenv('CHAT_INTERNAL_URL');
+            $options = ['timeout' => 30];
+            $client = new Client($webhookurl, $options);
+            $data['type'] = 'ProcessChatsID';
+            $data['id'] = $recordId;
+            $data = json_encode($data);
+            try {
+              //  $io->out("Sending data to WebSocket server: " . $webhookurl);
+                $this->log("ChatCommand: Sending webhook." .   $webhookurl, 'debug');
+                $client->send($data);
+
+                // Receive response (optional)
+                $response = $client->receive();
+                $io->out("Received response: $response");
+                $this->log("ChatCommand: Success Response." .  $response, 'debug');
+            } catch (Exception $e) {
+                $io->out('Error sending data to WebSocket server: ' . $e->getMessage());
+                $this->log("ChatCommand: Failed Response." .  Command::CODE_ERROR, 'debug');
+                return Command::CODE_ERROR;
+            }
+
+            return Command::CODE_SUCCESS;
+        // } else {
+        //     $this->log("ChatCommand:$recordId already Sent",'debug');
+        // }
  
-        $webhookurl=getenv('CHAT_INTERNAL_URL');
-        $options = ['timeout' => 30];
-        $client = new Client($webhookurl, $options);
-        $data['type'] = 'ProcessChatsID';
-        $data['id']=$recordId;
-        $data = json_encode($data);
-        try {
-            $io->out("Sending data to WebSocket server: " .$webhookurl);
-            $this->log("ChatCommand: Sending webhook.".   $webhookurl, 'debug');
-            $client->send($data);
+        
+    }
+
+
+    function updateSendinfo($id)
+    {
+        $chatsTable = TableRegistry::getTableLocator()->get('Chats');
     
-            // Receive response (optional)
-            $response = $client->receive();
-            $io->out("Received response: $response");
-            $this->log("ChatCommand: Success Response.".  $response, 'debug');
+        // Fetch the first record that matches the criteria
+        $chat = $chatsTable->find()
+            ->where(['id' => $id, 'notify' => false])
+            ->first();
     
-        } catch (Exception $e) {
-            $io->out('Error sending data to WebSocket server: ' . $e->getMessage());
-            $this->log("ChatCommand: Failed Response.".  Command::CODE_ERROR, 'debug');
-            return Command::CODE_ERROR;
+        if ($chat) {
+            $this->log("ChatCommand: $id not yet processed",'debug');
+            
+            // Update the notify field to true
+            $chat->notify = true;
+    
+            // Save the updated entity
+            if ($chatsTable->save($chat)) {
+                $this->log("ChatCommand: Notification updated for $id",'debug');
+                return true;
+            } else {
+                $this->log("ChatCommand: Update notification failed on $id",'debug');
+                return false;
+            }
+        } else {
+            $this->log("ChatCommand: $id already processed",'debug');
+            return false;
         }
-    
-        return Command::CODE_SUCCESS;
     }
    
 }

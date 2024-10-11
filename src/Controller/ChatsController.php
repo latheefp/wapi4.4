@@ -192,7 +192,7 @@ class ChatsController extends AppController
 
         if ($tokeninfo) {
             if (isset($postData['chat-id'])) {
-                $this->log("Chat ID is set as  ".$postData['chat-id'], 'debug');
+                $this->log("Chat ID is set as  " . $postData['chat-id'], 'debug');
                 $query = $this->getTableLocator()->get('Chats')->find();
                 $query->where([
                     'id' => $postData['chat-id']
@@ -200,8 +200,8 @@ class ChatsController extends AppController
 
                 $query->select(['id', 'sendarray', 'recievearray', 'contact_stream_id', 'created', 'stream_id', 'type']);
                 $messages = $query->all()->toArray();
-                $this->log("Messages are   ".json_encode($messages), 'debug');
-                if(empty($messages)){
+                //  $this->log("Messages are   ".json_encode($messages), 'debug');
+                if (empty($messages)) {
                     $this->autoRender = false;
                     $this->setResponse(
                         $this->response->withStatus(203) // Created status code
@@ -210,15 +210,12 @@ class ChatsController extends AppController
                                 'error' => 'No message'
                             ]))
                     );
-                }else{
+                } else {
                     $this->set('messages', $messages);
                 }
-                
-
-
             } else {
-            //    debug("Chat ID is set");
-            $this->log("No Chat ID set", 'debug');
+                //    debug("Chat ID is set");
+                $this->log("No Chat ID set", 'debug');
                 $account_id = $tokeninfo->account_id;
 
 
@@ -232,8 +229,8 @@ class ChatsController extends AppController
                 $query->where([
                     'contact_stream_id' => $postData['contact_stream_id'],
                     'account_id' => $account_id
-                               ]); //conditions.
-            //    debug($postData);
+                ]); //conditions.
+                //    debug($postData);
 
 
 
@@ -263,7 +260,7 @@ class ChatsController extends AppController
                 } else {
                     $query->order(['id' => 'DESC']);
                 }
-              //  debug($query->sql());
+                //  debug($query->sql());
 
 
                 $query->limit(50);

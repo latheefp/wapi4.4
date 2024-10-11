@@ -23,15 +23,15 @@
 // ];
 
 
-return [
-    // Other configuration settings
+// return [
+//     // Other configuration settings
 
-    'Queue' => [
-        'default' => [
-            'driver' => 'Cake\Queue\Driver\Sync', // Example driver, use your desired driver
-            'jobs' => [
-                'ProcessChat' => 'App\Job\ProcessChatJob',
-            ],
-        ],
-    ],
-];
+//     'Queue' => [
+//         'default' => [
+//             'driver' => 'Cake\Queue\Driver\Sync', // Example driver, use your desired driver
+//             'jobs' => [
+//                 'ProcessChat' => 'App\Job\ProcessChatJob',
+//             ],
+//         ],
+//     ],
+// ];

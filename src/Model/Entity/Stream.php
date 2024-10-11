@@ -54,10 +54,10 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\FrozenTime|null $conversation_expiration_timestamp
  * @property string|null $conversation_origin_type
  * @property string|null $tmp_upate_json
+ * @property bool $live_chat_notified
  *
  * @property \App\Model\Entity\ContactStream $contact_stream
  * @property \App\Model\Entity\Schedule $schedule
- * @property \App\Model\Entity\Contact $contact
  * @property \App\Model\Entity\Account $account
  * @property \App\Model\Entity\RatingView[] $rating_views
  * @property \App\Model\Entity\Rating[] $ratings
@@ -121,9 +121,9 @@ class Stream extends Entity
         'conversation_expiration_timestamp' => true,
         'conversation_origin_type' => true,
         'tmp_upate_json' => true,
+        'live_chat_notified' => true,
         'contact_stream' => true,
         'schedule' => true,
-        'contact' => true,
         'account' => true,
         'rating_views' => true,
         'ratings' => true,

@@ -27,7 +27,6 @@ class StreamsTableTest extends TestCase
         'app.Streams',
         'app.ContactStreams',
         'app.Schedules',
-        'app.Contacts',
         'app.Accounts',
         'app.RatingViews',
         'app.Ratings',

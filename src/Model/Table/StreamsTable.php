@@ -46,13 +46,13 @@ class StreamsTable extends Table
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->addBehavior('StreamToChat');
+
         $this->setTable('streams');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
 
         $this->addBehavior('Timestamp');
-
+        $this->addBehavior('StreamToChat');
         $this->belongsTo('ContactStreams', [
             'foreignKey' => 'contact_stream_id',
         ]);
@@ -62,6 +62,9 @@ class StreamsTable extends Table
         $this->belongsTo('Accounts', [
             'foreignKey' => 'account_id',
             'joinType' => 'INNER',
+        ]);
+        $this->hasMany('Chats', [
+            'foreignKey' => 'stream_id',
         ]);
         $this->hasMany('RatingViews', [
             'foreignKey' => 'stream_id',
@@ -280,6 +283,10 @@ class StreamsTable extends Table
         $validator
             ->scalar('tmp_upate_json')
             ->allowEmptyString('tmp_upate_json');
+
+        $validator
+            ->boolean('live_chat_notified')
+            ->notEmptyString('live_chat_notified');
 
         return $validator;
     }

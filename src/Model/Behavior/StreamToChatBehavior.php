@@ -26,12 +26,17 @@ class StreamToChatBehavior extends Behavior
 {
     public function afterSave(Event $event, $entity, ArrayObject $options)
     {
-        $chatsTable = TableRegistry::getTableLocator()->get('Chats');
+        if ($entity->live_chat_notified) {
+            Log::debug("New entity:live_chat_notified is true: ".$entity->live_chat_notified);
+            return;
+        }
 
+        
+     //   debug($entity);
 
         if (empty($entity->contact_stream_id)) {
             // Handle missing contact_stream_id
-            Log::debug("Error: contact_stream_id is empty", 'error');
+            Log::debug("Error: contact_stream_id is empty".$entity);
             return "Error: contact_stream_id is empty";
         }
         
@@ -48,6 +53,8 @@ class StreamToChatBehavior extends Behavior
         }
         
         // If all checks pass, proceed with your logic
+       
+        $chatsTable = TableRegistry::getTableLocator()->get('Chats');
         
         $chat = $chatsTable->newEntity([
             'contact_stream_id' => $entity->contact_stream_id,
@@ -61,37 +68,20 @@ class StreamToChatBehavior extends Behavior
 
         if ($chatsTable->save($chat)) {
             Log::debug("Behavior: Data saved as chat ID:$chat->id");
+            $entity->live_chat_notified = true;
+            $StreamsTable = TableRegistry::getTableLocator()->get('Streams');
+            $StreamsTable->save($entity);
+            sleep (10);
             $this->NotifyLiveChat($chat->id);
-          //  sleep(200);
+
             
         } else {
             Log::debug("Behavior: failed due to missing data during edit ".json_encode($entity->toArray)." has disconnected");
         }
 
-        // if(isset($chat->id)){
-        //     sleep (100);
-        //     Log::debug("Behavior: Calling live messgae.:$chat->id");
-        //     $this->NotifyLiveChat($chat->id);
-        // }else{
-        //     Log::debug("No Chat ID available");
-        // }
-
 
      }
 
-    //  function NotifyLiveChat($chatid){
-    //     Log::debug("StreamToChatBehavior: detected changes in Chat table: $chatid");
-    //         $data['type'] = 'ProcessChatsID';
-    //         $data['id'] = $chatid;
-    //         $options = [
-    //             'timeout' => 30 // Connection and read timeout in seconds
-    //         ];
-    //         $client = new Client(getenv('CHAT_INTERNAL_URL'), $options);
-    //         Log::debug("StreamToChatBehavior: Calling websocket from Listener: ".getenv('CHAT_INTERNAL_URL'));
-    //         $client->send(json_encode($data));
-    //         $response = $client->receive();
-    //         Log::debug("Received response: $response");
-    //  }
 
      function NotifyLiveChat($chatid){
 

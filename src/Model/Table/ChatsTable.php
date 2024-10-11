@@ -86,11 +86,6 @@ class ChatsTable extends Table
             ->allowEmptyString('recievearray');
 
         $validator
-            ->scalar('type')
-            ->maxLength('type', 18)
-            ->allowEmptyString('type');
-
-        $validator
             ->integer('contact_stream_id')
             ->allowEmptyString('contact_stream_id');
 
@@ -101,6 +96,11 @@ class ChatsTable extends Table
         $validator
             ->integer('stream_id')
             ->notEmptyString('stream_id');
+
+        $validator
+            ->scalar('type')
+            ->maxLength('type', 32)
+            ->allowEmptyString('type');
 
         return $validator;
     }
