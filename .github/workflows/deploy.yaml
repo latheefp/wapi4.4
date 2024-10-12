@@ -51,10 +51,12 @@ jobs:
       env:
         CURRENT_DATE: $(date +"%Y%m%d%H%M%S")
         COMMIT_HASH: $(git rev-parse --short HEAD)
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        IMAGE_TAG: ${CURRENT_DATE}_${COMMIT_HASH} 
       run: |
         CURRENT_DATE=$(date +"%Y%m%d")
         COMMIT_HASH=$(git rev-parse --short HEAD)
-        IMAGE_TAG=${CURRENT_DATE}_${COMMIT_HASH}  
+        #IMAGE_TAG=${CURRENT_DATE}_${COMMIT_HASH}  
         echo "$KUBE_CONFIG_DATA" | base64 -d > kubeconfig.yaml
         echo image tag is $IMAGE_TAG
         export KUBECONFIG=$PWD/kubeconfig.yaml  # Set KUBECONFIG to the path of the kubeconfig file
