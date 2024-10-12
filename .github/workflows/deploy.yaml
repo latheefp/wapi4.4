@@ -60,5 +60,5 @@ jobs:
         export KUBECONFIG=$PWD/kubeconfig.yaml  # Set KUBECONFIG to the path of the kubeconfig file
         kubectl config get-contexts  # Lists available contexts
         kubectl config use-context egrand
-        kubectl set image -n  wapi  deployment/wapi wapi=latheefp/wapi:$IMAGE_TAG
-        kubectl -n wapi rollout restart deployment/wapi
+        kubectl set image -n  wapi  deployment/wajunction wapi=latheefp/wapi:$IMAGE_TAG
+        kubectl -n wapi rollout restart deployment/wajunction
