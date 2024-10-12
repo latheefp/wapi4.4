@@ -3,9 +3,9 @@ version: "3"
 services:
   wap44:
     volumes:
-      - D:\web\wa4.4:/var/www/html
-      - D:\web\wa4.4\docker\env.sh:/var/www/html/config/k8s/.env
-      - D:\web\wa4.4\docker\000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - .:/var/www/html
+      - ./docker/env.sh:/var/www/html/config/k8s/.env
+      - ./docker/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
     build: .
     image: latheefp/wapi:latest
     # env_file:
@@ -14,17 +14,9 @@ services:
       - "8090:80"
       - "8080:8080"
     networks:
-      dev-network:     
-
-  # redis:
-  #   image: redis:latest
-  #   ports:
-  #     - "6379:6379"
-  #   networks:
-  #     - dev-network
-
-
+      - infratool     
 
 networks:
-  dev-network:
-    driver: bridge
+  infratool:
+    external: true
+

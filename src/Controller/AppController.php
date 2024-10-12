@@ -23,7 +23,7 @@ use Cake\Core\Configure;
 //use Cake\Core\Configure;
 use Cake\Http\Session\DatabaseSession;
 use Cake\Datasource\ConnectionManager;
-
+use App\Service\SlackService;
 /**
  * Application Controller
  *
@@ -445,6 +445,8 @@ class AppController extends Controller
             $row->success = false;
             $row->sendarray = json_encode($sendarray);
             $table->save($row);
+            $slackService = new SlackService();
+            $slackService->sendMessage(message: "Failed to send  $type message to ".$mobile->contact_number);
         }
         return $response;
     }

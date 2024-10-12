@@ -1,5 +1,5 @@
 <?php
-
+//bin/cake Archive -f cleanq
 declare(strict_types=1);
 
 namespace App\Command;
@@ -10,7 +10,7 @@ use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\I18n\FrozenTime; // Import FrozenTime
 use App\Controller\AppController; //(path to your controller).
-
+use App\Service\SlackService;
 
 class ArchiveCommand extends Command
 {
@@ -76,6 +76,9 @@ class ArchiveCommand extends Command
 
         debug("Number of SendQ records to be deleted: $sendCount");
 
+        $slackService = new SlackService();
+        $slackService->sendMessage("Number of SendQ records to be deleted:". $sendCount);
+
         $query = $sendTable->query();
         $query->delete()
             ->where([
@@ -99,7 +102,7 @@ class ArchiveCommand extends Command
             ->fetch('assoc')['count'];
 
         debug("Number of RcvQ records to be deleted: $rcvCount");
-
+        $slackService->sendMessage("Number of RcvQ records to be deleted:". $rcvCount);
         $query = $rcvTable->query();
         $query->delete()
             ->where([
@@ -107,8 +110,6 @@ class ArchiveCommand extends Command
                 'created <' => $retentionsHoursAgo
             ])
             ->execute();
-        
-
         
      }
  
