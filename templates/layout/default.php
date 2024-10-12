@@ -53,7 +53,7 @@ if (isset($titleforlayout)) {
         <div class="wrapper">
             <!-- Preloader -->
             <div class="preloader flex-column justify-content-center align-items-center">
-                <img class="animation__shake" src="/img/WaJunction.png" alt="<?php Configure::read('app.name') ?> <?= Configure::read('app.version') ?>" height="60" width="60">
+                <img class="animation__shake" src="/img/Wajunction.png" alt="<?php Configure::read('app.name') ?> <?= Configure::read('app.version') ?>" height="60" width="60">
             </div>
 
             <!-- Navbar -->

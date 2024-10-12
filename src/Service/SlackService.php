@@ -39,6 +39,8 @@ class SlackService
         $http = new Client();
         $response = $http->post($this->webhookUrl, json_encode($payload), ['type' => 'json']);
 
+        debug($response);
+
         if (!$response->isOk()) {
             throw new \Exception('Failed to send message to Slack');
         }

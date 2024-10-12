@@ -410,33 +410,33 @@ class ApisController extends AppController {
         fclose($handle);
     }
 
-    function sendmsg1() { //for school
-        $this->viewBuilder()->setLayout('ajax');
-        $this->writelog("Whatsapp Schedule function hit", null);
-        $this->viewBuilder()->setLayout('ajax');
-        $data = $this->request->getData();
-        if ($this->request->is('post')) {
-            $this->writelog($data, "The is post data");
-            //validating API Keys.
-            $api_status = $this->_validatekey($data);
-            if ($api_status['status'] == true) {
-                $this->writelog($api_status, "Api Validated");
-                $data['user_id'] = $api_status['user_id'];
+    // function sendmsg1() { //for school
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     $this->writelog("Whatsapp Schedule function hit", null);
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     $data = $this->request->getData();
+    //     if ($this->request->is('post')) {
+    //         $this->writelog($data, "The is post data");
+    //         //validating API Keys.
+    //         $api_status = $this->_validatekey($data);
+    //         if ($api_status['status'] == true) {
+    //             $this->writelog($api_status, "Api Validated");
+    //             $data['user_id'] = $api_status['user_id'];
 
-                //passing the post data to real send funtion.
-                $data['mobile_number'] = "966547237272";
-                $result = $this->_send_schedule($data);
-                $this->set('result', $result);
-            } else {
-                $this->set('result', $api_status);
-            }
-        } else {
-            $result['status'] = "failed";
-            $result['message'] = "Wrong request type";
-            $this->set($result, $result);
-            $this->writelog($data, "Not Post data");
-        }
-    }
+    //             //passing the post data to real send funtion.
+    //             $data['mobile_number'] = "966547237272";
+    //             $result = $this->_send_schedule($data);
+    //             $this->set('result', $result);
+    //         } else {
+    //             $this->set('result', $api_status);
+    //         }
+    //     } else {
+    //         $result['status'] = "failed";
+    //         $result['message'] = "Wrong request type";
+    //         $this->set($result, $result);
+    //         $this->writelog($data, "Not Post data");
+    //     }
+    // }
 
     function sendmsg() {
         // debug("Send Schdule");
@@ -488,44 +488,6 @@ class ApisController extends AppController {
         //check current stauts of this account.
     }
 
-//     function sendchat() {
-//         $this->viewBuilder()->setLayout('ajax');
-//         $request = $this->getRequest();
-//         $data = $this->request->getData();
-//         //   debug($data);
-//         $authorizationHeader = $request->getHeaderLine('Authorization');
-//         if (preg_match('/Bearer\s+(.*)/', $authorizationHeader, $matches)) {
-//             $bearerToken = $matches[1];
-//         }
-//         $data['api_key'] = $bearerToken;
-//         $FBSettings = $this->_getFBsettings($data);
-//         if ($FBSettings['status']['code'] !== 200) {
-//             $result['status'] = "failed";
-//             $result['msg'] = "Internal system error, Wrong IP info";
-//         } else {
-//             //  $contactStream = $this->getTableLocator()->get('ContactStreams')->get($data['mobilenumberId']);
-//             $streams_table = $this->getTableLocator()->get('Streams');
-//             $streamrow = $streams_table->newEmptyEntity();
-// //            $streamrow->schedule_id = $sched_id;
-//             $streamrow->contact_stream_id = $data['mobilenumberId'];
-//             $streamrow->initiator = "Console";
-//             $streamrow->type = "Console";
-//             $streamrow->postdata = json_encode($data);
-//             $streamrow->account_id = $FBSettings['account_id'];
-//             $streams_table->save($streamrow);
-//             $contact = $streams_table->get($streamrow->id);
-//             $result = $this->_despatch_msg($contact, $data, null, $FBSettings, "text");
-//             //debug($result);
-//             if (isset($result['messages'][0]['id'])) {
-//                 $status['status'] = "success";
-//                 $status['msg'] = json_encode($result);
-//             } else {
-//                 $status['status'] = "failed";
-//                 $status['msg'] = json_encode($result);
-//             }
-//             $this->set('result', $status);
-//         }
-//     }
 
 
 }
