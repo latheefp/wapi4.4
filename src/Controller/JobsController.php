@@ -248,12 +248,9 @@ class JobsController extends AppController
             case "receive":
              //   debug("Recieve");
                 $msgArray = json_decode($streams->recievearray, true);
-            //    debug($msgArray);
                 $message = $msgArray['entry'][0]['changes'][0]['value']['messages'][0];
                 $sender=$msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
                 $sender_profile=$msgArray['entry'][0]['changes'][0]['value']['contacts'][0]['profile']['name'];
-              //  debug($sender);
-               // debug($sender_profile);
                 $sendarrayJson = '{
                     "messaging_product": "whatsapp",
                     "recipient_type": "individual"

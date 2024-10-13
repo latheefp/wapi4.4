@@ -1104,14 +1104,23 @@ class CampaignsController extends AppController
         } else {
             $query['limit'] = $this->_getsettings('pagination_count');
         }
-        $fields = $this->_fieldtypes($base_table);
+        $fields = $this->_fieldtypes(table_name: $base_table);
+
+   
         foreach ($fields as $title => $props) {
-            if (($props['viewable'] == true) && ($props['searchable'] == true)) {
-                if (isset($querydata['search']['value'])) {
-                    $query['conditions']['OR'][] = array($model . "." . $props['fld_name'] . ' LIKE' => '%' . $querydata['search']['value'] . '%');
+            if (($props['viewable'] == true)) {
+                $query['fields']= $props['fld_name'];  //add only viewable field to searh.
+                if(($props['searchable'] == true)){
+                    if (isset($querydata['search']['value'])) {
+                        $query['conditions']['OR'][] = array($model . "." . $props['fld_name'] . ' LIKE' => '%' . $querydata['search']['value'] . '%');
+                    }
                 }
+
             }
         }
+
+
+
         $start = intval($querydata['start']);
         $query['page'] = ($start / $query['limit']) + 1;
         if (!empty($querydata['columns'][$querydata['order']['0']['column']]['name'])) {

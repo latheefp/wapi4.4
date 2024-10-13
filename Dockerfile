@@ -94,4 +94,4 @@ EXPOSE 80
 #CMD ["bash", "-c", "service apache2 restart & /var/www/html/bin/cake Processrcvq & /var/www/html/bin/cake Processsendq"]
 USER www-data
 
-#ENTRYPOINT ["/var/www/html/bin/entrypoint.sh"]
+ENTRYPOINT ["/var/www/html/bin/entrypoint.sh"]

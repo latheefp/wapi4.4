@@ -112,4 +112,12 @@ class TestsController extends AppController
         exec("$cmd > $logFile 2>&1 &");
     }
 
+
+    function tune(){
+        $base_table = "stream_views";
+        $fields = $this->_fieldtypes( $base_table);
+        debug($fields);
+
+    }
+
 }
