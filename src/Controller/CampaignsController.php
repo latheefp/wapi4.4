@@ -1109,7 +1109,7 @@ class CampaignsController extends AppController
    
         foreach ($fields as $title => $props) {
             if (($props['viewable'] == true)) {
-                $query['fields']= $props['fld_name'];  //add only viewable field to searh.
+          //      $query['fields']= $props['fld_name'];  //add only viewable field to searh.
                 if(($props['searchable'] == true)){
                     if (isset($querydata['search']['value'])) {
                         $query['conditions']['OR'][] = array($model . "." . $props['fld_name'] . ' LIKE' => '%' . $querydata['search']['value'] . '%');
