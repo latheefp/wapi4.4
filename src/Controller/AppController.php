@@ -489,7 +489,8 @@ class AppController extends Controller
             $row->sendarray = json_encode($sendarray);
             $table->save($row);
             $slackService = new SlackService();
-            $response['slack']=json_decode($slackService->sendMessage(message: "Failed to send  $type message to ".$mobile->contact_number),true);
+            $contactnumber = $this->getTableLocator()->get('ContactStreams')->get($streams->contact_stream_id);
+            $response['slack']=json_decode($slackService->sendMessage(message: "Failed to send  $type message to ".$contactnumber->contact_number),true);
         }
         return $response;
     }
