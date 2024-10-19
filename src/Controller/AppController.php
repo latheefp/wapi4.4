@@ -463,7 +463,7 @@ class AppController extends Controller
         ));
 
         $jsonresponse = curl_exec($curl);
-        $response['wa'] = json_decode($jsonresponse, true);
+        $response= json_decode($jsonresponse, true);
 
 
         curl_close($curl);
@@ -472,16 +472,25 @@ class AppController extends Controller
         $table = $this->getTableLocator()->get('Streams');
         $row = $table->get($streams->id);
         // debug($row);
-      //    debug($response);
+        //    debug($response);
         if (isset($response['messages'][0]['id'])) {
             $row->messageid = $response['messages'][0]['id'];
-       //     $row->type = "send";
+            //     $row->type = "send";
             $row->has_wa = true;
             $row->success = true;
             $row->result = $jsonresponse;
             $row->sendarray = json_encode($sendarray);
             $table->save($row);
-        } else {
+        } 
+        // elseif (isset($response['wa']['messages'][0]['id'])) {
+        //     $row->messageid = $response['wa']['messages'][0]['id'];
+        //     $row->type = "send";
+        //     $row->has_wa = true;
+        //     $row->success = true;
+        //     $row->result = $jsonresponse;
+        //     $table->save($row);
+        //} 
+        else {
             $this->writelog($response, "Response error");
             $row->has_wa = false;
             $row->result = $jsonresponse;
@@ -490,7 +499,7 @@ class AppController extends Controller
             $table->save($row);
             $slackService = new SlackService();
             $contactnumber = $this->getTableLocator()->get('ContactStreams')->get($streams->contact_stream_id);
-            $response['slack']=json_decode($slackService->sendMessage(message: "Failed to send  $type message to ".$contactnumber->contact_number. " $jsonresponse"),true);
+            $response['slack'] = json_decode($slackService->sendMessage(message: "Failed to send  $type message to " . $contactnumber->contact_number . " $jsonresponse"), true);
         }
         return $response;
     }
@@ -1267,7 +1276,6 @@ class AppController extends Controller
             $row->success = true;
             $row->result = $jsonresponse;
             $table->save($row);
-
         }else{
             $this->writelog($response, "Response error");
             $row->type = "send";
