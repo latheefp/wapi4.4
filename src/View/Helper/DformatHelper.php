@@ -16,7 +16,7 @@ class DformatHelper extends Helper {
         $result = null;
         $oformat = $option['format'];
         $odata = $option['data'];
-        $row=$option['row'];
+   //     $row=$option['row'];
 
         switch ($oformat) {
             case "number":
