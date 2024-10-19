@@ -6,9 +6,9 @@ namespace App\Test\Fixture;
 use Cake\TestSuite\Fixture\TestFixture;
 
 /**
- * ContactStreamsFixture
+ * BlockedNumbersFixture
  */
-class ContactStreamsFixture extends TestFixture
+class BlockedNumbersFixture extends TestFixture
 {
     /**
      * Init method
@@ -20,13 +20,10 @@ class ContactStreamsFixture extends TestFixture
         $this->records = [
             [
                 'id' => 1,
-                'contact_number' => 'Lorem ipsum dolo',
-                'profile_name' => 'Lorem ipsum dolor sit amet',
+                'mobile_number' => 'Lorem ipsum do',
                 'account_id' => 1,
-                'camp_blocked' => 1,
-                'name' => 'Lorem ipsum dolor sit amet',
+                'created' => '2024-10-17 17:06:03',
                 'user_id' => 1,
-                'created' => '2024-10-18 09:53:24',
             ],
         ];
         parent::init();

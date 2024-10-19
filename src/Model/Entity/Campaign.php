@@ -21,6 +21,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\User $user
  * @property \App\Model\Entity\Template $template
  * @property \App\Model\Entity\CampaignForm[] $campaign_forms
+ * @property \App\Model\Entity\CampsTracker[] $camps_trackers
  * @property \App\Model\Entity\ScheduleView[] $schedule_views
  * @property \App\Model\Entity\Schedule[] $schedules
  */
@@ -36,6 +37,7 @@ class Campaign extends Entity
      * @var array<string, bool>
      */
     protected $_accessible = [
+        'id' => true,
         'campaign_name' => true,
         'start_date' => true,
         'end_date' => true,
@@ -47,6 +49,7 @@ class Campaign extends Entity
         'user' => true,
         'template' => true,
         'campaign_forms' => true,
+        'camps_trackers' => true,
         'schedule_views' => true,
         'schedules' => true,
     ];

@@ -45,9 +45,13 @@ class BillingsController extends AppController
         $apiKey = $this->request->getHeaderLine('X-Api-Key');
 
         $qid = $this->request->getData('qid'); // Assuming this is a POST request
-   
 
-
+        if(!isset($qid)){
+            $this->response = $this->response->withStatus(500); // id not found
+            $response['error'] = "Rcv Q $qid  not found in request,";
+            $this->set('response', $response);
+            return;
+        }
 
 
         try {

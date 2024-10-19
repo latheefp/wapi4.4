@@ -5,6 +5,7 @@ CREATE VIEW stream_views AS SELECT
     campaigns.id AS compaign_id,
     campaigns.campaign_name,
     contact_streams.contact_number,
+    contact_streams.camp_blocked,
     contact_streams.profile_name,
     contact_streams.name as contact_name
 FROM

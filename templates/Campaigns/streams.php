@@ -27,119 +27,7 @@ $this->Breadcrumbs->add([
 
 <Input type="hidden" id="show-recieve-only" value="false">
 
-<div class="modal fade bs-example-modal-lg table-responsive" id="contactmodel" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="cat-modal-title">Contact Number</h4>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="card-header p-0 pt-1 border-bottom-0">
 
-                </div>
-
-                <div class="tab-content" id="custom-tabs-three-tabContent">
-                    <div class="tab-pane fade active show" id="custom-tabs-three-home" role="tabpanel" aria-labelledby="custom-tabs-three-home-tab">
-                        <div class="card">
-                            <div class="card-body">
-                                <?php
-                                $products = null;
-                                echo $this->Form->create(
-                                    $products,
-                                    [
-                                        'type' => 'post',
-                                        'class' => 'form-horizontal',
-                                        'url' => '/compaigns/newcamp',
-                                        'idPrefix' => 'newcontactlist',
-                                        'id' => 'newcampform',
-                                        'defaction' => null,
-                                        'class' => ["form-horizontal", "needs-validation"],
-                                        "novalidate",
-                                        'enctype' => 'multipart/form-data'
-                                    ]
-                                );
-                                ?>
-                                <div class="row ">
-                                    <div class="col-xl-6 col-sm-12 col-md-6">
-                                        <div tabindex="1" class="form-group col-xl-12">
-                                            <label>Campaign Name *</label>
-                                            <input type="text" class="form-control" name="campaign_name" id="campaign_name" required="" placeholder="Campaign Name">
-                                        </div>
-                                        <div tabindex="1" class="form-group  datepicker col-xl-12  ">
-                                            <label>Start Date *</label>
-                                            <input type="text" class="form-control  " name="start_date" id="start_date" required="" placeholder="Start Date">
-                                            <div class="input-group-addon">
-                                                <span class="glyphicon glyphicon-th"></span>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                    <div class="col-md-6 col-xl-6 col-sm-12">
-                                        <div class="form-group">
-                                            <label>Template </label>
-                                            <select class="form-control select2bs4 " maxlength="12" minlength="12" required="" name="template_id" id="template_id" tabindex="-1" aria-hidden="true">
-                                                <?php
-                                                $template_id = null;
-                                                if (isset($data['template_id'])) {
-                                                    $template_id = $data['template_id'];
-                                                }
-                                                echo $this->Selectlist->buildlist([
-                                                    'table' => 'Templates',
-                                                    'where' => array('active' => true),
-                                                    'selected' => $template_id,
-                                                    'field' => 'name',
-                                                    'placeholder', "Select Template"
-                                                ]);
-                                                ?>
-                                            </select>
-                                        </div>
-                                        <div class="form-group  datepicker">
-                                            <label>End Date *</label>
-                                            <input type="text" class="form-control  " name="end_date" id="end_date" required="" placeholder="End Date">
-                                            <div class="input-group-addon ">
-                                                <span class="glyphicon glyphicon-th"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <?php echo $this->Form->end() ?>
-                                <form method="post" enctype="multipart/form-data" accept-charset="utf-8" class="form-horizontal needs-validation" id="varform">
-                                    <div class="row">
-                                        <div id="variables" class="col-md-12 col-sm-12">
-
-
-                                        </div>
-                                    </div>
-                                </form>
-                                <div class="modal-footer">
-                                    <div class="form-group mb-0">
-                                        <div align="right">
-                                            <button type="button" name="submit" id="newcamp-btn" class="btn btn-primary waves-effect waves-light mr-1">
-                                                Submit
-                                            </button>
-                                            <button type="button" data-dismiss="modal" id="cancle-btn" class="btn btn-secondary waves-effect">
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
-</div>
 
 <?php $this->Html->scriptStart(['block' => true]); ?>
 //<script>
@@ -173,6 +61,12 @@ $this->Breadcrumbs->add([
                 }
 
             },
+            search: {
+                    return: true  //enable enter to serach
+                },
+                language: {
+                    searchPlaceholder: 'Press Enter to search'
+                }   , 
             //        lengthChange: false,        
             "stateSave": true,
             "lengthMenu": [
@@ -241,6 +135,24 @@ $this->Breadcrumbs->add([
                     forwardany();
                 },
                 enabled: false
+            },
+            {
+                text: '<i class="fas fa-user-slash"></i>',
+                className: 'btn btn-info btn-sm',
+                titleAttr: 'Block this number',
+                action: function(e, dt, node, config) {
+                    blocknumber();
+                },
+                enabled: false
+            },
+            {
+                text: '<i class="fas fa-paper-plane"></i>',
+                className: 'btn btn-info btn-sm',
+                titleAttr: 'Resend 24Hrs Failures',
+                action: function(e, dt, node, config) {
+                    sendfailed24h();
+                },
+                enabled: true
             }
 
 
@@ -249,39 +161,39 @@ $this->Breadcrumbs->add([
             .appendTo($('.col-md-6:eq(0)', table.table().container()));
 
 
-        $('#tablecampaign_filter').append('<input id="customSearchInput"> <button id="customSearchBtn" class="btn btn-info btn-sm">Go</button>');
+      //  $('#tablecampaign_filter').append('<input id="customSearchInput"> <button id="customSearchBtn" class="btn btn-info btn-sm">Go</button>');
 
 
 
 
-        document.getElementById("customSearchInput").addEventListener("keydown", function(event) {
-            // Check if the pressed key is not the Enter key
-            if (event.key !== "Enter") {
-                // Prevent default behavior for all keys except Enter
-                event.preventDefault();
-            }
-        });
+        // document.getElementById("customSearchInput").addEventListener("keydown", function(event) {
+        //     // Check if the pressed key is not the Enter key
+        //     if (event.key !== "Enter") {
+        //         // Prevent default behavior for all keys except Enter
+        //         event.preventDefault();
+        //     }
+        // });
 
-        // JavaScript to handle search action when Enter key is pressed
-        document.getElementById("customSearchInput").addEventListener("keyup", function(event) {
-            // Check if the pressed key is the Enter key
-            if (event.key === "Enter") {
-                // Trigger the search action
-                triggerSearch();
-            }
-        });
+        // // JavaScript to handle search action when Enter key is pressed
+        // document.getElementById("customSearchInput").addEventListener("keyup", function(event) {
+        //     // Check if the pressed key is the Enter key
+        //     if (event.key === "Enter") {
+        //         // Trigger the search action
+        //         triggerSearch();
+        //     }
+        // });
 
-        // JavaScript to handle search action when the "Go" button is clicked
-        document.getElementById("customSearchBtn").addEventListener("click", function() {
-            // Trigger the search action
-            triggerSearch();
-        });
+        // // JavaScript to handle search action when the "Go" button is clicked
+        // document.getElementById("customSearchBtn").addEventListener("click", function() {
+        //     // Trigger the search action
+        //     triggerSearch();
+        // });
 
-        // Function to trigger search action
-        function triggerSearch() {
-            var searchTerm = document.getElementById("customSearchInput").value;
-            table.search(searchTerm).draw();
-        }
+        // // Function to trigger search action
+        // function triggerSearch() {
+        //     var searchTerm = document.getElementById("customSearchInput").value;
+        //     table.search(searchTerm).draw();
+        // }
 
 
 
@@ -294,11 +206,13 @@ $this->Breadcrumbs->add([
                 $(this).removeClass('selected');
                 table.button(1).disable();
                 table.button(2).disable();
+                table.button(3).disable();
             } else {
                 table.$('tr.selected').removeClass('selected');
                 $(this).addClass('selected');
                 table.button(1).enable();
                 table.button(2).enable();
+                table.button(3).enable();
                 //    loaddetails();
 
             }
@@ -363,6 +277,19 @@ $this->Breadcrumbs->add([
 
 
 
+//disable auto filter. 
+        // $("div.tablecampaign_filter input").unbind();
+
+        // $("div.tablecampaign_filter input").on('keydown', function(e) {
+        //     if (e.which == 13) {
+        //         alert("Enter");
+        //         table.search( $("div.tablecampaign_filter input").val()).draw();
+        //     }
+        // });
+
+
+
+
 
     }); //end of DR.
 
@@ -403,6 +330,7 @@ $this->Breadcrumbs->add([
     function forwardme() {
         var table = $('#tablecampaign').DataTable();
         var id = table.row('.selected').id();
+
         $.ajax({
             beforeSend: function(xhr) { // Add this line
                 xhr.setRequestHeader('X-CSRF-Token', csrfToken);
@@ -423,8 +351,35 @@ $this->Breadcrumbs->add([
         })
     }
 
-    function forwardany() {
+    function blocknumber() {
+            var table = $('#tablecampaign').DataTable();
+            var id = table.row('.selected').id();
 
+            $.ajax({
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-CSRF-Token', csrfToken);  // Attach CSRF token for security
+                },
+                url: "/contacts/blocknumber/" + id,  // Make the AJAX call to block the number
+                method: "GET",
+                success: function(data) {
+                    if (data.status === 'success') {
+                        // Display success message using Toastr
+                        toastr.success(data.message);
+                    } else if (data.status === 'error') {
+                        // Display error message using Toastr
+                        toastr.error(data.message);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // Handle any errors that might occur during the AJAX request itself
+                    toastr.error('An error occurred while processing the request.');
+                }
+            });
+        }
+
+
+    function forward24h() {
+        
     }
 
 

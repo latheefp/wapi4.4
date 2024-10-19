@@ -1097,7 +1097,7 @@ class CampaignsController extends AppController
                 $model . '.id' => 'desc'
             ]
         ];
-
+        
         //debug($querydata);
         if (isset($querydata['length'])) {
             $query['limit'] = intval($querydata['length']);
@@ -1106,11 +1106,12 @@ class CampaignsController extends AppController
         }
         $fields = $this->_fieldtypes(table_name: $base_table);
 
-   
+        $query['fields'][]='id';
         foreach ($fields as $title => $props) {
-            if (($props['viewable'] == true)) {
-          //      $query['fields']= $props['fld_name'];  //add only viewable field to searh.
+            if (($props['viewable'] == true) ||($props['reference'] == true)) {
+                $query['fields'][]= $props['fld_name'];  //add only viewable field to searh.
                 if(($props['searchable'] == true)){
+                   // debug($fields);
                     if (isset($querydata['search']['value'])) {
                         $query['conditions']['OR'][] = array($model . "." . $props['fld_name'] . ' LIKE' => '%' . $querydata['search']['value'] . '%');
                     }
@@ -1231,4 +1232,33 @@ class CampaignsController extends AppController
 
         $this->set('result', $result);
     }
+
+
+    // function blocknumber1($stream_id)
+    // {
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     $steam_contact=$this->getTableLocator()->get('Streams')->get($stream_id);
+    //     debug($steam_contact->contact_stream_id );
+    //     $contactnumber=$this->getTableLocator()->get('ContactStreams')->get($steam_contact->contact_stream_id);
+    //     debug($contactnumber);
+    //     $BlockedTable=$this->getTableLocator()->get('BlockedNumbers');
+    //     $BlockedEntry=$BlockedTable->newEmptyEntity();
+    //     $BlockedEntry->mobile_number=$contactnumber->contact_number;
+    //     $BlockedEntry->account_id=$this->getMyAccountID();
+    //     $BlockedEntry->user_id=$this->getMyUID();
+    //     $BlockedTable->save($BlockedEntry);
+    //     $this->set('result', $result);
+    // }
+
+   
+
+    function resend24hrs(){
+        $this->viewBuilder()->setLayout('ajax');
+        $this->autoRender = false;  // Disable auto-render to handle AJAX response manually
+        $steamTables=$this->getTableLocator()->get('Stream');
+
+    
+     }
+
+
 }

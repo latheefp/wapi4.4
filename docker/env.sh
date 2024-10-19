@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 DB_PASS="23FKJ6-XPV]O9MsP"
 DB_USERNAME="wapi"
-DB_HOST=db
+DB_HOST=192.168.8.131
 DB_DATABASE="wapi"
 SEND_MSG=1
 LOG=1

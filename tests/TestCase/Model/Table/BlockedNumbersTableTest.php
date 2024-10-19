@@ -3,20 +3,20 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use App\Model\Table\StreamsTable;
+use App\Model\Table\BlockedNumbersTable;
 use Cake\TestSuite\TestCase;
 
 /**
- * App\Model\Table\StreamsTable Test Case
+ * App\Model\Table\BlockedNumbersTable Test Case
  */
-class StreamsTableTest extends TestCase
+class BlockedNumbersTableTest extends TestCase
 {
     /**
      * Test subject
      *
-     * @var \App\Model\Table\StreamsTable
+     * @var \App\Model\Table\BlockedNumbersTable
      */
-    protected $Streams;
+    protected $BlockedNumbers;
 
     /**
      * Fixtures
@@ -24,15 +24,9 @@ class StreamsTableTest extends TestCase
      * @var array<string>
      */
     protected $fixtures = [
-        'app.Streams',
-        'app.ContactStreams',
-        'app.Schedules',
+        'app.BlockedNumbers',
         'app.Accounts',
-        'app.Chats',
-        'app.RatingViews',
-        'app.Ratings',
-        'app.Ratings-aug-30',
-        'app.StreamsUpdates',
+        'app.Users',
     ];
 
     /**
@@ -43,8 +37,8 @@ class StreamsTableTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $config = $this->getTableLocator()->exists('Streams') ? [] : ['className' => StreamsTable::class];
-        $this->Streams = $this->getTableLocator()->get('Streams', $config);
+        $config = $this->getTableLocator()->exists('BlockedNumbers') ? [] : ['className' => BlockedNumbersTable::class];
+        $this->BlockedNumbers = $this->getTableLocator()->get('BlockedNumbers', $config);
     }
 
     /**
@@ -54,7 +48,7 @@ class StreamsTableTest extends TestCase
      */
     protected function tearDown(): void
     {
-        unset($this->Streams);
+        unset($this->BlockedNumbers);
 
         parent::tearDown();
     }
@@ -63,7 +57,7 @@ class StreamsTableTest extends TestCase
      * Test validationDefault method
      *
      * @return void
-     * @uses \App\Model\Table\StreamsTable::validationDefault()
+     * @uses \App\Model\Table\BlockedNumbersTable::validationDefault()
      */
     public function testValidationDefault(): void
     {
@@ -74,7 +68,7 @@ class StreamsTableTest extends TestCase
      * Test buildRules method
      *
      * @return void
-     * @uses \App\Model\Table\StreamsTable::buildRules()
+     * @uses \App\Model\Table\BlockedNumbersTable::buildRules()
      */
     public function testBuildRules(): void
     {

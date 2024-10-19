@@ -28,6 +28,7 @@ class CampaignsTableTest extends TestCase
         'app.Users',
         'app.Templates',
         'app.CampaignForms',
+        'app.CampsTrackers',
         'app.ScheduleViews',
         'app.Schedules',
     ];

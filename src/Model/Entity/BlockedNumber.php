@@ -6,26 +6,18 @@ namespace App\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * ContactStream Entity
+ * BlockedNumber Entity
  *
  * @property int $id
- * @property string $contact_number
- * @property string|null $profile_name
+ * @property string $mobile_number
  * @property int $account_id
- * @property bool $camp_blocked
- * @property string|null $name
- * @property int $user_id
  * @property \Cake\I18n\FrozenTime $created
+ * @property int $user_id
  *
  * @property \App\Model\Entity\Account $account
  * @property \App\Model\Entity\User $user
- * @property \App\Model\Entity\Chat[] $chats
- * @property \App\Model\Entity\RatingView[] $rating_views
- * @property \App\Model\Entity\RecentChat[] $recent_chats
- * @property \App\Model\Entity\StreamView[] $stream_views
- * @property \App\Model\Entity\Stream[] $streams
  */
-class ContactStream extends Entity
+class BlockedNumber extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -37,19 +29,11 @@ class ContactStream extends Entity
      * @var array<string, bool>
      */
     protected $_accessible = [
-        'contact_number' => true,
-        'profile_name' => true,
+        'mobile_number' => true,
         'account_id' => true,
-        'camp_blocked' => true,
-        'name' => true,
-        'user_id' => true,
         'created' => true,
+        'user_id' => true,
         'account' => true,
         'user' => true,
-        'chats' => true,
-        'rating_views' => true,
-        'recent_chats' => true,
-        'stream_views' => true,
-        'streams' => true,
     ];
 }

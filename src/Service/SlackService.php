@@ -2,9 +2,12 @@
 namespace App\Service;
 
 use Cake\Http\Client;
+use Cake\Log\Log;
+use Cake\Log\LogTrait;
 
 class SlackService
 {
+    use LogTrait; // Include the LogTrait
     protected $webhookUrl;
 
     public function __construct()
@@ -22,9 +25,10 @@ class SlackService
      * @return void
      */
     public function sendMessage($message, $channel = "wapi-alert", $username = 'WAJunction')
-    {
+    {   
+        $response=[];
         // Construct the payload to send
-        debug($this->webhookUrl);
+       /// debug($this->webhookUrl);
         $payload = [
             'text' => $message,
             'username' => $username,
@@ -39,10 +43,20 @@ class SlackService
         $http = new Client();
         $response = $http->post($this->webhookUrl, json_encode($payload), ['type' => 'json']);
 
-        debug($response);
+        //debug($response);
+
+        // if (!$response->isOk()) {
+        //     throw new \Exception('Failed to send message to Slack');
+        // }
 
         if (!$response->isOk()) {
-            throw new \Exception('Failed to send message to Slack');
+            // Log the warning message
+            $this->log('Warning: Failed to send message to Slack', 'warning');
+            
+            // Alternatively, display a user-friendly warning message
+           $response="Failed to send message in slack";
         }
+
+        return json_encode($response);
     }
 }

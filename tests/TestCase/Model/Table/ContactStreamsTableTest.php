@@ -25,10 +25,13 @@ class ContactStreamsTableTest extends TestCase
      */
     protected $fixtures = [
         'app.ContactStreams',
+        'app.Accounts',
+        'app.Users',
+        'app.Chats',
+        'app.RatingViews',
+        'app.RecentChats',
         'app.StreamViews',
         'app.Streams',
-        'app.Streams-25-jan',
-        'app.Streams-feb-9',
     ];
 
     /**
@@ -62,6 +65,17 @@ class ContactStreamsTableTest extends TestCase
      * @uses \App\Model\Table\ContactStreamsTable::validationDefault()
      */
     public function testValidationDefault(): void
+    {
+        $this->markTestIncomplete('Not implemented yet.');
+    }
+
+    /**
+     * Test buildRules method
+     *
+     * @return void
+     * @uses \App\Model\Table\ContactStreamsTable::buildRules()
+     */
+    public function testBuildRules(): void
     {
         $this->markTestIncomplete('Not implemented yet.');
     }

@@ -10,7 +10,7 @@ use WebSocket\Client;
 // use Cake\Core\Configure;
 // use Cake\Log\Log;
 // use Queue\Model\Table\QueuedJobsTable;
-
+use Cake\Event\EventInterface;
 use Queue\Job\Job;
 // use Cake\ORM\TableRegistry;
 use Queue\Shell\Task\QueueTask;
@@ -29,6 +29,11 @@ class TestsController extends AppController
 
 
     
+   public function beforeFilter(EventInterface $event): void
+   {
+       parent::beforeFilter($event);
+       $this->FormProtection->setConfig('unlockedActions', ['add', 'newcamp', 'getcampaign', 'attachments', 'getschedules', 'newsched', 'getstreams', 'updatecomment', 'sendshedule']);
+   }
 
 
 
@@ -118,6 +123,132 @@ class TestsController extends AppController
         $fields = $this->_fieldtypes( $base_table);
         debug($fields);
 
+    }
+
+    function getstreams()
+    {
+        // Load the required tables
+        $search="7237272";
+        $streamsTable = $this->getTableLocator()->get('Streams');
+
+        // Build the query with the necessary joins, ensuring proper aliasing and join order
+        $query = $streamsTable->find()
+            ->select([
+                'Streams.lang',               // From Streams table
+                'Streams.type',
+                'Streams.message_from',
+                'Streams.id',
+                'Streams.account_id',
+                'Schedules.name',             // From Schedules table
+                'Campaigns.id',               // From Campaigns table
+                'Campaigns.campaign_name',
+                'ContactStreams.contact_number',  // From ContactStreams table
+                'ContactStreams.profile_name',
+                'ContactStreams.name',
+            ])
+            // First, join with Schedules
+           // ->leftJoinWith('Schedules')
+
+           ->leftJoin(
+            ['Schedules' => 'schedules'],
+            ['Schedules.id = Streams.schedule_id']  // Ensures Schedules is joined with Streams first
+        )
+            // Then, join with Campaigns, but through Schedules
+            ->leftJoin(
+                ['Campaigns' => 'campaigns'],
+                ['Campaigns.id = Schedules.campaign_id']  // This ensures that Schedules is joined first
+            )
+            // Then, join with ContactStreams
+            ->leftJoinWith('ContactStreams')
+            // Apply where conditions
+            ->where(['Streams.account_id' => 1])
+            ->andWhere([
+                'OR' => [
+                    'ContactStreams.contact_number LIKE' => '%' . $search . '%',
+                    'ContactStreams.profile_name LIKE' => '%' . $search . '%',
+                    'ContactStreams.name LIKE' => '%' . $search . '%',
+                    'Campaigns.campaign_name LIKE' => '%' . $search . '%',
+                    'Schedules.name LIKE' => '%' . $search . '%',
+                    'Streams.type LIKE' => '%' . $search . '%',
+                    'Streams.message_from LIKE' => '%' . $search . '%',
+                ]
+            ])
+            // Order by Streams.id in descending order
+            ->order(['Streams.id' => 'DESC'])
+            // Limit and offset
+            ->limit(25)
+            ->offset(0);
+
+
+            $this->viewBuilder()->setLayout('ajax');
+        //    $query = $this->_set_stream_query($this->request->getData(), $model, $base_table);
+            //     debug($query);
+            $data = $this->paginate = $query;
+            $this->set('data', $this->paginate('Streams'));
+        //    $this->set('fieldsType', $this->_fieldtypes($base_table));
+
+
+    }
+
+    function getstreams1()
+    {
+        $model = "StreamViews";
+        $base_table = "stream_views";
+        $this->viewBuilder()->setLayout('ajax');
+        $query = $this->_set_stream_query($this->request->getData(), $model, $base_table);
+        //     debug($query);
+        $data = $this->paginate = $query;
+        $this->set( 'data', $this->paginate($model));
+        $this->set('fieldsType', $this->_fieldtypes($base_table));
+    }
+
+    public function _set_stream_query($querydata, $model, $base_table)
+    {  //return array of quey based on passed values from index page search.
+        $query = [
+            'order' => [
+                $model . '.id' => 'desc'
+            ]
+        ];
+
+        //debug($querydata);
+        if (isset($querydata['length'])) {
+            $query['limit'] = intval($querydata['length']);
+        } else {
+            $query['limit'] = $this->_getsettings('pagination_count');
+        }
+        $fields = $this->_fieldtypes(table_name: $base_table);
+
+   
+        foreach ($fields as $title => $props) {
+            if (($props['viewable'] == true)) {
+                $query['fields']= $props['fld_name'];  //add only viewable field to searh.
+                if(($props['searchable'] == true)){
+                    if (isset($querydata['search']['value'])) {
+                        $query['conditions']['OR'][] = array($model . "." . $props['fld_name'] . ' LIKE' => '%' . $querydata['search']['value'] . '%');
+                    }
+                }
+
+            }
+        }
+
+
+
+        $start = intval($querydata['start']);
+        $query['page'] = ($start / $query['limit']) + 1;
+        if (!empty($querydata['columns'][$querydata['order']['0']['column']]['name'])) {
+            $query['order'] = array($querydata['columns'][$querydata['order']['0']['column']]['name'] . ' ' . $querydata['order']['0']['dir']);
+        }
+
+
+
+        if ($querydata['show_recv'] == "true") {
+            $query['conditions']['AND'][] = array($model . '.type' => 'receive');
+        }
+
+        //        $session = $this->request->getSession();
+        $query['conditions']['AND'][] = array($model . ".account_id" => $this->getMyAccountID());
+
+        return $query;
     }
 
 }

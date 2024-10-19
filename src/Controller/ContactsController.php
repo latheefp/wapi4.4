@@ -24,15 +24,18 @@ use Cake\Http\CallbackStream; // ← 追加
  *
  * @property \App\Model\Table\BookmarksTable $Bookmarks
  */
-class ContactsController extends AppController {
+class ContactsController extends AppController
+{
 
     var $uses = array('Campaigns');
 
-    public function isAuthorized($user) {
+    public function isAuthorized($user)
+    {
         return true;
     }
 
-    public function beforeFilter(EventInterface $event): void {
+    public function beforeFilter(EventInterface $event): void
+    {
         parent::beforeFilter($event);
         $formaction = $this->request->getParam('action');
 
@@ -41,24 +44,26 @@ class ContactsController extends AppController {
         ));
     }
 
-    function index() {
+    function index()
+    {
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('contact_numbers'));
         $this->set('titleforlayout', "ContactNumbers");
     }
 
-    function newcontacts() {
+    function newcontacts()
+    {
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('Contacts');
         $result = [];
         if ($this->request->is('post')) {
             $data = $this->request->getData();
-//            $session = $this->request->getSession();
+            //            $session = $this->request->getSession();
             $account_id = $this->getMyAccountID();
 
             $data['user_id'] = $this->getMyUID();
             $data['account_id'] = $account_id;
-         //   debug($data);
+            //   debug($data);
             $row = $table->newEntity($data);
             if ($row->getErrors()) {
                 $result['status'] = "failed";
@@ -91,40 +96,42 @@ class ContactsController extends AppController {
         $this->set('result', $result);
     }
 
-//     function getmygroups() {
+    //     function getmygroups() {
 //         $this->viewBuilder()->setLayout('ajax');
 // //        $session = $this->request->getSession();
 //         $account_id = $this->getMyAccountID();
 
-//         $this->loadModel('Contacts');
+    //         $this->loadModel('Contacts');
 
-//         $query = $this->Contacts->find('all', [
+    //         $query = $this->Contacts->find('all', [
 //             'keyField' => 'id',
 //             'valueField' => ['name', 'id', 'contact_count'],
 //             'conditions' => ['Contacts.account_id' => $account_id],
 //         ]);
 
-//         //    $query->order(['ContactNumbersViews.created' => 'DESC']);
+    //         //    $query->order(['ContactNumbersViews.created' => 'DESC']);
 //         //   debug($query);
 //         $this->set('groups', $query); //table row data
 //         // $this->set('groups', $query->all()->toArray()); //table row data
 //     }
 
 
-    function getlist() {
+    function getlist()
+    {
         $this->viewBuilder()->setLayout('ajax');
-//        $session = $this->request->getSession();
+        //        $session = $this->request->getSession();
         $account_id = $this->getMyAccountID();
 
-        $contactTable=$this->getTableLocator()->get('Contacts');
+        $contactTable = $this->getTableLocator()->get('Contacts');
 
         $query = $contactTable->find()
-        ->where(['Contacts.account_id' => $account_id]);
-         
+            ->where(['Contacts.account_id' => $account_id]);
+
         $this->set('data', $this->paginate($query));
     }
 
-    function getcontacts($id = null) {
+    function getcontacts($id = null)
+    {
 
         $this->viewBuilder()->setLayout('ajax');
         $model = "ContactNumbers";
@@ -135,8 +142,9 @@ class ContactsController extends AppController {
         $this->set('fieldsType', $this->_fieldtypes($base_table));
     }
 
-    function _set_contact_number_query($querydata, $model, $base_table) {
-       //    debug($querydata);
+    function _set_contact_number_query($querydata, $model, $base_table)
+    {
+        //    debug($querydata);
         if (isset($querydata['length'])) {
             $limit = intval($querydata['length']);
         } else {
@@ -145,14 +153,14 @@ class ContactsController extends AppController {
         $query = array();
         $table = $this->getTableLocator()->get($model);
         $query = $table
-                ->find()
-                ->limit($limit)
+            ->find()
+            ->limit($limit)
         ;
 
         $fields = $this->_fieldtypes($base_table);
         $qarray = [];
 
-      //  debug($fields);
+        //  debug($fields);
 
         foreach ($fields as $title => $props) {
             if (($props['viewable'] == true) && ($props['searchable'] == true)) {
@@ -168,20 +176,21 @@ class ContactsController extends AppController {
 
         $query->matching('ContactsContactNumbers', function (Query $q) use ($querydata) {
             return $q
-                    ->select(['contact_id', 'contact_number_id'])
-                    ->where(['ContactsContactNumbers.contact_id' => $querydata['contact_id']]);
+                ->select(['contact_id', 'contact_number_id'])
+                ->where(['ContactsContactNumbers.contact_id' => $querydata['contact_id']]);
         });
 
         $start = intval($querydata['start']);
         $query->page($start / $limit + 1);
         $query->order($querydata['columns'][$querydata['order']['0']['column']]['name'] . ' ' . $querydata['order']['0']['dir']);
- //        echo debug($query);
+        //        echo debug($query);
         return $query;
     }
 
-    function newcontactnumber() {
+    function newcontactnumber()
+    {
         $this->viewBuilder()->setLayout('ajax');
-//         if(!$this->_checkallowed('add_group')){
+        //         if(!$this->_checkallowed('add_group')){
 //            $this->redirect("/550");
 //        }
 //        $session = $this->request->getSession();
@@ -198,8 +207,8 @@ class ContactsController extends AppController {
             // $table = TableRegistry::get('ContactNumbers');
             $table = $this->getTableLocator()->get('ContactNumbers');
             $existing = $table->find()
-                    ->where(['mobile_number' => $data['mobile_number']])
-                    ->toList();
+                ->where(['mobile_number' => $data['mobile_number']])
+                ->toList();
             // debug($data);
             if (!empty($existing)) {
                 $id = $existing[0]->id;
@@ -226,7 +235,7 @@ class ContactsController extends AppController {
                     //debug($newrow->getErrors());
                 }
             } else {
-//                debug($data);
+                //                debug($data);
                 //   $data['account_id']=$account_id;
                 $record = $table->newEntity($data);
                 $return = array();
@@ -246,14 +255,15 @@ class ContactsController extends AppController {
         $this->set('result', $return);
     }
 
-    function updategroupinfo($id, $groups) {
+    function updategroupinfo($id, $groups)
+    {
         $table = $this->getTableLocator()->get('ContactsContactNumbers');
         //    $table->deleteAll(['contact_number_id' => $id]);
 
         foreach ($groups as $key => $val) {
             $query = $table->find()
-                    ->where(['contact_number_id' => $id, 'contact_id' => $val])
-                    ->toList();
+                ->where(['contact_number_id' => $id, 'contact_id' => $val])
+                ->toList();
             if (empty($query)) {
                 $record = $table->newEmptyEntity();
                 $record->contact_number_id = $id;
@@ -265,7 +275,8 @@ class ContactsController extends AppController {
         }
     }
 
-    function newcontactupload() {
+    function newcontactupload()
+    {
         //https://www.webscodex.com/2020/10/file-upload-in-cakephp-4.html
 
         $this->viewBuilder()->setLayout('ajax');
@@ -320,7 +331,8 @@ class ContactsController extends AppController {
         $this->set('result', $result);
     }
 
-    function imporfromexcel() {
+    function imporfromexcel()
+    {
         $this->viewBuilder()->setLayout('ajax');
         $postData = $this->request->getData();
         $succcess = 0;
@@ -342,7 +354,8 @@ class ContactsController extends AppController {
         $this->set('result', $result);
     }
 
-    function imporfromexcelold() {
+    function imporfromexcelold()
+    {
         $this->viewBuilder()->setLayout('ajax');
         $postData = $this->request->getData();
         $succcess = 0;
@@ -385,12 +398,13 @@ class ContactsController extends AppController {
         $this->set('result', $result);
     }
 
-    function _savecontactdata($data, $groups) {
+    function _savecontactdata($data, $groups)
+    {
         $data['mobile_number'] = $this->_format_mobile($data['mobile_number']);
         $table = $this->getTableLocator()->get('ContactNumbers');
         $existing = $table->find()
-                ->where(['mobile_number' => $data['mobile_number']])
-                ->toList();
+            ->where(['mobile_number' => $data['mobile_number']])
+            ->toList();
         // debug($data);
         if (!empty($existing)) { //updating existing. 
             // debug($existing);
@@ -433,54 +447,212 @@ class ContactsController extends AppController {
         return $return;
     }
 
-    function checkwhatsapp() {
-        
+    function checkwhatsapp()
+    {
+
     }
 
-    function deletecontact($id) {
+    function deletecontact($id)
+    {
         $result = [];
         $this->viewBuilder()->setLayout('ajax');
         $tablecontacts = $this->getTableLocator()->get('Contacts'); //the group table
 
         $deleterecord = $tablecontacts->find()
-                ->where(['account_id'=>$this->getMyAccountID(),'id'=>$id]);
+            ->where(['account_id' => $this->getMyAccountID(), 'id' => $id]);
 
-        $recordCount = $deleterecord->count(); 
+        $recordCount = $deleterecord->count();
 
         if ($recordCount > 0) {
             foreach ($deleterecord as $record) {
                 $tablecontacts->delete($record);
             }
-        
+
             $result['status'] = "success";
             $result['msg'] = "Group has been deleted.";
         } else {
             $result['status'] = "error";
             $result['msg'] = "No records found to delete.";
         }
-        
+
         $this->set('result', $result);
     }
 
-    function test() {
-        // $this->viewBuilder()->setLayout('ajax');
-        $token = "88975478KLU96C32";
-        $outputHtml = null;
-        $table = $this->getTableLocator()->get('RefLists');
 
-        $query = $table->find()
-                ->where(['token' => $token])
+
+    function blockedlist()
+    {
+        // Capture the search query from the GET request
+        $query = $this->request->getQuery('q'); // 'q' is the name of the search input field
+        $status=$this->request->getQuery('status');
+        $this->loadModel('ContactStreams');
+        // Base query with the 'Departments' relationship
+        $conditions = [];
+
+        $conditions['AND'] = [
+            'ContactStreams.account_id' => $this->getMyAccountID()      
+        ];
+
+        // Check if a search query exists
+        if (!empty($query)) {
+            // Search in both doctors' name and departments' name
+            $conditions['OR'] = [
+                'ContactStreams.contact_number LIKE' => '%' . $query . '%',           
+                'ContactStreams.profile_name LIKE' => '%' . $query . '%'      
+            ];
+        }
+        if (!empty($status)) {
+            // Search in both doctors' name and departments' name
+            if($status=="unblocked"){
+                $conditions['AND'] = [
+                    'ContactStreams.camp_blocked' => 0         
+                ];
+            }elseif($status == "blocked"){
+                $conditions['AND'] = [
+                    'ContactStreams.camp_blocked' => 1         
+                ];
+            }
+          
+        }
+
+        // Set up pagination and apply search conditions if any
+        $this->paginate = [
+            'contain' => ['Users'],
+            'conditions' => $conditions, // Apply the conditions
+        ];
+
+        // Paginate the results
+        $numbers = $this->paginate($this->ContactStreams);
+
+        // Pass the results and search query to the view
+        $this->set(compact('numbers', 'query'));
+    }
+
+
+    // public function unblock($id)
+    // {
+    //     $this->request->allowMethod(['post', 'delete']);  // Allow only POST or DELETE requests
+
+    //     $ContactStreamsTable = $this->getTableLocator()->get('ContactStreams');
+    //     $blockedEntry = $ContactStreamsTable->get($id);  // Find the entry by ID
+
+
+
+
+
+
+    //     if ($BlockedTable->delete($blockedEntry)) {
+    //         $response = ['status' => 'success', 'message' => 'The contact has been successfully unblocked.'];
+    //     } else {
+    //         $response = ['status' => 'error', 'message' => 'Failed to unblock the contact. Please try again.'];
+    //     }
+
+    //     // Return JSON response
+    //     return $this->response
+    //         ->withType('application/json')
+    //         ->withStringBody(json_encode($response));
+    // }
+
+
+    public function unblocknumber($contact_stream_id)
+        {
+            $this->viewBuilder()->setLayout('ajax');
+            $this->autoRender = false;  // Disable auto-render to handle AJAX response manually
+
+            $contactnumber = $this->getTableLocator()->get('ContactStreams')->get($contact_stream_id);
+
+            // Get the ContactStreams table
+            $Contact_streamTable = $this->getTableLocator()->get('ContactStreams');
+
+            // Check if the number is already blocked by the same account
+            $existsblocked = $Contact_streamTable->find()
+                ->where([
+                    'contact_number' => $contactnumber->contact_number,
+                    'account_id' => $this->getMyAccountID(),
+                    'camp_blocked' => true
+                ])
                 ->first();
 
-        //  debug ($query);
-//        
-//        $model=$query->table_name;
-//        $field_name=$query->field_name;
-//        
-//        $outputHtml='<select id="'.$token.'" class="form-control" ><option value="0">- Search Here -</option></select>';
-//              
-//        
-        //     debug($outputHtml);
-    }
+            if ($existsblocked) {
+                // Unblock the number by setting camp_blocked to false
+                $existsblocked->camp_blocked = false;
+                if ($Contact_streamTable->save($existsblocked)) {
+                    // Success response
+                    $response = ['status' => 'success', 'message' => 'The number has been successfully unblocked.'];
+                } else {
+                    // Error if save failed
+                    $response = ['status' => 'error', 'message' => 'Failed to unblock the number. Please try again.'];
+                }
+            } else {
+                // Error if the number is not blocked or doesn't exist
+                $response = ['status' => 'error', 'message' => 'The number is not blocked or does not exist in the system.'];
+            }
+
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode($response));
+        }
+
+
+        public function blocknumber($stream_id)
+        {
+            $this->viewBuilder()->setLayout('ajax');
+            $this->autoRender = false;  // Disable auto-render to handle AJAX response manually
+    
+            // Fetch the Stream record based on $stream_id
+            $steam_contact = $this->getTableLocator()->get('Streams')->get($stream_id);
+            $contact_stream_id = $steam_contact->contact_stream_id;
+    
+            // Fetch the corresponding contact number from ContactStreams
+            $contactnumber = $this->getTableLocator()->get('ContactStreams')->get($contact_stream_id);
+    
+            // Get the BlockedNumbers table
+            $Contact_streamTable = $this->getTableLocator()->get('ContactStreams');
+    
+            // Check if the number is already blocked by the same account
+            $existsblocked = $Contact_streamTable->find()
+                ->where([
+                    'contact_number' => $contactnumber->contact_number,
+                    'account_id' => $this->getMyAccountID(),
+                    'camp_blocked' => true
+                ])
+                ->first();
+    
+            if ($existsblocked) {
+                // If the number is already blocked, return an appropriate response
+                $response = ['status' => 'error', 'message' => 'This number is already blocked.'];
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode($response));
+            }
+    
+    
+            $exists = $Contact_streamTable->find()
+                ->where([
+                    'contact_number' => $contactnumber->contact_number,
+                    'account_id' => $this->getMyAccountID(),
+                ])
+                ->first();
+    
+            if ($exists) {
+                // Set camp_blocked to true
+                $exists->camp_blocked = true;
+                if ($Contact_streamTable->save($exists)) {
+                    // Success response
+                    $response = ['status' => 'success', 'message' => 'The number has been successfully blocked.'];
+                } else {
+                    // Error if save failed
+                    $response = ['status' => 'error', 'message' => 'Failed to block the number. Please try again.'];
+                }
+            } else {
+                // Error if number not found
+                $response = ['status' => 'error', 'message' => 'The number does not exist in the system.'];
+            }
+    
+            return $this->response
+                ->withType('application/json')
+                ->withStringBody(json_encode($response));
+        }
+
 
 }

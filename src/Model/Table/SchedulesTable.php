@@ -17,7 +17,6 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\SchedulestreamsviewsTable&\Cake\ORM\Association\HasMany $Schedulestreamsviews
  * @property \App\Model\Table\StreamViewsTable&\Cake\ORM\Association\HasMany $StreamViews
  * @property \App\Model\Table\StreamsTable&\Cake\ORM\Association\HasMany $Streams
- * @property \App\Model\Table\ContactsTable&\Cake\ORM\Association\BelongsToMany $Contacts
  *
  * @method \App\Model\Entity\Schedule newEmptyEntity()
  * @method \App\Model\Entity\Schedule newEntity(array $data, array $options = [])
@@ -74,11 +73,11 @@ class SchedulesTable extends Table
         $this->hasMany('Streams', [
             'foreignKey' => 'schedule_id',
         ]);
-        // $this->belongsToMany('Contacts', [
-        //     'foreignKey' => 'schedule_id',
-        //     'targetForeignKey' => 'contact_id',
-        //     'joinTable' => 'contacts_schedules',
-        // ]);
+        $this->belongsToMany('Contacts', [
+            'foreignKey' => 'schedule_id',
+            'targetForeignKey' => 'contact_id',
+            'joinTable' => 'contacts_schedules',
+        ]);
     }
 
     /**

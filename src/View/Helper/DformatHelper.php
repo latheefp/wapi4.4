@@ -16,6 +16,7 @@ class DformatHelper extends Helper {
         $result = null;
         $oformat = $option['format'];
         $odata = $option['data'];
+        $row=$option['row'];
 
         switch ($oformat) {
             case "number":
@@ -52,6 +53,25 @@ class DformatHelper extends Helper {
                 }
 //            }
                 break;
+        //    case "data+bool":
+        //        debug($row);
+          //      debug($odata);
+            //    debug($oformat);
+                // if ($odata == true) {
+                //     if (isset($option['boolean_yes'])) {
+                //         $result = $option['boolean_yes'];
+                //     } else {
+                //         $result = '<i class="fas fa-check"></i>';
+                //     }
+                // } else {
+                //     if (isset($option['boolean_no'])) {
+                //         $result = $option['boolean_no'];
+                //     } else {
+                //         $result = '<i class="fas fa-times"></i>';
+                //     }
+                // }
+
+           //     break;    
             case "DT2D":
                 if (!empty($odata)) {
                     $result = $odata->format('Y-m-d');

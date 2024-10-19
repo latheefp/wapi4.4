@@ -22,7 +22,6 @@ foreach ($data as $key => $val) {
                         'format' => $fval['format'],
                         'boolean_yes' => $fval['boolean_yes'],
                         'boolean_no' => $fval['boolean_no'],
-                        'row' => $val
                     ]
             );
         }
@@ -31,4 +30,3 @@ foreach ($data as $key => $val) {
     $result['data'][] = $row;
 }
 echo json_encode($result);
-//

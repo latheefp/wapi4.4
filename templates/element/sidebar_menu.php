@@ -88,6 +88,15 @@
                     </a>
                 </li>
             </ul>
+
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="/contacts/blockedlist" class="nav-link">
+                        <i class="fas fa-user-slash nav-icon"></i>
+                        <p>Blocked List</p>
+                    </a>
+                </li>
+            </ul>
         </li>
 
 

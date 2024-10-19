@@ -14,6 +14,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
  * @property \App\Model\Table\TemplatesTable&\Cake\ORM\Association\BelongsTo $Templates
  * @property \App\Model\Table\CampaignFormsTable&\Cake\ORM\Association\HasMany $CampaignForms
+ * @property \App\Model\Table\CampsTrackersTable&\Cake\ORM\Association\HasMany $CampsTrackers
  * @property \App\Model\Table\ScheduleViewsTable&\Cake\ORM\Association\HasMany $ScheduleViews
  * @property \App\Model\Table\SchedulesTable&\Cake\ORM\Association\HasMany $Schedules
  *
@@ -82,11 +83,15 @@ class CampaignsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
+            ->integer('id')
+            ->requirePresence('id', 'create')
+            ->notEmptyString('id');
+
+        $validator
             ->scalar('campaign_name')
             ->maxLength('campaign_name', 128)
             ->requirePresence('campaign_name', 'create')
-            ->notEmptyString('campaign_name')
-            ->add('campaign_name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->notEmptyString('campaign_name');
 
         $validator
             ->date('start_date')
@@ -125,7 +130,6 @@ class CampaignsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['campaign_name']), ['errorField' => 'campaign_name']);
         $rules->add($rules->existsIn('user_id', 'Users'), ['errorField' => 'user_id']);
         $rules->add($rules->existsIn('template_id', 'Templates'), ['errorField' => 'template_id']);
 

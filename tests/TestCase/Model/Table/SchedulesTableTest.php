@@ -31,7 +31,6 @@ class SchedulesTableTest extends TestCase
         'app.Schedulestreamsviews',
         'app.StreamViews',
         'app.Streams',
-        'app.Contacts',
     ];
 
     /**

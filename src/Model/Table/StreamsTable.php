@@ -14,6 +14,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\ContactStreamsTable&\Cake\ORM\Association\BelongsTo $ContactStreams
  * @property \App\Model\Table\SchedulesTable&\Cake\ORM\Association\BelongsTo $Schedules
  * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
+ * @property \App\Model\Table\ChatsTable&\Cake\ORM\Association\HasMany $Chats
  * @property \App\Model\Table\RatingViewsTable&\Cake\ORM\Association\HasMany $RatingViews
  * @property \App\Model\Table\RatingsTable&\Cake\ORM\Association\HasMany $Ratings
  * @property \App\Model\Table\Ratings-aug-30Table&\Cake\ORM\Association\HasMany $Ratings-aug-30
@@ -52,7 +53,7 @@ class StreamsTable extends Table
         $this->setPrimaryKey('id');
 
         $this->addBehavior('Timestamp');
-        $this->addBehavior('StreamToChat');
+
         $this->belongsTo('ContactStreams', [
             'foreignKey' => 'contact_stream_id',
         ]);
@@ -283,10 +284,6 @@ class StreamsTable extends Table
         $validator
             ->scalar('tmp_upate_json')
             ->allowEmptyString('tmp_upate_json');
-
-        $validator
-            ->boolean('live_chat_notified')
-            ->notEmptyString('live_chat_notified');
 
         return $validator;
     }

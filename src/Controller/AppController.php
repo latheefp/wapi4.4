@@ -184,11 +184,7 @@ class AppController extends Controller
         return $result;
     }
 
-    //     public function beforeFilter(EventInterface $event) {
-    //        parent::beforeFilter($event);
-    //        $this->Security->setConfig('validatePost', false);
-    // //   $this->Auth->allow(['login', 'logout','forgetpass','resetpass','test','pubpasswordsetajax']);
-    //    }
+
 
     function gen_rand_string($length = 10)
     {
@@ -269,11 +265,57 @@ class AppController extends Controller
         return $randomString;
     }
 
-    function _despatch_msg($contact, $form, $templateQuery, $FBSettings, $type = "template")
+    function _despatch_msg($streams, $form, $templateQuery, $FBSettings, $type = "template")
     {
+
+
+
+
+
+        //this section to make sure, camp is followed the stand of skipping blocked number for related account. 
+        if ($streams->type == "camp") {
+            // Fetch the corresponding contact number from ContactStreams
+            $contactnumber = $this->getTableLocator()->get('ContactStreams')->get($streams->contact_stream_id);
+            //    debug($FBSettings);
+            // Get the BlockedNumbers table
+            $Contact_streamTable = $this->getTableLocator()->get('ContactStreams');
+
+            // Check if the number is already blocked by the same account
+            $existsblocked = $Contact_streamTable->find()
+                ->where([
+                    'contact_number' => $contactnumber->contact_number,
+                    'account_id' => $FBSettings['account_id'],
+                    'camp_blocked' => true
+                ])
+                ->first();
+
+            if ($existsblocked) {
+                $table = $this->getTableLocator()->get('Streams');
+                $row = $table->get($streams->id);
+                $this->writelog("Error", "Blocked number $contactnumber->contact_number for account id $streams->account_id");
+                $row->has_wa = true;
+                $row->result = "Blocked number $contactnumber->contact_number for account id $streams->account_id";
+                $row->success = false;
+                //  $row->sendarray = json_encode($sendarray);
+                $table->save($row);
+                $slackService = new SlackService();
+                $response['slack']=json_decode($slackService->sendMessage(message: "Blocked number $contactnumber->contact_number for account id $streams->account_id"),true);
+                $response['msg'] = [
+                    'status' => 'Error',
+                    'message' => "The number $contactnumber->contact_number, is banned  to send camp on account " . $FBSettings['account_id']
+                ];
+                return $response;
+
+            }
+        }
+       
+
+
+
+
         switch ($type) {
             case "template":
-                $this->writelog($contact, "Despatching message, Contact");
+                $this->writelog($streams, "Despatching message, streams");
                 $this->writelog($form, "Despatching message, Form");
                 $this->writelog($templateQuery, "Despatching message, templateQuery");
                 //CAP: below is the sample array. we will change the paramers based on form.
@@ -364,7 +406,7 @@ class AppController extends Controller
                     $sendarray['template']['components'][] = $bodyarray;
                 }
 
-                $mobile = $this->getTableLocator()->get('ContactStreams')->get($contact->contact_stream_id);
+                $mobile = $this->getTableLocator()->get('ContactStreams')->get($streams->contact_stream_id);
                 //     debug($mobile->contact_number);
 
                 $sendarray['to'] = $mobile->contact_number;
@@ -386,7 +428,7 @@ class AppController extends Controller
                         }
                     }';
                 $sendarray = json_decode($json_array, true);
-                $mobile = $this->getTableLocator()->get('ContactStreams')->get($contact->contact_stream_id);
+                $mobile = $this->getTableLocator()->get('ContactStreams')->get($streams->contact_stream_id);
                 //     debug($mobile->contact_number);
 
                 $sendarray['to'] = $mobile->contact_number;
@@ -421,13 +463,14 @@ class AppController extends Controller
         ));
 
         $jsonresponse = curl_exec($curl);
-        $response = json_decode($jsonresponse, true);
+        $response['wa'] = json_decode($jsonresponse, true);
+
 
         curl_close($curl);
         $this->writelog($response, "Despatch response");
 
         $table = $this->getTableLocator()->get('Streams');
-        $row = $table->get($contact->id);
+        $row = $table->get($streams->id);
         // debug($row);
       //    debug($response);
         if (isset($response['messages'][0]['id'])) {
@@ -446,7 +489,7 @@ class AppController extends Controller
             $row->sendarray = json_encode($sendarray);
             $table->save($row);
             $slackService = new SlackService();
-            $slackService->sendMessage(message: "Failed to send  $type message to ".$mobile->contact_number);
+            $response['slack']=json_decode($slackService->sendMessage(message: "Failed to send  $type message to ".$mobile->contact_number),true);
         }
         return $response;
     }
@@ -488,23 +531,37 @@ class AppController extends Controller
         fclose($handle);
     }
 
-    function getWastreamsContactId($mobile_number, $fbsettings)
+    function getWastreamsContactId($mobile_number, $fbsettings) //function to create/return the WastreamsContactId related to contact number.
     {
+
         //   debug("Mobile number in getWastreamsContactId is $contact_waid" );
+     //   debug($fbsettings);
         $contact_waid = $this->_format_mobile($mobile_number, $fbsettings);
         $contactinfo = $this->getTableLocator()->get('ContactNumbers')->find()->where(['mobile_number' => $contact_waid])->first();
         $contact_stream_table = $this->getTableLocator()->get('ContactStreams');
 
-        $existing = $this->getTableLocator()->get('ContactStreams')->find()->where(['contact_number' => $contact_waid])->toArray();
-        if (empty($existing)) {
+        $existing = $this->getTableLocator()->get('ContactStreams')->find()->where(['contact_number' => $contact_waid, 'account_id'=>$fbsettings['account_id']])->toArray();
+       
+        if (empty($existing)) {  //number alreayd exists. 
+        //    debug("New");
             $row = $contact_stream_table->newEmptyEntity();
             if (!empty($contactinfo->name)) {
                 $row->name = $contactinfo->name;
             }
             $row->contact_number = $contact_waid;
-            $contact_stream_table->save($row);
-            return $row->id;
+            $row->account_id=$fbsettings['account_id'];       
+            if(!isset($user_id)){
+                $user_id=1;
+            }
+            $row->user_id=$user_id;
+            if($contact_stream_table->save($row)){
+                return $row->id;
+            }else{
+                debug($row->getErrors());
+            }
+            
         } else {
+        //    debug("Exists");
             $row = $contact_stream_table->get($existing[0]->id);
             if (isset($contactinfo->name)) {
                 $row->name = $contactinfo->name;
@@ -514,7 +571,7 @@ class AppController extends Controller
         }
     }
 
-    function updateProfileWastreamsContact($contact_waid, $profile, $FBSettings)
+    function updateProfileWastreamsContact($contact_waid, $profile, $FBSettings) //update profile of a WastreamsContactId
     {
         $contact_waid = $this->_format_mobile($contact_waid, $FBSettings);
         $table = $this->getTableLocator()->get('ContactStreams');
@@ -644,58 +701,7 @@ class AppController extends Controller
 
 
 
-    // function _rateMe($price_array,$fbsettings)
-    // {
-    //  //   debug ("Rating....");
-    //   //  debug($price_array);
-    //     $this->writelog($price_array, "Rating from rateme");
-    //     $streamTable = $this->getTableLocator()->get('Streams');
-    //     //  debug("Message ID is " . $price_array['id']);
-    //     $record = $streamTable->find()
-    //         ->contain('ContactStreams') // Include the related "ContactStreams" records
-    //         ->where(['messageid' => $price_array['id']])
-    //         ->first();
-
-    //     if (!$record) {
-    //         // Stop code execution or handle the situation as needed
-    //        debug("Record not found");
-    //      //   return false;
-    //         $this->writelog($price_array['id'], "No record found msg id in Streams");
-    //         $this->_notify("No record found msg id " . $price_array['id'], "Warning");
-    //         $return['result']['status'] = "warning";
-    //         $return['result']['message'] = "No record found msg id " . $price_array['id'];
-    //         return $return; // or return; depending on where this code is located
-    //     } else {
-    //         $this->writelog($price_array['id'], "Record Found in streams");
-    //     }
-
-    //   //  return false;
-
-
-    //     // debug($record->conversationid);
-    //     $alreadyCosted = $streamTable->find()
-    //         ->where([
-    //             'conversationid' => $record->conversationid,
-    //             'rated > ' => false,
-    //             //  'delivered_time IS NOT NULL',
-    //             //  'delivered_time >=' => date('Y-m-d H:i:s') // Assuming current date and time
-    //         ])
-    //         ->all();
-
-    //     if ($alreadyCosted->isEmpty()) {
-    //         //Process charging if not already.
-    //         debug("Charging $record->conversationid");
-    //         $this->writelog($record, "Passing to Charging");
-    //         $return = $this->_chargeMe($record,$fbsettings);
-    //     } else {
-    //          debug($alreadyCosted);
-    //         // debug("Already charged $record->conversationid");
-    //         $this->writelog($record->conversationid, "Already rated Message ID");
-    //         $return['result']['status'] = "success";
-    //         $return['result']['message'] = "$record->conversationid, Already rated Message ID";
-    //     }
-    //     return $return;
-    // }
+    
 
     function _rateMedelete($price_array,$fbsettings)
     {
