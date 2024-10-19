@@ -1260,7 +1260,15 @@ class AppController extends Controller
             $row->success = true;
             $row->result = $jsonresponse;
             $table->save($row);
-        } else {
+        } elseif(isset($response['wa']['messages'][0]['id'])) {
+            $row->messageid = $response['wa']['messages'][0]['id'];
+            $row->type = "send";
+            $row->has_wa = true;
+            $row->success = true;
+            $row->result = $jsonresponse;
+            $table->save($row);
+
+        }else{
             $this->writelog($response, "Response error");
             $row->type = "send";
             $row->has_wa = false;
