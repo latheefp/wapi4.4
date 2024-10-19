@@ -10923,3 +10923,4 @@
 192.168.65.1 - - [19/Oct/2024:06:54:42 +0000] "POST /campaigns/getstreams HTTP/1.1" 200 12766 "http://localhost:8090/campaigns/streams" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0"
 192.168.65.1 - - [19/Oct/2024:06:54:48 +0000] "POST /campaigns/getstreams HTTP/1.1" 200 12881 "http://localhost:8090/campaigns/streams" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0"
 127.0.0.1 - - [19/Oct/2024:06:54:55 +0000] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.4.56 (Debian) PHP/8.1.18 (internal dummy connection)"
+192.168.65.1 - - [19/Oct/2024:07:33:23 +0000] "POST /campaigns/getstreams HTTP/1.1" 200 12767 "http://localhost:8090/campaigns/streams" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:130.0) Gecko/20100101 Firefox/130.0"
