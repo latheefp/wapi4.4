@@ -27,7 +27,11 @@ class PriceCardsFixture extends TestFixture
                 'authentication' => 1,
                 'service' => 1,
                 'business_Initiated_rate' => 1,
+                'authentication_international' => 1,
                 'user_Initiated_rate' => 1,
+                'modified' => '2024-10-20 19:06:24',
+                'market' => 'Lorem ipsum dolor sit amet',
+                'updated' => 1,
             ],
         ];
         parent::init();

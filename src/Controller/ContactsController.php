@@ -116,7 +116,7 @@ class ContactsController extends AppController
 //     }
 
 
-    function getlist()
+    function getlistold()
     {
         $this->viewBuilder()->setLayout('ajax');
         //        $session = $this->request->getSession();
@@ -129,6 +129,38 @@ class ContactsController extends AppController
 
         $this->set('data', $this->paginate($query));
     }
+
+    function getlist()
+    {
+        $this->viewBuilder()->setLayout('ajax');
+        //        $session = $this->request->getSession();
+        $account_id = $this->getMyAccountID();
+        $querydata = $this->request->getData();
+        $query=[];
+        if (isset($querydata['length'])) {
+            $limit= intval($querydata['length']);
+        } else {
+            $limit = $this->_getsettings('pagination_count');
+        }
+
+      
+        $start = intval($querydata['start']);
+        $page = ($start / $limit) + 1;
+
+        $search=$querydata['search']['value'];
+
+        $contactTable = $this->getTableLocator()->get('Contacts');
+
+        $query = $contactTable->find()
+            ->where(['Contacts.account_id' => $account_id])
+            ->andWhere(['Contacts.name LIKE' => '%'.$search.'%'])
+            ->limit($limit)
+            ->page($page);
+
+        $this->set('data', $this->paginate($query));
+    }
+
+    
 
     function getcontacts($id = null)
     {
@@ -489,26 +521,26 @@ class ContactsController extends AppController
         // Base query with the 'Departments' relationship
         $conditions = [];
 
-        $conditions['AND'] = [
+        $conditions['AND'][] = [
             'ContactStreams.account_id' => $this->getMyAccountID()      
         ];
 
         // Check if a search query exists
         if (!empty($query)) {
-            // Search in both doctors' name and departments' name
+
             $conditions['OR'] = [
                 'ContactStreams.contact_number LIKE' => '%' . $query . '%',           
                 'ContactStreams.profile_name LIKE' => '%' . $query . '%'      
             ];
         }
         if (!empty($status)) {
-            // Search in both doctors' name and departments' name
+
             if($status=="unblocked"){
-                $conditions['AND'] = [
+                $conditions['AND'][] = [
                     'ContactStreams.camp_blocked' => 0         
                 ];
             }elseif($status == "blocked"){
-                $conditions['AND'] = [
+                $conditions['AND'][] = [
                     'ContactStreams.camp_blocked' => 1         
                 ];
             }

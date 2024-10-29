@@ -46,7 +46,7 @@ echo $this->Form->create($user,
     $session = $this->request->getSession();
     $admin_id = $session->read('Auth.User.ugroup_id');
    // debug($admin_id);
-    //if AdminID=1, Super use can be enabled. else disabled
+    //if AdminID=1, Superuser can be enabled. else disabled
     if ($admin_id == 1) {
           $filter_array = [];
     } else {

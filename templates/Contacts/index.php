@@ -325,9 +325,9 @@
             {
                 text: '<i class="far fa-plus-square"></i>',
                 className: 'btn btn-default btn-sm',
-                titleAttr: 'Add New Contact',
+                titleAttr: 'Add New Group',
                 action: function(e, dt, node, config) {
-                    addcontact();
+                    addnewgroup();
                 },
                 enabled: true
             }

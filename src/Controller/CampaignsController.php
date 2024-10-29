@@ -1136,7 +1136,7 @@ class CampaignsController extends AppController
 
         //        $session = $this->request->getSession();
         $query['conditions']['AND'][] = array($model . ".account_id" => $this->getMyAccountID());
-
+      //  debug($query['fields']);
         return $query;
     }
 

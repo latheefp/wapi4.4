@@ -24,6 +24,8 @@ use Cake\Validation\Validator;
  * @method \App\Model\Entity\PriceCard[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
  * @method \App\Model\Entity\PriceCard[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
  * @method \App\Model\Entity\PriceCard[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
+ *
+ * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class PriceCardsTable extends Table
 {
@@ -40,6 +42,8 @@ class PriceCardsTable extends Table
         $this->setTable('price_cards');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
+
+        $this->addBehavior('Timestamp');
     }
 
     /**
@@ -88,9 +92,19 @@ class PriceCardsTable extends Table
             ->notEmptyString('business_Initiated_rate');
 
         $validator
+            ->integer('authentication_international')
+            ->allowEmptyString('authentication_international');
+
+        $validator
             ->numeric('user_Initiated_rate')
             ->requirePresence('user_Initiated_rate', 'create')
             ->notEmptyString('user_Initiated_rate');
+
+        $validator
+            ->scalar('market')
+            ->maxLength('market', 64)
+            ->requirePresence('market', 'create')
+            ->notEmptyString('market');
 
         return $validator;
     }

@@ -16,7 +16,11 @@ use Cake\ORM\Entity;
  * @property float $authentication
  * @property float $service
  * @property float $business_Initiated_rate
+ * @property int|null $authentication_international
  * @property float $user_Initiated_rate
+ * @property \Cake\I18n\FrozenTime $modified
+ * @property string $market
+ * @property bool $updated
  */
 class PriceCard extends Entity
 {
@@ -37,6 +41,10 @@ class PriceCard extends Entity
         'authentication' => true,
         'service' => true,
         'business_Initiated_rate' => true,
+        'authentication_international' => true,
         'user_Initiated_rate' => true,
+        'modified' => true,
+        'market' => true,
+        'updated' => true,
     ];
 }

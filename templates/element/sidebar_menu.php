@@ -1,3 +1,7 @@
+<?php
+$session = $this->request->getSession();
+$group_id = $session->read('Config.ugroup_id');
+?>
 <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
         <!-- Add icons to the links using the .nav-icon class
@@ -117,6 +121,7 @@
                     </a>
                 </li>
             </ul>
+
         </li>
 
 
@@ -159,10 +164,9 @@
                 </li>
 
                 <?php
-                $session = $this->request->getSession();
-                $group_id = $session->read('Auth.User.ugroup_id');
+
                 if ($group_id == 1) {  //Below menus are only for super users.
-                ?>
+                    ?>
                     <li class="nav-item">
                         <a href="/settings/listgroups" class="nav-link">
                             <i class="fas fa-users nav-icon"></i>
@@ -175,7 +179,16 @@
                             <p>Permissions</p>
                         </a>
                     </li>
-                <?php
+      
+                    <li class="nav-item">
+                        <a href="/settings/pricing/" class="nav-link">
+                            <i class="fas fa-tags nav-icon"></i>
+                            <p>Rate Card</p>
+                        </a>
+                    </li>
+
+           
+                    <?php
                 }
                 ?>
             </ul>

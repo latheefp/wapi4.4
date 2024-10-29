@@ -294,10 +294,15 @@ class UsersController extends AppController {
             $user = $this->Authentication->getIdentity();
             $session->write('Config.id', $user->ugroup_id);
             $session->write('Config.account_id', $user->account_id);
+            $session->write('Config.ugroup_id', $user->ugroup_id);
             $account = $this->getTableLocator()->get('Accounts')->get($user->account_id);
             $session->write('Config.company', $account->company_name);
 
             
+
+
+
+
             //Set last Login Time. 
             $time = date("Y-m-d h:i:s", time());
             $ntime = new FrozenTime($time, 'Asia/Riyadh');
