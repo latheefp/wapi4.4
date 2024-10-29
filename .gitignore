@@ -52,4 +52,4 @@ nbproject/*
 yarn-debug.log
 yarn-error.log
 cred
-access.log
+./access.log

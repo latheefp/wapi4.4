@@ -251,4 +251,10 @@ class TestsController extends AppController
         return $query;
     }
 
+    function uploadtest($id){
+        $cmd = ROOT . DS . "bin/cake upload -i $id > /dev/null 2>&1 &";
+        exec($cmd);
+        debug($cmd);
+    }
+
 }
