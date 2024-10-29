@@ -83,7 +83,7 @@ class UploadCommand extends Command {
                    $i++;
                    $per=$i/$total_record*100;
                    $this->output($per);
-                    // debug($result);
+                 //   debug($result);
                     if ($result['status'] == "Success") {
                         $succcess = $succcess + 1;
                     }
@@ -98,6 +98,12 @@ class UploadCommand extends Command {
     
     
     function _savecontactdata($data, $groups) {
+        if(!isset($data['mobile_number'])){
+            $result['status'] = "failed";
+            $result['msg'] = "Wrong mobile number ".$data['mobile_number'];
+            echo "Wrong Mobile number ". $data['mobile_number'];
+            return $result;
+        }
         $data['mobile_number'] = $this->_format_mobile($data['mobile_number']);
         $this->output($data['mobile_number']);
         $table = $this->getTableLocator()->get('ContactNumbers');
@@ -151,8 +157,9 @@ class UploadCommand extends Command {
      function _format_mobile($mobile_number) {
         $country_code = $this->_getsettings('def_isd');
         $len = strlen((string)$mobile_number);
-
+        print ($mobile_number);
         $mobile_number = preg_replace("/^\+/", '', $mobile_number);
+        
 
         if ($len == 10) {
             $mobile_number = $country_code . $mobile_number;

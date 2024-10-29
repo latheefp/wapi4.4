@@ -250,6 +250,29 @@
 
 
 
+<!-- Bootstrap Modal for Entering Group Name -->
+<div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addGroupModalLabel">Add New Group</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="newgrouptxt" class="form-control" placeholder="Enter group name">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addNewGroup()">Add Group</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <input type="hidden" id="current_contact_id">
 <input type="hidden" id="action"> 
 
@@ -327,7 +350,8 @@
                 className: 'btn btn-default btn-sm',
                 titleAttr: 'Add New Group',
                 action: function(e, dt, node, config) {
-                    addnewgroup();
+                 //   addnewgroup();
+                     $('#addGroupModal').modal('show');
                 },
                 enabled: true
             }
@@ -823,6 +847,45 @@
 
         });
     }
+
+
+
+
+    function addNewGroup() {
+    const group = $('#newgrouptxt').val();
+    if (!group) {
+        toastr['error']("Please enter a group name.");
+        return;
+    }
+
+    $.ajax({
+        url: "/contacts/newcontacts",
+        method: "POST",
+        data: { 'name': group },
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('X-CSRF-Token', csrfToken); // Add CSRF token for security
+        }
+    })
+    .done(function(data) {
+        const jsonData = JSON.parse(data);
+        const status = jsonData.status;
+        const msg = jsonData.msg;
+
+        if (status === "success") {
+            toastr['success'](msg);
+            $('#addGroupModal').modal('hide'); // Close modal on success
+            $('#groupaddbutton').show();
+            $('#contactaddinputdiv').hide();
+            // Optionally reload contact list here if needed
+            // loadcontactlist();
+        } else {
+            toastr['error'](msg); // Show error and keep modal open
+        }
+    })
+    .fail(function() {
+        toastr['error']("An error occurred. Please try again."); // Show error if AJAX fails
+    });
+}
 
 
 

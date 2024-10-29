@@ -24,7 +24,7 @@ class ContactsFixture extends TestFixture
                 'contact_count' => 1,
                 'whatsapp_count' => 1,
                 'blocked_count' => 1,
-                'created' => '2024-03-27 00:51:07',
+                'created' => '2024-10-29 18:37:04',
                 'account_id' => 1,
                 'user_id' => 1,
             ],

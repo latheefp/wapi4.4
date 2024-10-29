@@ -62,6 +62,11 @@ class ContactsTable extends Table
             'targetForeignKey' => 'contact_number_id',
             'joinTable' => 'contacts_contact_numbers',
         ]);
+        $this->belongsToMany('Schedules', [
+            'foreignKey' => 'contact_id',
+            'targetForeignKey' => 'schedule_id',
+            'joinTable' => 'contacts_schedules',
+        ]);
     }
 
     /**
