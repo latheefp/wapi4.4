@@ -150,14 +150,19 @@ class ContactsController extends AppController
         $search=$querydata['search']['value'];
 
         $contactTable = $this->getTableLocator()->get('Contacts');
-
+       // debug($limit ." ". $page);
         $query = $contactTable->find()
             ->where(['Contacts.account_id' => $account_id])
-            ->andWhere(['Contacts.name LIKE' => '%'.$search.'%'])
-            ->limit($limit)
-            ->page($page);
+            ->andWhere(['Contacts.name LIKE' => '%'.$search.'%']);
+            // ->limit($limit)
+            // ->page($page);
 
-        $this->set('data', $this->paginate($query));
+        $this->set('data', $this->paginate($query, [
+                'limit' => $limit,
+                'page' => $page
+            ]));    
+
+       // $this->set('data', $this->paginate($query));
     }
 
     
