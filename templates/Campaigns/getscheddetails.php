@@ -98,10 +98,10 @@ foreach ($formdata as $key => $val) {
                                             <div class="col-sm-2">
                                                 <?php
                                                 ?>
-                                                <a href="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] . "/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox"  data-gallery="gallery">
+                                                <a href="/campaigns/viewsendFile?fileid=<?= $formarray[$fname]['fbimageid'] . "/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox"  data-gallery="gallery">
                                                     <?php if (isset($formarray[$fname])) {
                                                         ?>
-                                                        <img  class="img-fluid mb-2" src="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] ?>"  id="<?= $fname ?>-prev">
+                                                        <img  class="img-fluid mb-2" src="/campaigns/viewsendFile?fileid=<?= $formarray[$fname]['fbimageid'] ?>"  id="<?= $fname ?>-prev">
                                                     <?php } else {
                                                         ?>
                                                         <img id="<?= $fname ?>-prev src="">

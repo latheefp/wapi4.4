@@ -123,7 +123,7 @@ class CampaignsController extends AppController
 
         $data['account_id'] = $this->getMyAccountID();
         $FBsettings = $this->_getFBsettings($data);
-        $stream_id= $requestinfo['id'];
+        //$stream_id= $requestinfo['id'];
 
         $this->viewBuilder()->setLayout('ajax');
         $file = tmpfile();
@@ -142,7 +142,7 @@ class CampaignsController extends AppController
                 //   'Content-Type: ' . $filetype,
                 'Authorization: Bearer ' . $FBsettings['ACCESSTOKENVALUE']
             ),
-        ));
+        )); 
 
         $response = curl_exec($curl);
         $responsArray = json_decode($response, true);
@@ -232,13 +232,24 @@ class CampaignsController extends AppController
             // }
         }
 
+        // fclose($file_handle);
+        // $response = $this->response->withFile(
+        //     $file_path,
+        //     ['download' => true, 'name' => $fname]
+        // );
+        // $response->withType($filetype);
+        // return $response;
+
         fclose($file_handle);
         $response = $this->response->withFile(
             $file_path,
-            ['download' => true, 'name' => $fname]
-        );
-        $response->withType($filetype);
+            ['download' => false, 'name' => $fname] // Set download to false to view in browser
+        )
+        ->withType($filetype)
+        ->withHeader('Content-Disposition', 'inline; filename="' . $fname . '"'); // Set header to inline
+    
         return $response;
+
     }
 
     function viewrcvImage()
