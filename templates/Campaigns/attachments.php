@@ -341,8 +341,8 @@ $varcount = 1;
                                                                 <div class="col-sm-4">
                                                                     <?php if (isset($formarray[$fname])) {
                                                                     ?>
-                                                                        <a href="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] . "/" . $data['account_id'] . "/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox" data-gallery="gallery">
-                                                                            <img class="img-fluid mb-2" src="/campaigns/viewimage/<?= $formarray[$fname]['fbimageid'] ?>" id="<?= $fname ?>-prev">
+                                                                        <a href="/campaigns/viewsendFile?fileid=<?= $formarray[$fname]['fbimageid'] . "/" . $data['account_id'] . "/" . $formarray[$fname]['field_value'] ?>" data-toggle="lightbox" data-gallery="gallery">
+                                                                            <img class="img-fluid mb-2" src="/campaigns/viewsendFile?fileid=<?= $formarray[$fname]['fbimageid'] ?>" id="<?= $fname ?>-prev">
                                                                         <?php } else {
                                                                         ?>
                                                                             <img id="<?= $fname ?>-prev" src="">
@@ -361,7 +361,7 @@ $varcount = 1;
                                                             <div>
                                                                 <?php if (isset($formarray[$fname])) {
                                                                 ?>
-                                                                    <img src="/campaigns/viewimage/" <?= $formarray[$fname]['fbimageid'] ?> id="<?= $fname ?>-prev>
+                                                                    <img src="/campaigns/viewsendFile?fileid=" <?= $formarray[$fname]['fbimageid'] ?> id="<?= $fname ?>-prev>
                                                                 <?php } else {
                                                                 ?>
                                                                          <img id=" <?= $fname ?>-prev" src="">
@@ -376,7 +376,7 @@ $varcount = 1;
                                                             <div>
                                                                 <?php if (isset($formarray[$fname])) {
                                                                 ?>
-                                                                    <img src="/campaigns/viewimage/" <?= $formarray[$fname]['fbimageid'] ?> id="<?= $fname ?>-prev>
+                                                                    <img src="/campaigns/viewsendFile?fileid=" <?= $formarray[$fname]['fbimageid'] ?> id="<?= $fname ?>-prev>
                                                                 <?php } else {
                                                                 ?>
                                                                          <img id=" <?= $fname ?>-prev" src="">
@@ -391,7 +391,7 @@ $varcount = 1;
                                                             <div>
                                                                 <?php if (isset($formarray[$fname])) {
                                                                 ?>
-                                                                    <img src="/campaigns/viewimage/" <?= $formarray[$fname]['id'] ?> id="<?= $fname ?>-prev>
+                                                                    <img src="/campaigns/viewsendFile?fileid=" <?= $formarray[$fname]['id'] ?> id="<?= $fname ?>-prev>
                                                                 <?php } else {
                                                                 ?>
                                                                          <img id=" <?= $fname ?>-prev" src="">
