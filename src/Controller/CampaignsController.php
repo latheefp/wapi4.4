@@ -988,13 +988,13 @@ class CampaignsController extends AppController
             ->where(['schedule_id' => $id])
             ->count();
         //debug($total);
-        $no_wa = $table->query()
+        $failed = $table->query()
             ->where(['schedule_id' => $id, 'success' => 0])
             ->count();
         // debug ($no_wa);
 
         $this->set('total', $total);
-        $this->set('no_wa', $no_wa);
+        $this->set('failed', $failed);
         $this->set('id', $id);
 
         $schedtable = $this->getTableLocator()->get('Schedules');
