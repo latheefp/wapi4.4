@@ -1,10 +1,7 @@
 <?php
-$success = $total - $no_wa;
+$success = $total - $failed;
 $success_per = round($success / $total * 100,1);
-$no_wa_perc = round($no_wa / $total * 100,1);
-//debug($total);
-//debug($no_wa);
-//debug(json_decode($data['template_details'], true));
+$failed_per = round($failed / $total * 100,1);
 $formarray = [];
 foreach ($formdata as $key => $val) {
     $formarray[$val['field_name']] = $val;
@@ -19,7 +16,7 @@ foreach ($formdata as $key => $val) {
             <span class="progress-number"><b><?= $success ?>/<?= $total ?></b></span>
             <div class="progress">
                 <div class="progress-bar bg-success" role="progressbar" style="width: <?= $success_per ?>%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"> Success: <?= $success_per ?>%</div>
-                <div class="progress-bar bg-danger" role="progressbar" style="width: <?= $no_wa_perc ?>%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"> No WhatsApp: <?= $no_wa_perc ?>%</div>
+                <div class="progress-bar bg-danger" role="progressbar" style="width: <?= $failed_per ?>%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"> No WhatsApp: <?= $failed_per ?>%</div>
             </div>
 
         </div>

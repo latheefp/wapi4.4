@@ -989,7 +989,7 @@ class CampaignsController extends AppController
             ->count();
         //debug($total);
         $no_wa = $table->query()
-            ->where(['schedule_id' => $id, 'has_wa' => 0])
+            ->where(['schedule_id' => $id, 'success' => 0])
             ->count();
         // debug ($no_wa);
 
