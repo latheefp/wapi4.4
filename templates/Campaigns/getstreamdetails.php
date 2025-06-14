@@ -65,7 +65,6 @@
                                     echo ($beautified_json_string);
 
                                 }
-
                                 ?>
                             </pre>
                         </td></tr>
@@ -160,6 +159,7 @@
                             if (isset($data->recievearray) && !empty($data->recievearray)) {
                                 $rcvData['json'] = $data->recievearray;
                                 $rcvData['id']=$data->id;
+                                $rcvData['stream_id'] = $data->stream_id;
                                 $rcvData['FBsettings'] = $FBsettings;
                         //        debug($rcvData);
                                 print($this->RcvDataformat->format($rcvData));
