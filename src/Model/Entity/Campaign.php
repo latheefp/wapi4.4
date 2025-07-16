@@ -37,7 +37,6 @@ class Campaign extends Entity
      * @var array<string, bool>
      */
     protected $_accessible = [
-        'id' => true,
         'campaign_name' => true,
         'start_date' => true,
         'end_date' => true,

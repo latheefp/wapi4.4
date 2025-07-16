@@ -927,10 +927,6 @@
         });
 
 
-
-
-
-
         $('#searchText').keydown(function(event) {
             let keyPressed = event.keyCode || event.which;
             if (keyPressed === 13) {
