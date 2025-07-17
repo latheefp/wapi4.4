@@ -175,7 +175,7 @@ class ApisController extends AppController {
                 $sendQ->save($sendQrow);
 
                 http_response_code(200); // Bad Request
-                $response['Success'] = 'Message Submitted';
+                $response['Success'] = 'Message Submitted with id ' . $sendQrow->id;
                 $this->set('result', $response);
                 return;
 
