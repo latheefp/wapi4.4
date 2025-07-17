@@ -114,6 +114,7 @@ class JobsController extends AppController
                     case "forward":
                         $return = $this->_forwardmsg($sendQrecord, $FBSettings);
                         break;
+                
                     case "chat":
                         $return = $this->_chat($sendQrecord, $FBSettings);
                         break;
@@ -428,7 +429,14 @@ class JobsController extends AppController
                 return $return;
             }
         }
-        
+
+
+        //Logic for ERPNext OTP
+        if($data['type']=="erpnextotp"){
+            $this->writelog($data, "Processing erpnextotp data from _send_scheduel function ".$data['var-1']);
+            $data['var-1'] = str_replace('Your verification code is ', '', $data['var-1']);
+        }
+
 
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
         $schedTable = $this->getTableLocator()->get('Schedules');
