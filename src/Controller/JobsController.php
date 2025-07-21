@@ -557,14 +557,14 @@ class JobsController extends AppController
 
         $dataarray['hookid'] = $input['entry'][0]['id'];
         $dataarray['messaging_product'] = $input['entry'][0]['changes'][0]['value']['messaging_product'];
-        $phone_number_id = $input['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
-        $FBSettings = $this->_getFBsettings(['phone_number_id' => $phone_number_id]);
+        $phone_numberId = $input['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
+        $FBSettings = $this->_getFBsettings(['phone_numberId' => $phone_numberId]);
         if ($FBSettings['status']['code'] != 200) {
             $record->status = $FBSettings['status']['message'];
             $Qtable->save($record);
 
             $return['result']['status'] = "failed";
-            $return['result']['message'] = "No account related to phone_number_id $phone_number_id";
+            $return['result']['message'] = "No account related to phone_numberId $phone_numberId";
             return $return;
         }
         //   debug($FBSettings);
@@ -572,7 +572,7 @@ class JobsController extends AppController
         $this->writelog($FBSettings, "FB settings");
         $display_phone_number = $input['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'];
         $dataarray['display_phone_number'] = $display_phone_number;
-        $dataarray['phonenumberid'] = $phone_number_id;
+        $dataarray['phonenumberid'] = $phone_numberId;
         // $sender = $input['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'];
         // $dataarray['contact_waid'] = $sender;
         if (isset($input['entry'][0]['changes'][0]['value']['messages'])) { //type is message
@@ -999,7 +999,7 @@ class JobsController extends AppController
         $curl = curl_init();
         //sending menu to customer. 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $FBSettings['phone_number_id'] . '/messages',
+            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $FBSettings['phone_numberId'] . '/messages',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -1057,7 +1057,7 @@ class JobsController extends AppController
         }';
         $this->writelog($POSTFIELDS, "POSTFIELDS");
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
+            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_numberId'] . '/messages',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -1392,7 +1392,7 @@ class JobsController extends AppController
             }';
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $FBSettings['phone_number_id'] . '/messages',
+            CURLOPT_URL => 'https://graph.facebook.com/v15.0/' . $FBSettings['phone_numberId'] . '/messages',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,

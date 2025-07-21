@@ -323,7 +323,7 @@ class ApisController extends AppController {
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/' . $this->_getAccountSettings('API_VERSION') . '/' . $this->_getAccountSettings('phone_number_id') . '/media',
+            CURLOPT_URL => 'https://graph.facebook.com/' . $this->_getAccountSettings('API_VERSION') . '/' . $this->_getAccountSettings('phone_numberId') . '/media',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,

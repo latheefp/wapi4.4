@@ -12,6 +12,24 @@ use Cake\Validation\Validator;
  * Accounts Model
  *
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
+ * @property \App\Model\Table\ApiKeysTable&\Cake\ORM\Association\HasMany $ApiKeys
+ * @property \App\Model\Table\ApiviewsTable&\Cake\ORM\Association\HasMany $Apiviews
+ * @property \App\Model\Table\CampaignViewsTable&\Cake\ORM\Association\HasMany $CampaignViews
+ * @property \App\Model\Table\ChatsTable&\Cake\ORM\Association\HasMany $Chats
+ * @property \App\Model\Table\ChatsSessionsTable&\Cake\ORM\Association\HasMany $ChatsSessions
+ * @property \App\Model\Table\CommandsTable&\Cake\ORM\Association\HasMany $Commands
+ * @property \App\Model\Table\ContactStreamsTable&\Cake\ORM\Association\HasMany $ContactStreams
+ * @property \App\Model\Table\ContactsTable&\Cake\ORM\Association\HasMany $Contacts
+ * @property \App\Model\Table\InvoiceViewsTable&\Cake\ORM\Association\HasMany $InvoiceViews
+ * @property \App\Model\Table\InvoicesTable&\Cake\ORM\Association\HasMany $Invoices
+ * @property \App\Model\Table\PermissionsTable&\Cake\ORM\Association\HasMany $Permissions
+ * @property \App\Model\Table\RecentChatsTable&\Cake\ORM\Association\HasMany $RecentChats
+ * @property \App\Model\Table\ScheduleViewsTable&\Cake\ORM\Association\HasMany $ScheduleViews
+ * @property \App\Model\Table\SchedulesTable&\Cake\ORM\Association\HasMany $Schedules
+ * @property \App\Model\Table\StreamViewsTable&\Cake\ORM\Association\HasMany $StreamViews
+ * @property \App\Model\Table\StreamsTable&\Cake\ORM\Association\HasMany $Streams
+ * @property \App\Model\Table\TemplatesTable&\Cake\ORM\Association\HasMany $Templates
+ * @property \App\Model\Table\UgroupsPermissionsTable&\Cake\ORM\Association\HasMany $UgroupsPermissions
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\HasMany $Users
  *
  * @method \App\Model\Entity\Account newEmptyEntity()
@@ -52,17 +70,49 @@ class AccountsTable extends Table
             'foreignKey' => 'user_id',
             'joinType' => 'INNER',
         ]);
-        $this->belongsTo('PhoneNumbers', [
-            'foreignKey' => 'phone_number_id',
-            'joinType' => 'INNER',
-        ]);
         $this->hasMany('ApiKeys', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('Apiviews', [
             'foreignKey' => 'account_id',
         ]);
         $this->hasMany('CampaignViews', [
             'foreignKey' => 'account_id',
         ]);
+        $this->hasMany('Chats', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('ChatsSessions', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('Commands', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('ContactStreams', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('Contacts', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('InvoiceViews', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('Invoices', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('Permissions', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('RecentChats', [
+            'foreignKey' => 'account_id',
+        ]);
         $this->hasMany('ScheduleViews', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('Schedules', [
+            'foreignKey' => 'account_id',
+        ]);
+        $this->hasMany('StreamViews', [
             'foreignKey' => 'account_id',
         ]);
         $this->hasMany('Streams', [
@@ -87,10 +137,6 @@ class AccountsTable extends Table
      */
     public function validationDefault(Validator $validator): Validator
     {
-        $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
         $validator
             ->scalar('company_name')
             ->maxLength('company_name', 32)
@@ -120,6 +166,10 @@ class AccountsTable extends Table
             ->allowEmptyString('secondary_number');
 
         $validator
+            ->integer('user_id')
+            ->notEmptyString('user_id');
+
+        $validator
             ->numeric('current_balance')
             ->requirePresence('current_balance', 'create')
             ->notEmptyString('current_balance');
@@ -141,6 +191,12 @@ class AccountsTable extends Table
             ->maxLength('ACCESSTOKENVALUE', 256)
             ->requirePresence('ACCESSTOKENVALUE', 'create')
             ->notEmptyString('ACCESSTOKENVALUE');
+
+        $validator
+            ->scalar('phone_numberId')
+            ->maxLength('phone_numberId', 32)
+            ->requirePresence('phone_numberId', 'create')
+            ->notEmptyString('phone_numberId');
 
         $validator
             ->scalar('def_language')
@@ -171,6 +227,11 @@ class AccountsTable extends Table
             ->notEmptyString('interactive_webhook');
 
         $validator
+            ->scalar('rcv_notification_template')
+            ->maxLength('rcv_notification_template', 32)
+            ->allowEmptyString('rcv_notification_template');
+
+        $validator
             ->scalar('interactive_api_key')
             ->maxLength('interactive_api_key', 256)
             ->requirePresence('interactive_api_key', 'create')
@@ -193,6 +254,10 @@ class AccountsTable extends Table
             ->requirePresence('def_isd', 'create')
             ->notEmptyString('def_isd');
 
+        $validator
+            ->scalar('welcome_msg')
+            ->allowEmptyString('welcome_msg');
+
         return $validator;
     }
 
@@ -205,8 +270,7 @@ class AccountsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
-        $rules->add($rules->existsIn(['phone_number_id'], 'PhoneNumbers'), ['errorField' => 'phone_number_id']);
+        $rules->add($rules->existsIn('user_id', 'Users'), ['errorField' => 'user_id']);
 
         return $rules;
     }

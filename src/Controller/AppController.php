@@ -447,7 +447,7 @@ class AppController extends Controller
     //    debug($sendarray);
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
+            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_numberId'] . '/messages',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -622,7 +622,7 @@ class AppController extends Controller
     public function _getFBsettings($data)
     {
       //  debug($data);
-        //you can either send the uid , api_key, phone_number_id to get fbsettings. 
+        //you can either send the uid , api_key, phone_numberId to get fbsettings. 
         if (isset($data['api_key'])) {
             $table = $this->getTableLocator()->get('ApiKeys');
             $apiquery = $table->find()
@@ -655,11 +655,11 @@ class AppController extends Controller
             $result = $acquery
                 ->where(['id' => $userquery->account_id])
                 ->first();
-        } elseif (isset($data['phone_number_id'])) {
+        } elseif (isset($data['phone_numberId'])) {
             // debug($data);
             $acquery = $this->getTableLocator()->get('Accounts')->find();
             $result = $acquery
-                ->where(['phone_number_id' => $data['phone_number_id']])
+                ->where(['phone_numberId' => $data['phone_numberId']])
                 ->first();
         } elseif (isset($data['account_id'])) {
             $acquery = $this->getTableLocator()->get('Accounts')->find();
@@ -681,7 +681,7 @@ class AppController extends Controller
         $data['WBAID'] = $result->WBAID;
         $data['Balance'] = $result->current_balance;
         $data['API_VERSION'] = $result->API_VERSION;
-        $data['phone_number_id'] = $result->phone_number_id;
+        $data['phone_numberId'] = $result->phone_numberId;
         $data['def_language'] = $result->def_language;
         $data['test_number'] = $result->test_number;
         $data['def_isd'] = $result->def_isd;
@@ -1231,7 +1231,7 @@ class AppController extends Controller
         $this->writelog($id, "Resending MSG");
         $curl = curl_init();
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_number_id'] . '/messages',
+            CURLOPT_URL => 'https://graph.facebook.com/' . $FBSettings['API_VERSION'] . '/' . $FBSettings['phone_numberId'] . '/messages',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,

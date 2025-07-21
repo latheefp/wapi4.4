@@ -749,7 +749,7 @@ class CampaignsController extends AppController
         //     debug($FBsettings);
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://graph.facebook.com/' . $FBsettings['API_VERSION'] . '/' . $FBsettings['phone_number_id'] . '/media',
+            CURLOPT_URL => 'https://graph.facebook.com/' . $FBsettings['API_VERSION'] . '/' . $FBsettings['phone_numberId'] . '/media',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
