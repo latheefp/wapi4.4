@@ -1730,16 +1730,20 @@ class JobsController extends AppController
     }
 
 
-    function clearText($text) {
-        // Remove new lines and tabs using str_replace
-        $cleanText = str_replace(array("\r", "\n", "\t"), "", $text);
-      
-        // Replace consecutive spaces with single spaces using preg_replace
-        $cleanText = preg_replace('/ +/', ' ', $cleanText);
-      
-        // Return the cleaned text
-        return $cleanText;
-      }
+        function clearText($text) {
+            // Only process if it's a string
+            if (!is_string($text)) {
+                return $text;
+            }
+
+            // Remove new lines and tabs
+            $cleanText = str_replace(array("\r", "\n", "\t"), "", $text);
+
+            // Replace multiple spaces with a single space
+            $cleanText = preg_replace('/ +/', ' ', $cleanText);
+
+            return $cleanText;
+        }
       
 
 }
