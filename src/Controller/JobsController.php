@@ -432,10 +432,14 @@ class JobsController extends AppController
 
 
         //Logic for ERPNext OTP
-        if($data['type']=="erpnextotp"){
+        if(isset($data['type']) && $data['type']=="erpnextotp"){
             $this->writelog($data, "Processing erpnextotp data from _send_scheduel function ".$data['var-1']);
             $data['var-1'] = str_replace('Your verification code is ', '', $data['var-1']);
         }
+        // if($data['type']=="erpnextotp"){
+        //     $this->writelog($data, "Processing erpnextotp data from _send_scheduel function ".$data['var-1']);
+        //     $data['var-1'] = str_replace('Your verification code is ', '', $data['var-1']);
+        // }
 
 
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
