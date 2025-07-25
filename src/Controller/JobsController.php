@@ -66,6 +66,7 @@ class JobsController extends AppController
             $this->_update_http_code($qid, '404', $type);
             $response['error'] = 'Invalid qid APIKEY';
             $this->set('response', $response);
+            $this->sendSlack("Invalid API key used in runjob $qid with type $type","warning");
             return;
         }
 
@@ -76,6 +77,8 @@ class JobsController extends AppController
             $this->_update_http_code($qid, '400', $type);
             http_response_code(400); // Bad Request
             $response['error'] = "Invalid qid not numbr or empty  $qid";
+
+            $this->sendSlack("Invalid qid not numbr or empty  $qid","warning");
             $this->set('response', $response);
             return;
         }
@@ -91,6 +94,7 @@ class JobsController extends AppController
                     $sendQrecord = $table->get($qid);
                 } catch (RecordNotFoundException $exception) {
                     $this->_update_http_code($qid, '404', $type);
+                    $this->sendSlack("Record not found: Not able to find $qid in SendQueues","warning");
                     $response['error'] = "Record not found:".$exception->getMessage();
                     $this->set('response', $response);
                     return;
@@ -105,6 +109,7 @@ class JobsController extends AppController
                     $this->response = $this->response->withStatus(401); // Unauthorized
                     $this->_update_http_code($qid, '404', $type);
                     $response['error'] = 'Invalid qid APIKEY';
+                    $this->sendSlack("Invalid qid APIKEY used in runjob $qid with type $type","warning");
                     $this->set('response', $response);
                     return;
                 }
@@ -157,6 +162,7 @@ class JobsController extends AppController
                 default:
                     $return['error'] = "Invalid qid request type $type";
                     $return['result'] = "Invalid qid request type $type";
+                    $this->sendSlack("Invalid qid request type $type","error");
                     $this->response = $this->response->withStatus(500); // Unauthorized
                     $this->set('response', $return);
                 break;
@@ -231,7 +237,6 @@ class JobsController extends AppController
 
         
        
-
         $streamsTable = $this->getTableLocator()->get('Streams');
         if ($streamsTable->exists(['id' => $form_data['stream_id']])) {
             $streams = $streamsTable->get($form_data['stream_id']);
@@ -266,6 +271,8 @@ class JobsController extends AppController
                 //  debug($type);
                 // debug($message);
                // debug($message[$type]['id']);
+
+                $this->sendSlack("A forward message recived from $sender with type $type ","info");
                if(isset($message[$type]['caption'])){
                 $caption=$message[$type]['caption'] ." from $sender_profile($sender)";
                }else{
@@ -452,6 +459,7 @@ class JobsController extends AppController
             ->first();
         if (empty($schedQuery)) {
             $return['result']['error'] = "No matching schedule found, " . $data['schedule_name'];
+            $this->sendSlack("No matching schedule found on qid:$qid " . $data['schedule_name'],"warning");
             $this->writelog($schedQuery, "Shedule query result is empty, no matching schedule name");
             return $return;
         } else {
@@ -547,6 +555,7 @@ class JobsController extends AppController
         } catch (RecordNotFoundException $exception) {
             $return['result']['status'] = "failed";
             $return['result']['message'] =  "Record not found:".$exception->getMessage();
+            $this->sendSlack("Record not found in RcvQueues with id $id","error");
             return $return;
         }
 
@@ -736,6 +745,7 @@ class JobsController extends AppController
             return false;
         }else{
             $this->writelog($cmd, "Command: command is found $cmd ");
+            $this->sendSlack("Recieved a command $cmd from ".$dataarray['contact_waid'],"info");
                 switch( $cmd){
                     case "register":
                         //67265

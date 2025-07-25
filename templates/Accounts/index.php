@@ -27,8 +27,9 @@
                                     <th><?= $this->Paginator->sort('current_balance') ?></th>
                                     <th><?= $this->Paginator->sort('WBAID') ?></th>
                                     <th><?= $this->Paginator->sort('phone_numberId') ?></th>
-                            
                                     <th><?= $this->Paginator->sort('def_isd') ?></th>
+                                    <th><?= $this->Paginator->sort('webhookverified',"Verified") ?></th>
+
                                     <th class="actions">Actions</th>
                                 </tr>
                             </thead>
@@ -39,18 +40,49 @@
                                     <td><?= h($account->company_name) ?></td>
                                     <td><?= h($account->primary_contact_person) ?></td>
                                     <td><?= h($account->primary_number) ?></td>
-                                    
-                                    
                                     <td><?= $this->Number->format($account->current_balance) ?></td>
                                     <td><?= h($account->WBAID) ?></td>
                             
                                     <td><?= h($account->phone_numberId) ?></td>
                                   
                                     <td><?= h($account->def_isd) ?></td>
-                                    <td class="actions">
-                                        <?= $this->Html->link(__('View'), ['action' => 'view', $account->id], ['class' => 'btn btn-sm btn-info']) ?>
-                                        <?= $this->Html->link(__('Edit'), ['action' => 'edit', $account->id], ['class' => 'btn btn-sm btn-primary']) ?>
-                                        <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $account->id], ['confirm' => __('Are you sure you want to delete # {0}?', $account->id), 'class' => 'btn btn-sm btn-danger']) ?>
+                                   <td>
+                                        <?= $account->webhookverified ? '✅' : '⚪'; ?>
+                                    </td>
+                                  <td class="actions">
+                                        <?= $this->Html->link(
+                                            '<i class="bi bi-eye"></i>', // View icon
+                                            ['action' => 'view', $account->id],
+                                            [
+                                                'escape' => false,
+                                                'class' => 'btn btn-sm btn-info',
+                                                'title' => 'View Account',
+                                                'data-bs-toggle' => 'tooltip'
+                                            ]
+                                        ) ?>
+
+                                        <?= $this->Html->link(
+                                            '<i class="bi bi-pencil"></i>', // Edit icon
+                                            ['action' => 'edit', $account->id],
+                                            [
+                                                'escape' => false,
+                                                'class' => 'btn btn-sm btn-primary',
+                                                'title' => 'Edit Account',
+                                                'data-bs-toggle' => 'tooltip'
+                                            ]
+                                        ) ?>
+
+                                        <?= $this->Form->postLink(
+                                            '<i class="bi bi-trash"></i>', // Delete icon
+                                            ['action' => 'delete', $account->id],
+                                            [
+                                                'escape' => false,
+                                                'class' => 'btn btn-sm btn-danger',
+                                                'title' => 'Delete Account',
+                                                'data-bs-toggle' => 'tooltip',
+                                                'confirm' => __('Are you sure you want to delete # {0}?', $account->id)
+                                            ]
+                                        ) ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -75,4 +107,3 @@
             </div>
         </div>
     </section>
-<!-- </div> -->

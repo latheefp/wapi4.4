@@ -273,6 +273,7 @@ class AppController extends Controller
                 'notice' => ':bulb:',
                 'warning' => ':warning:',
                 'danger' => ':fire:',
+                'error' => ':fire:',
                 'critical' => ':rotating_light:',
                 'success' => ':white_check_mark:'
             ];

@@ -23,6 +23,8 @@ if (isset($titleforlayout)) {
         <!-- Ionicons -->
         <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
 
+        <!-- Theme style -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
         <?=
         $this->Html->css([
             '/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min',
@@ -309,6 +311,14 @@ if (isset($titleforlayout)) {
             }
 
 
+            //🧪 JavaScript to Enable Tooltips (Put at bottom of layout)
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            });
 
 
 
