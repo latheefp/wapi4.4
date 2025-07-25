@@ -16,7 +16,7 @@ class DformatHelper extends Helper {
         $result = null;
         $oformat = $option['format'];
         $odata = $option['data'];
-   //     $row=$option['row'];
+    //    print_r($option);
 
         switch ($oformat) {
             case "number":
@@ -33,6 +33,7 @@ class DformatHelper extends Helper {
                 }
                 break;
             case "DT2DT":
+            //    print_r($odata);
                 if (!empty($odata)) {
                     $result = $odata->format('d-m-Y H:i:s');
                 }

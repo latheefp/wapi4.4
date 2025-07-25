@@ -14,11 +14,16 @@ use Cake\ORM\Entity;
  * @property int $order_index
  * @property string $title
  * @property bool $searchable
+ * @property bool $reference
  * @property bool $exportable
  * @property bool $viewable
  * @property string|null $format
+ * @property string|null $boolean_yes
+ * @property string|null $boolean_no
  * @property string|null $lists
  * @property int $width
+ * @property string $contains
+ * @property string|null $contains_field
  */
 class Flagship extends Entity
 {
@@ -29,7 +34,7 @@ class Flagship extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'tbl_name' => true,
@@ -37,10 +42,15 @@ class Flagship extends Entity
         'order_index' => true,
         'title' => true,
         'searchable' => true,
+        'reference' => true,
         'exportable' => true,
         'viewable' => true,
         'format' => true,
+        'boolean_yes' => true,
+        'boolean_no' => true,
         'lists' => true,
         'width' => true,
+        'contains' => true,
+        'contains_field' => true,
     ];
 }

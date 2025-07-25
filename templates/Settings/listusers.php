@@ -9,6 +9,7 @@ $this->Breadcrumbs->add([
     <thead>
         <tr>
             <?php
+          //  debug($feildsType);
             foreach ($feildsType as $key => $val) {
                 if ($val['viewable'] == true) {
                     //                             print '<th>'.$key.'</th>';
@@ -90,6 +91,7 @@ $this->Breadcrumbs->add([
             "columns": [
     <?php
     foreach ($feildsType as $key => $val) {
+      //  debug($val);
         if ($val['viewable'] == true) {
             if ($val['searchable'] == 1) {
                 $searchable = "true";

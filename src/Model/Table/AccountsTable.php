@@ -127,6 +127,11 @@ class AccountsTable extends Table
         $this->hasMany('Users', [
             'foreignKey' => 'account_id',
         ]);
+        $this->belongsToMany('Countries', [
+            'foreignKey' => 'account_id',
+            'targetForeignKey' => 'country_id',
+            'joinTable' => 'accounts_countries',
+        ]);
     }
 
     /**

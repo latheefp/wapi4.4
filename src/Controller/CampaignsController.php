@@ -1119,6 +1119,7 @@ class CampaignsController extends AppController
 
         $query['fields'][]='id';
         foreach ($fields as $title => $props) {
+            //reference means, the field will be passsed to view, but not displayed in list.
             if (($props['viewable'] == true) ||($props['reference'] == true)) {
                 $query['fields'][]= $props['fld_name'];  //add only viewable field to searh.
                 if(($props['searchable'] == true)){

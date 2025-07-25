@@ -138,7 +138,8 @@ class SettingsController extends AppController
         $query = [
             'order' => [
                 'User.id' => 'asc'
-            ]
+            ],
+            'contain' => ['Ugroups']
         ];
         if (isset($querydata['length'])) {
             $query['limit'] = intval($querydata['length']);
@@ -147,9 +148,11 @@ class SettingsController extends AppController
         }
         $query['page'] = (intval($querydata['start'] / $query['limit'])) + 1;
         $query['order'] = array($querydata['columns'][$querydata['order']['0']['column']]['name'] . ' ' . $querydata['order']['0']['dir']);
+
         if (isset($querydata['search']['value'])) {
             $query['conditions']['OR'][] = array('Users.username LIKE' => '%' . $querydata['search']['value'] . '%');
             $query['conditions']['OR'][] = array('Users.email LIKE' => '%' . $querydata['search']['value'] . '%');
+            $query['conditions']['OR'][] = array('Ugroups.groupname LIKE' => '%' . $querydata['search']['value'] . '%');
         }
 
         //   $session = $this->request->getSession();

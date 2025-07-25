@@ -3,16 +3,16 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Controller;
 
-use App\Controller\AccountsController;
+use App\Controller\AccountsCountriesController;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
 /**
- * App\Controller\AccountsController Test Case
+ * App\Controller\AccountsCountriesController Test Case
  *
- * @uses \App\Controller\AccountsController
+ * @uses \App\Controller\AccountsCountriesController
  */
-class AccountsControllerTest extends TestCase
+class AccountsCountriesControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
@@ -22,33 +22,16 @@ class AccountsControllerTest extends TestCase
      * @var array<string>
      */
     protected $fixtures = [
+        'app.AccountsCountries',
         'app.Accounts',
-        'app.Users',
-        'app.ApiKeys',
-        'app.Apiviews',
-        'app.CampaignViews',
-        'app.Chats',
-        'app.ChatsSessions',
-        'app.Commands',
-        'app.ContactStreams',
-        'app.Contacts',
-        'app.InvoiceViews',
-        'app.Invoices',
-        'app.Permissions',
-        'app.RecentChats',
-        'app.ScheduleViews',
-        'app.Schedules',
-        'app.StreamViews',
-        'app.Streams',
-        'app.Templates',
-        'app.UgroupsPermissions',
+        'app.Countries',
     ];
 
     /**
      * Test index method
      *
      * @return void
-     * @uses \App\Controller\AccountsController::index()
+     * @uses \App\Controller\AccountsCountriesController::index()
      */
     public function testIndex(): void
     {
@@ -59,7 +42,7 @@ class AccountsControllerTest extends TestCase
      * Test view method
      *
      * @return void
-     * @uses \App\Controller\AccountsController::view()
+     * @uses \App\Controller\AccountsCountriesController::view()
      */
     public function testView(): void
     {
@@ -70,7 +53,7 @@ class AccountsControllerTest extends TestCase
      * Test add method
      *
      * @return void
-     * @uses \App\Controller\AccountsController::add()
+     * @uses \App\Controller\AccountsCountriesController::add()
      */
     public function testAdd(): void
     {
@@ -81,7 +64,7 @@ class AccountsControllerTest extends TestCase
      * Test edit method
      *
      * @return void
-     * @uses \App\Controller\AccountsController::edit()
+     * @uses \App\Controller\AccountsCountriesController::edit()
      */
     public function testEdit(): void
     {
@@ -92,7 +75,7 @@ class AccountsControllerTest extends TestCase
      * Test delete method
      *
      * @return void
-     * @uses \App\Controller\AccountsController::delete()
+     * @uses \App\Controller\AccountsCountriesController::delete()
      */
     public function testDelete(): void
     {

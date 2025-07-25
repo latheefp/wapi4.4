@@ -18,9 +18,10 @@ class AccountsController extends AppController
      */
     public function index()
     {
-        $this->paginate = [
-            'contain' => ['PhoneNumbers'],
-        ];
+         if( $this->getMyGID() !=1 ){
+            $this->Flash->error(__('You do not have permission to edit this account.'));
+            return $this->redirect(['action' => '/']);  
+        }
         $accounts = $this->paginate($this->Accounts);
 
         $this->set(compact('accounts'));
@@ -35,8 +36,12 @@ class AccountsController extends AppController
      */
     public function view($id = null)
     {
+         if( $this->getMyGID() !=1 ){
+            $this->Flash->error(__('You do not have permission to edit this account.'));
+            return $this->redirect(['action' => '/']);  
+        }
         $account = $this->Accounts->get($id, [
-            'contain' => ['PhoneNumbers', 'Users', 'ApiKeys', 'CampaignViews', 'ScheduleViews', 'Streams', 'Templates', 'UgroupsPermissions'],
+            'contain' => ['Users', 'ApiKeys', 'Apiviews', 'CampaignViews', 'Chats', 'ChatsSessions', 'Commands', 'ContactStreams', 'Contacts', 'InvoiceViews', 'Invoices', 'Permissions', 'RecentChats', 'ScheduleViews', 'Schedules', 'StreamViews', 'Streams', 'Templates', 'UgroupsPermissions'],
         ]);
 
         $this->set(compact('account'));
@@ -49,9 +54,18 @@ class AccountsController extends AppController
      */
     public function add()
     {
+         if( $this->getMyGID() !=1 ){
+            $this->Flash->error(__('You do not have permission to edit this account.'));
+            return $this->redirect(['action' => '/']);  
+        }
+    
         $account = $this->Accounts->newEmptyEntity();
         if ($this->request->is('post')) {
-            $account = $this->Accounts->patchEntity($account, $this->request->getData());
+            $account = $this->Accounts->patchEntity($account, $this->request->getData(),[
+                'associated' => ['Countries'] // Ensure countries are saved correctly
+            ]);
+       //     debug($account);
+            $account->user_id = $this->getMyUID(); // Assuming you have a method to get the current user's ID
             if ($this->Accounts->save($account)) {
                 $this->Flash->success(__('The account has been saved.'));
 
@@ -59,8 +73,8 @@ class AccountsController extends AppController
             }
             $this->Flash->error(__('The account could not be saved. Please, try again.'));
         }
-        $phoneNumbers = $this->Accounts->PhoneNumbers->find('list', ['limit' => 200])->all();
-        $this->set(compact('account', 'phoneNumbers'));
+          $countries = $this->Accounts->Countries->find('list')->toArray();
+        $this->set(compact('account','countries'));
     }
 
     /**
@@ -72,11 +86,20 @@ class AccountsController extends AppController
      */
     public function edit($id = null)
     {
+        if( $this->getMyGID() !=1 ){
+            $this->Flash->error(__('You do not have permission to edit this account.'));
+            return $this->redirect(['action' => '/']);  
+        }
+
         $account = $this->Accounts->get($id, [
-            'contain' => [],
+             'contain' => ['Countries'] // Important to fetch associated countries
         ]);
+
         if ($this->request->is(['patch', 'post', 'put'])) {
-            $account = $this->Accounts->patchEntity($account, $this->request->getData());
+            $account = $this->Accounts->patchEntity($account, $this->request->getData(),[
+                'associated' => ['Countries'] // Ensure countries are saved correctly
+            ]);
+            //debug($account);
             if ($this->Accounts->save($account)) {
                 $this->Flash->success(__('The account has been saved.'));
 
@@ -84,8 +107,8 @@ class AccountsController extends AppController
             }
             $this->Flash->error(__('The account could not be saved. Please, try again.'));
         }
-        $phoneNumbers = $this->Accounts->PhoneNumbers->find('list', ['limit' => 200])->all();
-        $this->set(compact('account', 'phoneNumbers'));
+        $countries = $this->Accounts->Countries->find('list')->toArray();
+        $this->set(compact('account', 'countries','countries'));
     }
 
     /**
@@ -97,6 +120,10 @@ class AccountsController extends AppController
      */
     public function delete($id = null)
     {
+         if( $this->getMyGID() !=1 ){
+            $this->Flash->error(__('You do not have permission to edit this account.'));
+            return $this->redirect(['action' => '/']);  
+        }
         $this->request->allowMethod(['post', 'delete']);
         $account = $this->Accounts->get($id);
         if ($this->Accounts->delete($account)) {

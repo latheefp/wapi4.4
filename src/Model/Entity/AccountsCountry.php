@@ -6,19 +6,17 @@ namespace App\Model\Entity;
 use Cake\ORM\Entity;
 
 /**
- * Country Entity
+ * AccountsCountry Entity
  *
  * @property int $id
- * @property string $iso
- * @property string $name
- * @property string $nicename
- * @property string|null $iso3
- * @property int|null $numcode
- * @property int $phonecode
+ * @property int $account_id
+ * @property int $country_id
+ * @property \Cake\I18n\FrozenTime|null $created
  *
- * @property \App\Model\Entity\Account[] $accounts
+ * @property \App\Model\Entity\Account $account
+ * @property \App\Model\Entity\Country $country
  */
-class Country extends Entity
+class AccountsCountry extends Entity
 {
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -30,12 +28,10 @@ class Country extends Entity
      * @var array<string, bool>
      */
     protected $_accessible = [
-        'iso' => true,
-        'name' => true,
-        'nicename' => true,
-        'iso3' => true,
-        'numcode' => true,
-        'phonecode' => true,
-        'accounts' => true,
+        'account_id' => true,
+        'country_id' => true,
+        'created' => true,
+        'account' => true,
+        'country' => true,
     ];
 }

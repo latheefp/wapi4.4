@@ -51,10 +51,6 @@ class FlagshipsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->scalar('tbl_name')
             ->maxLength('tbl_name', 32)
             ->requirePresence('tbl_name', 'create')
@@ -81,6 +77,11 @@ class FlagshipsTable extends Table
             ->notEmptyString('searchable');
 
         $validator
+            ->boolean('reference')
+            ->requirePresence('reference', 'create')
+            ->notEmptyString('reference');
+
+        $validator
             ->boolean('exportable')
             ->notEmptyString('exportable');
 
@@ -94,6 +95,14 @@ class FlagshipsTable extends Table
             ->allowEmptyString('format');
 
         $validator
+            ->scalar('boolean_yes')
+            ->allowEmptyString('boolean_yes');
+
+        $validator
+            ->scalar('boolean_no')
+            ->allowEmptyString('boolean_no');
+
+        $validator
             ->scalar('lists')
             ->maxLength('lists', 512)
             ->allowEmptyString('lists');
@@ -101,6 +110,17 @@ class FlagshipsTable extends Table
         $validator
             ->integer('width')
             ->notEmptyString('width');
+
+        $validator
+            ->scalar('contains')
+            ->maxLength('contains', 255)
+            ->requirePresence('contains', 'create')
+            ->notEmptyString('contains');
+
+        $validator
+            ->scalar('contains_field')
+            ->maxLength('contains_field', 255)
+            ->allowEmptyString('contains_field');
 
         return $validator;
     }

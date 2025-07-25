@@ -6,7 +6,7 @@ $group_id = $session->read('Config.ugroup_id');
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
         <!-- Add icons to the links using the .nav-icon class
              with Font Awesome Free 5.15.3 icons -->
-        <li class="nav-item menu-open">
+        <li class="nav-item ">
             <a href="/dashboards" class="nav-link">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
                 <p>
@@ -16,7 +16,7 @@ $group_id = $session->read('Config.ugroup_id');
             </a>
         </li>
 
-        <li class="nav-item menu-open">
+        <li class="nav-item ">
             <a href="/chats" class="nav-link">
                 <i class="nav-icon fas fa-comments"></i>
                 <p>
@@ -25,7 +25,7 @@ $group_id = $session->read('Config.ugroup_id');
             </a>
         </li>
 
-        <li class="nav-item menu-open">
+        <li class="nav-item ">
             <a href="#" class="nav-link">
                 <i class="nav-icon fas fa-bullhorn"></i>
                 <p>
@@ -75,7 +75,7 @@ $group_id = $session->read('Config.ugroup_id');
             </ul>
         </li>
 
-        <li class="nav-item menu-open">
+        <li class="nav-item ">
             <a href="#" class="nav-link">
                 <i class="nav-icon fas fa-address-book"></i>
                 <p>
@@ -105,7 +105,7 @@ $group_id = $session->read('Config.ugroup_id');
 
 
 
-        <li class="nav-item menu-open">
+        <li class="nav-item ">
             <a href="#" class="nav-link">
                 <i class="nav-icon fas fa-money-bill-alt"></i>
                 <p>
@@ -126,7 +126,7 @@ $group_id = $session->read('Config.ugroup_id');
 
 
 
-        <li class="nav-item menu-open">
+        <li class="nav-item ">
             <a href="#" class="nav-link">
                 <i class="nav-icon fas fa-chart-line"></i> <!-- Changed icon to fa-chart-line -->
                 <p>
@@ -147,7 +147,7 @@ $group_id = $session->read('Config.ugroup_id');
 
 
 
-        <li class="nav-item menu-open">
+        <li class="nav-item ">
             <a href="#" class="nav-link">
                 <i class="nav-icon fas fa-cogs"></i>
                 <p>
@@ -167,6 +167,13 @@ $group_id = $session->read('Config.ugroup_id');
 
                 if ($group_id == 1) {  //Below menus are only for super users.
                     ?>
+
+                    <li class="nav-item">
+                        <a href="/accounts" class="nav-link">
+                            <i class="fas fa-id-card nav-icon"></i>
+                            <p>Accounts</p>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a href="/settings/listgroups" class="nav-link">
                             <i class="fas fa-users nav-icon"></i>

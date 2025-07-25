@@ -11,6 +11,8 @@ use Cake\Validation\Validator;
 /**
  * Countries Model
  *
+ * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsToMany $Accounts
+ *
  * @method \App\Model\Entity\Country newEmptyEntity()
  * @method \App\Model\Entity\Country newEntity(array $data, array $options = [])
  * @method \App\Model\Entity\Country[] newEntities(array $data, array $options = [])
@@ -40,6 +42,12 @@ class CountriesTable extends Table
         $this->setTable('countries');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
+
+        $this->belongsToMany('Accounts', [
+            'foreignKey' => 'country_id',
+            'targetForeignKey' => 'account_id',
+            'joinTable' => 'accounts_countries',
+        ]);
     }
 
     /**
@@ -50,10 +58,6 @@ class CountriesTable extends Table
      */
     public function validationDefault(Validator $validator): Validator
     {
-        $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
         $validator
             ->scalar('iso')
             ->maxLength('iso', 2)
