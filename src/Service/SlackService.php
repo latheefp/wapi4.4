@@ -52,6 +52,7 @@ class SlackService
         if (!$response->isOk()) {
             // Log the warning message
             $this->log('Warning: Failed to send message to Slack', 'warning');
+            $this->log('Response: ' . $response->getBody(), 'warning');
             
             // Alternatively, display a user-friendly warning message
            $response="Failed to send message in slack";

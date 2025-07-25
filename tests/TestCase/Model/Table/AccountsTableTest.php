@@ -44,6 +44,7 @@ class AccountsTableTest extends TestCase
         'app.Streams',
         'app.Templates',
         'app.UgroupsPermissions',
+        'app.Countries',
     ];
 
     /**

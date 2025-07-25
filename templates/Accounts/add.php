@@ -1,3 +1,5 @@
+
+
 <div class="col-md-12">
     <div class="card card-primary">
         <div class="card-header">
@@ -99,6 +101,18 @@
                             <?= $this->Form->hidden('restricted_end_time', ['id' => 'restricted_end_time']) ?>
                         </div>
                     </div>
+
+                    <?php
+                        $webhookToken = $account->webhook_token ?? null;
+                        if (empty($webhookToken)) {
+                            $webhookToken = rand(10000000000, 99999999999); // 11-digit random number
+                        }
+                        ?>
+                    <div class="form-group">
+                        <?= $this->Form->control('webhook_token', ['class' => 'form-control','value'=> $webhookToken,'readonly'=>true]) ?>
+                    </div>
+
+                    
                 </div>
             </div>
                     

@@ -264,14 +264,32 @@ class AppController extends Controller
         }
         return $randomString;
     }
+     function sendSlack($text, $severity)
+        {
+            $slackService = new SlackService();
+            // Map severity to icons
+            $icons = [
+                'info' => ':information_source:',
+                'notice' => ':bulb:',
+                'warning' => ':warning:',
+                'danger' => ':fire:',
+                'critical' => ':rotating_light:',
+                'success' => ':white_check_mark:'
+            ];
+            $message = [
+                'text' => $text,
+                'severity' => $severity,
+                'timestamp' => date('Y-m-d H:i:s'),
+            ];
+            // Pick icon or fallback to info
+            $icon = $icons[strtolower($severity)] ?? ':grey_question:';
+            $formattedMessage = "{$icon} *[" . strtoupper($severity) . "]* {$text}";;
+            return $slackService->sendMessage($formattedMessage);
+        }
+
 
     function _despatch_msg($streams, $form, $templateQuery, $FBSettings, $type = "template")
     {
-
-
-
-
-
         //this section to make sure, camp is followed the stand of skipping blocked number for related account. 
         if ($streams->type == "camp") {
             // Fetch the corresponding contact number from ContactStreams
@@ -299,7 +317,9 @@ class AppController extends Controller
                 //  $row->sendarray = json_encode($sendarray);
                 $table->save($row);
                 $slackService = new SlackService();
-                $response['slack']=json_decode($slackService->sendMessage(message: "Blocked number $contactnumber->contact_number for account id $streams->account_id"),true);
+//                $response['slack']=json_decode($slackService->sendMessage(message: "Blocked number $contactnumber->contact_number for account id $streams->account_id"),true);
+                $response['slack']=json_decode($this->sendSlack("Blocked number $contactnumber->contact_number for account id $streams->account_id","warning"),true);
+
                 $response['msg'] = [
                     'status' => 'Error',
                     'message' => "The number $contactnumber->contact_number, is banned  to send camp on account " . $FBSettings['account_id']
@@ -308,11 +328,8 @@ class AppController extends Controller
 
             }
         }
-       
 
-
-
-
+   
         switch ($type) {
             case "template":
                 $this->writelog($streams, "Despatching message, streams");

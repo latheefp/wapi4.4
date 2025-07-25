@@ -43,8 +43,94 @@ class ApisController extends AppController {
 
 
 
-
     function webhook() {
+        //    $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
+        //  $this->writelog($ACCESSTOKENVALUE, "Access token");
+        //   $API_VERSION = $this->_getAccountSettings('API_VERSION');
+
+
+            // Array
+            // (
+            //     [hub_mode] => subscribe
+            //     [hub_challenge] => 1134571026
+            //     [hub_verify_token] => latheefp
+            // )
+
+
+
+        $this->writelog(array(['someone hit me']), "hit");
+        $this->viewBuilder()->setLayout('ajax');
+        $query = $this->request->getQueryParams();
+
+        if (!empty($query)) {
+            $this->writelog($query, "getQueryParams Webhook");
+            //  $this->writelog($query, "getQueryParams");
+            $hub_mode = $query['hub_mode'];
+            $hub_challenge = $query['hub_challenge'];
+            $hub_verify_token = $query['hub_verify_token'];
+            $this->writelog($this->request->getQueryParams(), "getQueryParams");
+
+            if ($hub_verify_token) { //subscription.
+                $this->writelog($hub_challenge, "hub challenge");
+                $accountsTable = TableRegistry::getTableLocator()->get('Accounts');
+                $account = $accountsTable->find()
+                ->where(['webhook_token' => $hub_verify_token])
+                ->first();
+                # echo $hub_challenge;
+                if ($account) {
+                    // Update verified flag if not already verified
+                     $account->webhookverified = true;
+                    if ($accountsTable->save($account)) {
+                        $this->writelog($hub_challenge, "hub challenge verified");
+                        $this->sendSlack("$account->company_name  $hub_mode verified with token: " . $hub_verify_token, "success");
+                        return $this->response
+                            ->withType("text/plain")
+                            ->withStatus(200)
+                            ->withStringBody((string) $hub_challenge); // Return plain string, not JSON
+                            
+                    }else{
+                        $this->writelog($hub_challenge, "Failed to save verification");
+                        $this->sendSlack("Failed to save webhook $account->company_name   $hub_mode with token: " . $hub_verify_token, "danger");
+                        return $this->response
+                            ->withType("text/plain")
+                            ->withStatus(500)
+                            ->withStringBody('Invalid verify token');
+                    }
+
+                } else {
+                    $this->sendSlack("Invalid  webhook $hub_mode with token: " . $hub_verify_token, "warning");
+                    return $this->response
+                        ->withType("text/plain")
+                        ->withStatus(403)
+                        ->withStringBody('Invalid verify token');
+                }
+            }else{
+                return $this->response
+                ->withType("text/plain")
+                ->withStatus(400)
+                ->withStringBody(json_encode((int) "400"));
+            }
+        
+        }else{
+            $this->writelog($query, "Empty Query");
+        }
+
+
+        $RCVQTable = $this->getTableLocator()->get('RcvQueues');
+        $newRCVRow = $RCVQTable->newEmptyEntity();
+        $newRCVRow->json = file_get_contents('php://input');
+        if ($RCVQTable->save($newRCVRow)) {
+            // Success: Data was saved successfully
+            $this->response = $this->response->withStatus(200); // HTTP 200 OK
+        } else {
+            // Failure: Data save failed
+            $this->response = $this->response->withStatus(500); // HTTP 500 Internal Server Error or another appropriate error code
+        }
+    }
+
+
+
+    function webhook_old_delete() {
         //    $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
         //  $this->writelog($ACCESSTOKENVALUE, "Access token");
         //   $API_VERSION = $this->_getAccountSettings('API_VERSION');
@@ -74,6 +160,8 @@ class ApisController extends AppController {
                 ->withStatus(400)
                 ->withStringBody(json_encode((int) "400"));
             }
+        }else{
+            $this->writelog($query, "Empty Query");
         }
 
         $RCVQTable = $this->getTableLocator()->get('RcvQueues');

@@ -31,6 +31,7 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\TemplatesTable&\Cake\ORM\Association\HasMany $Templates
  * @property \App\Model\Table\UgroupsPermissionsTable&\Cake\ORM\Association\HasMany $UgroupsPermissions
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\HasMany $Users
+ * @property \App\Model\Table\CountriesTable&\Cake\ORM\Association\BelongsToMany $Countries
  *
  * @method \App\Model\Entity\Account newEmptyEntity()
  * @method \App\Model\Entity\Account newEntity(array $data, array $options = [])
@@ -262,6 +263,17 @@ class AccountsTable extends Table
         $validator
             ->scalar('welcome_msg')
             ->allowEmptyString('welcome_msg');
+
+        $validator
+            ->scalar('webhook_token')
+            ->maxLength('webhook_token', 255)
+            ->requirePresence('webhook_token', 'create')
+            ->notEmptyString('webhook_token');
+
+        $validator
+            ->boolean('webhookverified')
+            ->requirePresence('webhookverified', 'create')
+            ->notEmptyString('webhookverified');
 
         return $validator;
     }

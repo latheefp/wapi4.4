@@ -16,7 +16,8 @@ REDIS_SERVER=redis
 REDIS_PORT="6379"
 WSENABLED=1
 METRICSENABLED=0
-SLACK_WEBHOOK_URL="https://hooks.slack.com/services/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"
+#SLACK_WEBHOOK_URL="https://hooks.slack.com/services/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"
+SLACK_WEBHOOK_URL="https://hooks.slack.com/services/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"
 #export DATABASE_URL="mysql://root:rootPassword@db/waapi?encoding=utf8&timezone=UTC&cacheMetadata=true&quoteIdentifiers=false&persistent=false"
 #export DATABASE_URL="mysql://my_app:secret@localhost/${APP_NAME}?encoding=utf8&timezone=UTC&cacheMetadata=true&quoteIdentifiers=false&persistent=false"
 #export DATABASE_TEST_URL="mysql://my_app:secret@localhost/test_${APP_NAME}?encoding=utf8&timezone=UTC&cacheMetadata=true&quoteIdentifiers=false&persistent=false"

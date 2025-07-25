@@ -33,6 +33,8 @@ use Cake\ORM\Entity;
  * @property string $interactive_notification_numbers
  * @property string $def_isd
  * @property string|null $welcome_msg
+ * @property string $webhook_token
+ * @property bool $webhookverified
  *
  * @property \App\Model\Entity\User[] $users
  * @property \App\Model\Entity\ApiKey[] $api_keys
@@ -53,6 +55,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Stream[] $streams
  * @property \App\Model\Entity\Template[] $templates
  * @property \App\Model\Entity\UgroupsPermission[] $ugroups_permissions
+ * @property \App\Model\Entity\Country[] $countries
  */
 class Account extends Entity
 {
@@ -90,6 +93,8 @@ class Account extends Entity
         'interactive_notification_numbers' => true,
         'def_isd' => true,
         'welcome_msg' => true,
+        'webhook_token' => true,
+        'webhookverified' => true,
         'users' => true,
         'api_keys' => true,
         'apiviews' => true,
@@ -109,6 +114,6 @@ class Account extends Entity
         'streams' => true,
         'templates' => true,
         'ugroups_permissions' => true,
-        'countries' => true, // Add this line
+        'countries' => true,
     ];
 }
