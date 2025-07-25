@@ -6,6 +6,8 @@ $result['data'] = array();
 foreach ($data as $key => $val) {
     $row = array();
     $row['DT_RowId'] = $val->id;
+    $row['enabled'] = $val->enabled;
+    $row['full_api_key'] = $val->api_key;
     foreach ($fieldsType as $fkey => $fval) {
         if ($fval['viewable'] == true) {
         //    print_r($fval);

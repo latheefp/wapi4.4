@@ -41,6 +41,12 @@ class ApisController extends AppController {
         $this->Authentication->allowUnauthenticated(['webhook', 'webhook1', 'sendschedule', 'uploadfile', 'sendmsg']);
     }
 
+    function v1(){
+
+        $this->viewBuilder()->setLayout('ajax');
+        $this->set('version', '1.0');
+        
+    }
 
 
     function webhook() {

@@ -71,12 +71,14 @@ foreach ($feildsType as $key => $val) {
                 $(this).removeClass('selected');
                 table.button(1).disable();
                 table.button(2).disable();
+                 table.button(3).disable();
             } else {
                 table.$('tr.selected').removeClass('selected');
                 $(this).addClass('selected');
                 table.button(1).enable();
                 settablebutton();
                 table.button(2).enable();
+                 table.button(3).enable();
 
             }
         });
@@ -111,9 +113,29 @@ foreach ($feildsType as $key => $val) {
                     togglestate();
                 },
                 enabled: false
+            },
+            {
+                text: '<i class="fas fa-key btn-copy-key"></i>',
+                className: 'btn btn-default btn-sm',
+                titleAttr: 'Copy API Key',
+                action: function (e, dt, node, config) {
+                    var row = dt.row('.selected');
+                    if (!row.node()) {
+                        alert("Please select a row first.");
+                        return;
+                    }
+
+                    var rowData = row.data();
+                    var apiKey = rowData.full_api_key;
+
+                   navigator.clipboard.writeText(apiKey).then(function () {
+                        toastr.success("API key copied to clipboard!", "Success");
+                    }, function (err) {
+                        toastr.error("Failed to copy API key: " + err, "Error");
+                    });
+                },
+                enabled: false // You can enable it dynamically when a row is selected
             }
-
-
         ]);
         table.buttons().container()
                 .appendTo($('.col-md-6:eq(0)', table.table().container()));
@@ -130,22 +152,28 @@ foreach ($feildsType as $key => $val) {
         $('#apiform').attr('validatefunction', 'add');
     }
 
-    function settablebutton() {
-        var table = $('#apitable').DataTable();
-        rowIndex = table.row('.selected').id();
-        var url = "/settings/getapkinfo/" + rowIndex;
-        $.ajax({url: url}).done(function (status) {
-            if (status == 1) {
+        function settablebutton() {
+            var table = $('#apitable').DataTable();
+            var row = table.row('.selected');
+
+            if (!row.node()) {
+                console.log("No row selected");
+                return;
+            }
+
+            var rowIndex = row.id(); // optional
+            var rowData = row.data();
+            var isEnabled = rowData.enabled;
+
+            if (isEnabled == 1 || isEnabled === true) {
                 $('.btn-toggle').addClass("fa-toggle-on");
-                 $('.btn-toggle').removeClass("fa-toggle-off");
                 $('.btn-toggle').removeClass("fa-toggle-off");
             } else {
                 $('.btn-toggle').addClass("fa-toggle-off");
                 $('.btn-toggle').removeClass("fa-toggle-on");
             }
+        }
 
-        })
-    }
 
     function togglestate() {
         var table = $('#apitable').DataTable();

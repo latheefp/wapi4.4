@@ -221,8 +221,11 @@ class SettingsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        //        $this->Auth->allow(array('validatemember'));
+        $this->loadComponent('Token');
     }
+        //        $this->Auth->allow(array('validatemember'));
+        
+    
 
     public function permissions($group_id = null)
     {
@@ -401,6 +404,7 @@ class SettingsController extends AppController
 
     function apis()
     {
+
         $this->set('PageLength', $this->_getsettings('pagination_count'));
         $this->set('feildsType', $this->_fieldtypes('apiviews'));
         $this->set('titleforlayout', "Apiviews");
@@ -446,13 +450,14 @@ class SettingsController extends AppController
             $query['order'] = array($querydata['columns'][$querydata['order']['0']['column']]['name'] . ' ' . $querydata['order']['0']['dir']);
         }
 
+      //  $query['and'][]= array($model . ".account_id" => $this->getMyAccountID());
         $session = $this->request->getSession();
         $group_id = intval($session->read('Auth.ugroup_id'));
-        if ($group_id == 1) {
+        // if ($group_id == 1) {
 
-        } else {
-            $query['conditions']['AND'][] = array($model . ".account_id" => $session->read('Auth.User.account_id'));
-        }
+        // } else {
+            $query['conditions']['AND'][] = array($model . ".account_id" => $this->getMyAccountID());
+       // }
 
 
         //  debug($query);
@@ -466,12 +471,13 @@ class SettingsController extends AppController
             $data = $this->request->getData();
             $table = $this->getTableLocator()->get('ApiKeys');
             $row = $table->newEmptyEntity();
-            $row->user_id = $this->Auth->user('id');
+            $row->user_id = $this->getMyUID(); // Assuming you have a method to get the current user's ID
             $row->api_name = $data['api_name'];
+            $row->account_id=$this->getMyAccountID();
             $row->enabled = $data['enabled'];
             $row->ip_list = json_encode($data['ip_list']);
-            $row->api_key = $this->_genrand(64);
-            // debug($data);
+          // $row->api_key = $this->_genrand(64);
+            $row->api_key = $this->_genApi(); // Generate API key using the _genApi method
             if ($row->getErrors()) {
                 $result['status'] = "failed";
                 $result['msg'] = "Validation errors";
@@ -494,11 +500,30 @@ class SettingsController extends AppController
         $this->set('result', $result);
     }
 
+
+
+    public function _genApi()
+    {
+        $this->autoRender = false; // Disable view rendering
+        // Validate user ID and account ID
+        $userId = $this->getMyUID();
+        $accountId = $this->getMyAccountID();
+        $data['user_id'] = $userId;
+        $data['expiry'] = null;
+        $data['account_id'] = $accountId;
+        return $this->Token->generateToken($data);
+    }
+
+
+
+
+
     function deleteapi($id)
     {
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('ApiKeys');
-        $row = $table->findById($id)->firstOrFail();
+        $row = $table->findById($id)
+            ->where(['account_id' => $this->getMyAccountID()])->firstOrFail();
         if ($table->delete($row)) {
             $result['status'] = "success";
             $result['msg'] = "The record has been deleted";
@@ -509,28 +534,40 @@ class SettingsController extends AppController
         $this->set('result', $result);
     }
 
-    function getapkinfo($id)
-    {
-        $this->viewBuilder()->setLayout('ajax');
-        $table = $this->getTableLocator()->get('ApiKeys');
-        $query = $table->get($id);
-        //  debug ($query);       
-        $this->set('status', $query->enabled);
-    }
+    // function getapkinfo($id)
+    // {
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     $table = $this->getTableLocator()->get('ApiKeys');
+    //     $query = $table->find()
+    //             ->where(['account_id' => $this->getMyAccountID(), 'id' => $id]);
+    //     //  debug ($query);       
+    //     $this->set('status', $query);
+    // }
 
     function toggleapistate($id)
     {
         $this->viewBuilder()->setLayout('ajax');
         $table = $this->getTableLocator()->get('ApiKeys');
-        $query = $table->get($id);
-        if ($query->enabled == true) {
-            $query->enabled = false;
+        $query = $table->find()
+            ->where(['id' => $id, 'account_id' => $this->getMyAccountID()])
+            ->first();
+
+
+        if (!$query) {
+            $status = "Failed, not permitted";
         } else {
-            $query->enabled = true;
+            if ($query->enabled == true) {
+                $query->enabled = false;
+            } else {
+                $query->enabled = true;
+            }
+            $table->save($query);
+            $status=$query->enabled;
         }
-        $table->save($query);
-        $this->set('status', $query->enabled);
+        $this->set('status', $status);
     }
+
+
 
     public function edituser($id = null)
     {
@@ -565,9 +602,9 @@ class SettingsController extends AppController
         $this->viewBuilder()->setLayout('ajax');
         $this->loadModel('Users');
         $data = $this->Users->get($data['id']);
-
+      //  debug($data);
         $session = $this->request->getSession();
-        $data['account_id'] = $session->read('Auth.User.account_id');
+        $data['account_id'] = $this->getMyAccountID();
         $admin_id = $session->read('Auth.User.ugroup_id');
         //if AdminID=1, Super user can be added. else no.
         if (($admin_id != 1) && ($data['ugroup_id'] == 1)) {
@@ -583,12 +620,13 @@ class SettingsController extends AppController
 
         $data = $this->Users->patchEntity($data, $this->request->getData());
 
-        if ($this->Users->save($data)) {
+       if ($this->Users->save($data)) {
             $result['status'] = "success";
             $result['msg'] = "Update has been saved";
         } else {
+            $errors = $data->getErrors();
             $result['status'] = "failed";
-            $result['msg'] = "Validation errors";
+            $result['msg'] = "Validation errors: " . json_encode($errors, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         }
         $this->set('result', $result);
     }

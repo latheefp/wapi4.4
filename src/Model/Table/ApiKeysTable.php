@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
  * ApiKeys Model
  *
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
+ * @property \App\Model\Table\AccountsTable&\Cake\ORM\Association\BelongsTo $Accounts
  *
  * @method \App\Model\Entity\ApiKey newEmptyEntity()
  * @method \App\Model\Entity\ApiKey newEntity(array $data, array $options = [])
@@ -49,6 +50,9 @@ class ApiKeysTable extends Table
 
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
+        ]);
+        $this->belongsTo('Accounts', [
+            'foreignKey' => 'account_id',
             'joinType' => 'INNER',
         ]);
     }
@@ -62,10 +66,6 @@ class ApiKeysTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('id')
-            ->allowEmptyString('id', null, 'create');
-
-        $validator
             ->scalar('api_name')
             ->maxLength('api_name', 32)
             ->requirePresence('api_name', 'create')
@@ -74,8 +74,12 @@ class ApiKeysTable extends Table
 
         $validator
             ->scalar('api_key')
-            ->maxLength('api_key', 64)
+            ->maxLength('api_key', 512)
             ->allowEmptyString('api_key');
+
+        $validator
+            ->integer('user_id')
+            ->allowEmptyString('user_id');
 
         $validator
             ->boolean('enabled')
@@ -83,8 +87,12 @@ class ApiKeysTable extends Table
 
         $validator
             ->scalar('ip_list')
-            ->maxLength('ip_list', 4294967295)
+            ->maxLength('ip_list', 15)
             ->allowEmptyString('ip_list');
+
+        $validator
+            ->integer('account_id')
+            ->notEmptyString('account_id');
 
         return $validator;
     }
@@ -99,10 +107,9 @@ class ApiKeysTable extends Table
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->isUnique(['api_name']), ['errorField' => 'api_name']);
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
+        $rules->add($rules->existsIn('user_id', 'Users'), ['errorField' => 'user_id']);
+        $rules->add($rules->existsIn('account_id', 'Accounts'), ['errorField' => 'account_id']);
 
         return $rules;
     }
-    
-   
 }

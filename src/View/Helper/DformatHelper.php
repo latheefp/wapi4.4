@@ -77,13 +77,18 @@ class DformatHelper extends Helper {
                 if (!empty($odata)) {
                     $result = $odata->format('Y-m-d');
                 }
-                
                 break;
                 case "N2Month":
                     if (!empty($odata)) {
                         $result =  date('F', mktime(0, 0, 0, $odata, 1));
                     }
                     break;    
+            case "trim":
+                //trim the string to last 40 characters like api keys
+                if (!empty($odata)) {
+                    $result = $short = substr($odata, -40); // last 40 characters
+                }
+                break;        
             default:
                 $result = $option['data'];
         }

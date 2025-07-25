@@ -11,12 +11,14 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property string $api_name
  * @property string|null $api_key
- * @property int $user_id
+ * @property int|null $user_id
  * @property bool $enabled
  * @property \Cake\I18n\FrozenDate $created
  * @property string|null $ip_list
+ * @property int $account_id
  *
  * @property \App\Model\Entity\User $user
+ * @property \App\Model\Entity\Account $account
  */
 class ApiKey extends Entity
 {
@@ -27,7 +29,7 @@ class ApiKey extends Entity
      * be mass assigned. For security purposes, it is advised to set '*' to false
      * (or remove it), and explicitly make individual fields accessible as needed.
      *
-     * @var array
+     * @var array<string, bool>
      */
     protected $_accessible = [
         'api_name' => true,
@@ -36,6 +38,8 @@ class ApiKey extends Entity
         'enabled' => true,
         'created' => true,
         'ip_list' => true,
+        'account_id' => true,
         'user' => true,
+        'account' => true,
     ];
 }

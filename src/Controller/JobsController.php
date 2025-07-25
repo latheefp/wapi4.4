@@ -114,6 +114,18 @@ class JobsController extends AppController
                     return;
                 }
 
+
+                //eligiblity check
+
+                if (!$this->_isEligible($sendQrecord, $FBSettings)) {
+                    $this->_update_http_code($qid, '403', $type);
+                    $this->sendSlack("Eligibility check failed for $qid with type $type","warning");
+                    $response['error'] = 'Eligibility check failed';
+                    $this->set('response', $response);
+                    return;
+                }
+
+
            //     debug($sendQrecord);
                 switch($sendQrecord->type){
                     case "forward":

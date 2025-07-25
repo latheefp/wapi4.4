@@ -599,6 +599,17 @@ class AppController extends Controller
         }
     }
 
+    function _isEligible(){
+        $eligible = true;
+        
+        //check is country eligible
+
+        //is thre enough balance
+
+
+        return $eligible;
+    }
+
     function updateProfileWastreamsContact($contact_waid, $profile, $FBSettings) //update profile of a WastreamsContactId
     {
         $contact_waid = $this->_format_mobile($contact_waid, $FBSettings);
