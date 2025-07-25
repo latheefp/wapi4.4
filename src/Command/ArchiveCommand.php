@@ -115,4 +115,54 @@ class ArchiveCommand extends Command
  
 
 
+     public function cleanq3months()
+        {
+            $this->app = new AppController();
+
+            $threeMonthsAgo = FrozenTime::now()->subMonths(3);
+
+            $sendTable = $this->getTableLocator()->get('SendQueues');
+            $rcvTable = $this->getTableLocator()->get('RcvQueues');
+
+            // Count and delete SendQueues older than 3 months
+            $query = $sendTable->query();
+            $sendCount = $query->select(['count' => $query->func()->count('*')])
+                ->where([
+                    'created <' => $threeMonthsAgo
+                ])
+                ->execute()
+                ->fetch('assoc')['count'];
+
+            debug("Number of SendQ records older than 3 months to be deleted: $sendCount");
+
+            $slackService = new SlackService();
+            $slackService->sendMessage("Deleting $sendCount records from SendQueues older than 3 months");
+
+            $query = $sendTable->query();
+            $query->delete()
+                ->where([
+                    'created <' => $threeMonthsAgo
+                ])
+                ->execute();
+
+            // Count and delete RcvQueues older than 3 months
+            $query = $rcvTable->query();
+            $rcvCount = $query->select(['count' => $query->func()->count('*')])
+                ->where([
+                    'created <' => $threeMonthsAgo
+                ])
+                ->execute()
+                ->fetch('assoc')['count'];
+
+            debug("Number of RcvQ records older than 3 months to be deleted: $rcvCount");
+            $slackService->sendMessage("Deleting $rcvCount records from RcvQueues older than 3 months");
+
+            $query = $rcvTable->query();
+            $query->delete()
+                ->where([
+                    'created <' => $threeMonthsAgo
+                ])
+                ->execute();
+        }
+
 }

@@ -478,15 +478,19 @@ class SettingsController extends AppController
             $row->ip_list = json_encode($data['ip_list']);
           // $row->api_key = $this->_genrand(64);
             $row->api_key = $this->_genApi(); // Generate API key using the _genApi method
+
+          //  debug($row->getErrors());
             if ($row->getErrors()) {
                 $result['status'] = "failed";
                 $result['msg'] = "Validation errors";
                 $error = $row->getErrors();
             } else {
                 if ($table->save($row)) {
+           //          debug($row->getErrors());
                     $result['status'] = "success";
                     $result['msg'] = "New campaign " . $data['api_name'] . " been added";
                 } else {
+             //        debug($row->getErrors());
                     $result['status'] = "failed";
                     $result['msg'] = "Not able to save the the Contact group";
                     $error = $row->getErrors();
@@ -496,15 +500,66 @@ class SettingsController extends AppController
             $result['status'] = "failed";
             $result['msg'] = "Wrong data Type";
         }
+      //   debug($row->getErrors());
 
         $this->set('result', $result);
     }
 
 
+//     function newapi()
+// {
+//     $this->viewBuilder()->setLayout('ajax');
+//     $this->viewBuilder()->setClassName('Json'); // Tell CakePHP to return JSON
+
+//     if ($this->request->is('post')) {
+//         $data = $this->request->getData();
+//         $table = $this->getTableLocator()->get('ApiKeys');
+//         $row = $table->newEmptyEntity();
+
+//         $row->user_id = $this->getMyUID();
+//         $row->api_name = $data['api_name'];
+//         $row->account_id = $this->getMyAccountID();
+//         $row->enabled = $data['enabled'];
+//         $row->ip_list = json_encode($data['ip_list']);
+//         $row->api_key = $this->_genApi();
+
+//         if ($row->getErrors()) {
+//             $result = [
+//                 'status' => 'failed',
+//                 'msg' => 'Validation errors',
+//                 'errors' => $row->getErrors(),
+//             ];
+//         } else {
+//             if ($table->save($row)) {
+//                 $result = [
+//                     'status' => 'success',
+//                     'msg' => "New campaign " . $data['api_name'] . " has been added",
+//                     'api_key' => $row->api_key,
+//                 ];
+//             } else {
+//                 $result = [
+//                     'status' => 'failed',
+//                     'msg' => 'Could not save the API key',
+//                     'errors' => $row->getErrors(),
+//                 ];
+//             }
+//         }
+//     } else {
+//         $result = [
+//             'status' => 'failed',
+//             'msg' => 'Wrong request type',
+//         ];
+//     }
+
+//     $this->set(compact('result'));
+//     $this->set('_serialize', ['result']); // Tells CakePHP to return as JSON
+// }
+
+
 
     public function _genApi()
     {
-        $this->autoRender = false; // Disable view rendering
+       // $this->autoRender = false; // Disable view rendering
         // Validate user ID and account ID
         $userId = $this->getMyUID();
         $accountId = $this->getMyAccountID();
@@ -551,7 +606,6 @@ class SettingsController extends AppController
         $query = $table->find()
             ->where(['id' => $id, 'account_id' => $this->getMyAccountID()])
             ->first();
-
 
         if (!$query) {
             $status = "Failed, not permitted";
