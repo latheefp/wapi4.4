@@ -648,9 +648,9 @@ class AppController extends Controller
         return $mobile_number;
     }
 
-    public function _getFBsettings($data)
+    public function _getFBsettings_delete($data)
     {
-      //  debug($data);
+        //debug($data);
         //you can either send the uid , api_key, phone_numberId to get fbsettings. 
         if (isset($data['api_key'])) {
             $table = $this->getTableLocator()->get('ApiKeys');
@@ -663,12 +663,12 @@ class AppController extends Controller
                 $data['status']['code'] = 404;
                 return $data;
             }
-            $acquery = $this->getTableLocator()->get('Accounts')->find();
+            $acquery = $this->getTableLocator()->get('Accounts')->find()->contain(['Countries']);
             $result = $acquery
                 ->where(['id' => $apiquery->account_id])
                 ->first();
         } elseif (isset($data['user_id'])) {
-            //debug($data);
+            debug($data);
             $table = $this->getTableLocator()->get('Users');
             $userquery = $table->find()
                 ->where(['Users.id' => $data['user_id']])
@@ -680,13 +680,14 @@ class AppController extends Controller
                 $data['status']['code'] = 404;
                 return $data;
             }
-            $acquery = $this->getTableLocator()->get('Accounts')->find();
+            $acquery = $this->getTableLocator()->get('Accounts')->find()->contain(['Countries']);
             $result = $acquery
                 ->where(['id' => $userquery->account_id])
                 ->first();
+            debug($result);    
         } elseif (isset($data['phone_numberId'])) {
             // debug($data);
-            $acquery = $this->getTableLocator()->get('Accounts')->find();
+            $acquery = $this->getTableLocator()->get('Accounts')->find()->contain(['Countries']);
             $result = $acquery
                 ->where(['phone_numberId' => $data['phone_numberId']])
                 ->first();
@@ -696,6 +697,8 @@ class AppController extends Controller
                 ->where(['id' => $data['account_id']])
                 ->first();
         }
+
+        debug($result);
 
 
         // ->toArray();
@@ -737,6 +740,109 @@ class AppController extends Controller
     }
 
     //Billing and Rating section.
+
+
+        public function _getFBsettings($data)
+{
+    $result = null;
+
+    if (!empty($data['api_key'])) {
+        $api = $this->getTableLocator()->get('ApiKeys')->find()
+            ->where(['api_key' => $data['api_key'], 'enabled' => true])
+            ->first();
+
+        if (empty($api)) {
+            return $this->_fbError("Wrong API Key", 404, $data);
+        }
+
+        $result = $this->getTableLocator()->get('Accounts')
+            ->find()
+            ->contain(['Countries' => function ($q) {
+                return $q->select(['Countries.phonecode']);
+            }])
+            ->where(['Accounts.id' => $api->account_id])
+            ->first();
+    } elseif (!empty($data['user_id'])) {
+        $user = $this->getTableLocator()->get('Users')->find()
+            ->where(['id' => $data['user_id']])
+            ->first();
+
+        if (empty($user)) {
+            return $this->_fbError("Wrong user info", 404, $data);
+        }
+
+        $result = $this->getTableLocator()->get('Accounts')
+            ->find()
+            ->contain(['Countries' => function ($q) {
+                return $q->select(['Countries.phonecode']);
+            }])
+            ->where(['Accounts.id' => $user->account_id])
+            ->first();
+    } elseif (!empty($data['phone_numberId'])) {
+        $result = $this->getTableLocator()->get('Accounts')
+            ->find()
+            ->contain(['Countries' => function ($q) {
+                return $q->select(['Countries.phonecode']);
+            }])
+            ->where(['phone_numberId' => $data['phone_numberId']])
+            ->first();
+    } elseif (!empty($data['account_id'])) {
+        $result = $this->getTableLocator()->get('Accounts')
+            ->find()
+            ->contain(['Countries' => function ($q) {
+                return $q->select(['Countries.phonecode']);
+            }])
+            ->where(['id' => $data['account_id']])
+            ->first();
+    }
+
+    if (empty($result)) {
+        return $this->_fbError("No related account info found.", 403, $data);
+    }
+
+    $data += [
+        'WBAID' => $result->WBAID,
+        'Balance' => $result->current_balance,
+        'API_VERSION' => $result->API_VERSION,
+        'phone_numberId' => $result->phone_numberId,
+        'def_language' => $result->def_language,
+        'test_number' => $result->test_number,
+        'def_isd' => $result->def_isd,
+        'interactive_webhook' => $result->interactive_webhook,
+        'interactive_notification_numbers' => $result->interactive_notification_numbers,
+        'interactive_api_key' => $result->interactive_api_key,
+        'rcv_notification_template' => $result->rcv_notification_template,
+        'welcome_msg' => $result->welcome_msg,
+        'interactive_menu_function' => $result->interactive_menu_function,
+        'account_id' => $result->id,
+        'ACCESSTOKENVALUE' => (intval(getenv('SEND_MSG')) === 1)
+            ? $result->ACCESSTOKENVALUE
+            : "Message not enabled, current value is " . intval(getenv('SEND_MSG')),
+    ];
+
+    // ✅ Add only country IDs
+    if (!empty($result->countries)) {
+        $data['country_ids'] = collection($result->countries)->extract('phonecode')->toList();
+    } else {
+        $data['country_ids'] = [];
+    }
+
+    $data['status'] = ['type' => 'Success', 'code' => 200];
+
+    return $data;
+}
+
+private function _fbError($msg, $code, $data)
+{
+    $data['status'] = [
+        'type' => 'Error',
+        'message' => $msg,
+        'code' => $code
+    ];
+    return $data;
+}
+
+
 
 
 

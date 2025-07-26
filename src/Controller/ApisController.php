@@ -23,13 +23,25 @@ use Cake\Http\Exception\ForbiddenException;
  *
  * @method \App\Model\Entity\Api[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
  */
-class ApisController extends AppController {
+class ApisController extends AppController
+{
 
-    public function isAuthorized($user) {
+
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->loadComponent('Token');
+        $this->loadComponent('Facebook'); // Load our reusable logic
+    }
+
+
+    public function isAuthorized($user) 
+    {
         return true;
     }
 
-    public function beforeFilter(EventInterface $event): void {
+    public function beforeFilter(EventInterface $event): void
+    {
         parent::beforeFilter($event);
 
         $formaction = $this->request->getParam('action');
@@ -38,29 +50,220 @@ class ApisController extends AppController {
             $formaction
         ));
 
-        $this->Authentication->allowUnauthenticated(['webhook', 'webhook1', 'sendschedule', 'uploadfile', 'sendmsg']);
+        $this->Authentication->allowUnauthenticated(['webhook', 'webhook1', 'sendschedule', 'uploadfile', 'sendmsg', 'v1']);
     }
 
-    function v1(){
-
+    public function v0()
+    {
         $this->viewBuilder()->setLayout('ajax');
         $this->set('version', '1.0');
-        
+        $this->writelog("Version 1.0 API hit", null);
+
+        $bearToken = $this->request->getHeaderLine('Authorization');
+        if (strpos($bearToken, 'Bearer ') === 0) {
+            $bearToken = substr($bearToken, 7); // Remove 'Bearer ' prefix
+            $this->writelog("Bearer token: " . $bearToken, null);
+            $tokenValidation = $this->Token->validateToken($bearToken);
+            if (!$tokenValidation) {
+                $this->writelog("Invalid Bearer token", null);
+                $response = [
+                    'status' => 'error',
+                    'message' => 'Invalid Bearer token',
+                    'version' => '1.0'
+                ];
+
+                return $this->response
+                    ->withType('application/json')
+                    ->withStatus(403)
+                    ->withStringBody(json_encode($response));
+
+            } else {
+                $this->writelog("Bearer token validated successfully", null);
+                // $params = $this->request->getQueryParams();
+                $action = $param = $this->request->getParam('pass.0'); // getfbsettings
+                $account_id = $tokenValidation->account_id;
+                $user_id = $tokenValidation->sub;
+
+                switch ($action) {
+                    case "getfbsettings":
+                        $this->writelog("Fetching Facebook settings", null);
+                        $FBSettings = $this->_getFBsettings(['account_id' => $account_id, 'user_id' => $user_id]);
+
+                        if ($FBSettings) {
+                            $response = [
+                                'status' => 'success',
+                                'message' => 'Facebook settings fetched successfully',
+                                'data' => $FBSettings
+                            ];
+                        } else {
+                            $response = [
+                                'status' => 'error',
+                                'message' => 'Failed to fetch Facebook settings'
+                            ];
+                        }
+                        break;
+
+                    case "checkeligibility":
+                        $this->writelog("Fetching Facebook settings", null);
+                        $FBSettings = $this->_getFBsettings(['account_id' => $account_id, 'user_id' => $user_id]);
+                        $mobile_number = $this->request->getQuery('mobile_number');
+                        $country = $this->_getCountry($mobile_number, $FBSettings);
+                        if (in_array((int) $country->country_code, $FBSettings['country_ids'])) {
+
+                            $response = [
+                                'countries' => json_encode($FBSettings['country_ids']),
+                                'requested_country' => $country->country,
+                                'version' => '1.0'
+                            ];
+                            if ($FBSettings['Balance'] < 1) { //not enough balance but  country allowed.
+                                $response += [
+                                    'status' => 'failed',
+                                    'balance' => $FBSettings['Balance'],
+                                    'message' => "Not enough balance to send message",
+                                    'version' => '1.0'
+                                ];
+
+                                return $this->response
+                                    ->withType('application/json')
+                                    ->withStatus(403)
+                                    ->withStringBody(json_encode($response));
+
+                            } else { //enough balance also country allowed.
+
+                                $response = [
+                                    'status' => 'sucess',
+                                    'countries' => json_encode($FBSettings->country_ids),
+                                    'requested_country' => $country->country,
+                                    'version' => '1.0'
+                                ];
+
+                                return $this->response
+                                    ->withType('application/json')
+                                    ->withStatus(200)
+                                    ->withStringBody(json_encode($response));
+
+
+                            }
+
+                        } else { //Mobile number not eligible for this account.
+                            $this->writelog("Mobile number is not eligible for this account", null);
+                            $response = [
+                                'status' => 'error',
+                                'message' => "Country $country->country is not eligible for this account",
+                                'version' => '1.0'
+                            ];
+                            return $this->response
+                                ->withType('application/json')
+                                ->withStatus(400)
+                                ->withStringBody(json_encode($response));
+                        }
+                        break;
+
+
+                    default:
+                        $this->writelog("Invalid action: " . $action, null);
+                        $response = [
+                            'status' => 'error',
+                            'message' => 'Invalid action specified',
+                            'version' => '1.0'
+                        ];
+                        return $this->response
+                            ->withType('application/json')
+                            ->withStatus(400)
+                            ->withStringBody(json_encode($response));
+                }
+
+
+
+                return $this->response
+                    ->withType('application/json')
+                    ->withStringBody(json_encode($response));
+            }
+
+        } else {
+            $this->writelog("Invalid Bearer token format", null);
+            $response = [
+                'status' => 'error',
+                'message' => 'Invalid Bearer token format',
+                'version' => '1.0'
+            ];
+            return $this->response
+                ->withType('application/json')
+                ->withStatus(403)
+                ->withStringBody(json_encode($response));
+        }
+
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode($response));
     }
 
 
-    function webhook() {
+    public function v1()
+    {
+        $this->viewBuilder()->setLayout('ajax');
+        $action = $this->request->getParam('pass.0'); // checkeligibility
+        $bearToken = $this->request->getHeaderLine('Authorization');
+
+        if (strpos($bearToken, 'Bearer ') !== 0) {
+            return $this->_jsonResponse(['status' => 'error', 'message' => 'Invalid Bearer token format'], 403);
+        }
+
+        $bearToken = substr($bearToken, 7);
+        $tokenValidation = $this->Token->validateToken($bearToken);
+        if (!$tokenValidation) {
+            return $this->_jsonResponse(['status' => 'error', 'message' => 'Invalid Bearer token'], 403);
+        }
+
+        $account_id = $tokenValidation->account_id;
+        $user_id = $tokenValidation->sub;
+
+        try {
+            switch ($action) {
+                case "getfbsettings":
+        //            debug("FB settings");
+                    $data = $this->Facebook->getFBSettings($account_id, $user_id);
+                    return $this->_jsonResponse(['status' => 'success', 'data' => $data]);
+
+                case "checkeligibility":
+                    $mobile_number = $this->request->getQuery('mobile_number');
+                    $data = $this->Facebook->checkEligibility($account_id, $user_id, $mobile_number);
+                    return $this->_jsonResponse($data, ($data['status'] === 'failed' ? 403 : 200));
+
+                default:
+                    return $this->_jsonResponse(['status' => 'error', 'message' => 'Invalid action'], 400);
+            }
+        } catch (\Exception $e) {
+            return $this->_jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    private function _jsonResponse(array $data, int $status = 200)
+    {
+        return $this->response
+            ->withType('application/json')
+            ->withStatus($status)
+            ->withStringBody(json_encode($data));
+    }
+
+
+
+
+
+
+    function webhook()
+    {
         //    $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
         //  $this->writelog($ACCESSTOKENVALUE, "Access token");
         //   $API_VERSION = $this->_getAccountSettings('API_VERSION');
 
 
-            // Array
-            // (
-            //     [hub_mode] => subscribe
-            //     [hub_challenge] => 1134571026
-            //     [hub_verify_token] => latheefp
-            // )
+        // Array
+        // (
+        //     [hub_mode] => subscribe
+        //     [hub_challenge] => 1134571026
+        //     [hub_verify_token] => latheefp
+        // )
 
 
 
@@ -80,12 +283,12 @@ class ApisController extends AppController {
                 $this->writelog($hub_challenge, "hub challenge");
                 $accountsTable = TableRegistry::getTableLocator()->get('Accounts');
                 $account = $accountsTable->find()
-                ->where(['webhook_token' => $hub_verify_token])
-                ->first();
+                    ->where(['webhook_token' => $hub_verify_token])
+                    ->first();
                 # echo $hub_challenge;
                 if ($account) {
                     // Update verified flag if not already verified
-                     $account->webhookverified = true;
+                    $account->webhookverified = true;
                     if ($accountsTable->save($account)) {
                         $this->writelog($hub_challenge, "hub challenge verified");
                         $this->sendSlack("$account->company_name  $hub_mode verified with token: " . $hub_verify_token, "success");
@@ -93,8 +296,8 @@ class ApisController extends AppController {
                             ->withType("text/plain")
                             ->withStatus(200)
                             ->withStringBody((string) $hub_challenge); // Return plain string, not JSON
-                            
-                    }else{
+
+                    } else {
                         $this->writelog($hub_challenge, "Failed to save verification");
                         $this->sendSlack("Failed to save webhook $account->company_name   $hub_mode with token: " . $hub_verify_token, "danger");
                         return $this->response
@@ -110,14 +313,14 @@ class ApisController extends AppController {
                         ->withStatus(403)
                         ->withStringBody('Invalid verify token');
                 }
-            }else{
+            } else {
                 return $this->response
-                ->withType("text/plain")
-                ->withStatus(400)
-                ->withStringBody(json_encode((int) "400"));
+                    ->withType("text/plain")
+                    ->withStatus(400)
+                    ->withStringBody(json_encode((int) "400"));
             }
-        
-        }else{
+
+        } else {
             $this->writelog($query, "Empty Query");
         }
 
@@ -136,54 +339,56 @@ class ApisController extends AppController {
 
 
 
-    function webhook_old_delete() {
-        //    $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
-        //  $this->writelog($ACCESSTOKENVALUE, "Access token");
-        //   $API_VERSION = $this->_getAccountSettings('API_VERSION');
-        $this->writelog(array(['someone hit me']), "hit");
-        $this->viewBuilder()->setLayout('ajax');
-        $query = $this->request->getQueryParams();
+    // function webhook_old_delete()
+    // {
+    //     //    $ACCESSTOKENVALUE = $this->_getAccountSettings('ACCESSTOKENVALUE');
+    //     //  $this->writelog($ACCESSTOKENVALUE, "Access token");
+    //     //   $API_VERSION = $this->_getAccountSettings('API_VERSION');
+    //     $this->writelog(array(['someone hit me']), "hit");
+    //     $this->viewBuilder()->setLayout('ajax');
+    //     $query = $this->request->getQueryParams();
 
-        if (!empty($query)) {
-            $this->writelog($query, "getQueryParams Webhook");
-            //  $this->writelog($query, "getQueryParams");
-            $hub_mode = $query['hub_mode'];
-            $hub_challenge = $query['hub_challenge'];
-            $hub_verify_token = $query['hub_verify_token'];
-            $this->writelog($this->request->getQueryParams(), "getQueryParams");
+    //     if (!empty($query)) {
+    //         $this->writelog($query, "getQueryParams Webhook");
+    //         //  $this->writelog($query, "getQueryParams");
+    //         $hub_mode = $query['hub_mode'];
+    //         $hub_challenge = $query['hub_challenge'];
+    //         $hub_verify_token = $query['hub_verify_token'];
+    //         $this->writelog($this->request->getQueryParams(), "getQueryParams");
 
-            if ($hub_verify_token === 'latheefp') {
-                $this->writelog($hub_challenge, "hub challenge");
-                # echo $hub_challenge;
+    //         if ($hub_verify_token === 'latheefp') {
+    //             $this->writelog($hub_challenge, "hub challenge");
+    //             # echo $hub_challenge;
 
-                return $this->response
-                ->withType("text/plain")
-                ->withStatus(200)
-                ->withStringBody(json_encode((int) $hub_challenge));
-            }else{
-                return $this->response
-                ->withType("text/plain")
-                ->withStatus(400)
-                ->withStringBody(json_encode((int) "400"));
-            }
-        }else{
-            $this->writelog($query, "Empty Query");
-        }
+    //             return $this->response
+    //                 ->withType("text/plain")
+    //                 ->withStatus(200)
+    //                 ->withStringBody(json_encode((int) $hub_challenge));
+    //         } else {
+    //             return $this->response
+    //                 ->withType("text/plain")
+    //                 ->withStatus(400)
+    //                 ->withStringBody(json_encode((int) "400"));
+    //         }
+    //     } else {
+    //         $this->writelog($query, "Empty Query");
+    //     }
 
-        $RCVQTable = $this->getTableLocator()->get('RcvQueues');
-        $newRCVRow = $RCVQTable->newEmptyEntity();
-        $newRCVRow->json = file_get_contents('php://input');
-        if ($RCVQTable->save($newRCVRow)) {
-            // Success: Data was saved successfully
-            $this->response = $this->response->withStatus(200); // HTTP 200 OK
-        } else {
-            // Failure: Data save failed
-            $this->response = $this->response->withStatus(500); // HTTP 500 Internal Server Error or another appropriate error code
-        }
-    }
+    //     $RCVQTable = $this->getTableLocator()->get('RcvQueues');
+    //     $newRCVRow = $RCVQTable->newEmptyEntity();
+    //     $newRCVRow->json = file_get_contents('php://input');
+    //     if ($RCVQTable->save($newRCVRow)) {
+    //         // Success: Data was saved successfully
+    //         $this->response = $this->response->withStatus(200); // HTTP 200 OK
+    //     } else {
+    //         // Failure: Data save failed
+    //         $this->response = $this->response->withStatus(500); // HTTP 500 Internal Server Error or another appropriate error code
+    //     }
+    // }
 
-  
-    function _formate_date($ts) {
+
+    function _formate_date($ts)
+    {
         //  $this->writelog($ts, "coverting");
         if (isset($ts)) {
             $ts = (int) $ts;
@@ -195,7 +400,8 @@ class ApisController extends AppController {
         }
     }
 
-    function _gettemplatedata($template_name = null) {
+    function _gettemplatedata($template_name = null)
+    {
         $this->viewBuilder()->setLayout('ajax');
         $curl = curl_init();
         curl_setopt_array($curl, array(
@@ -245,11 +451,12 @@ class ApisController extends AppController {
         return $msg;
     }
 
-    
 
-    
 
-    function sendschedule() {
+
+
+    function sendschedule()
+    {
         // debug("Send Schdule");
         $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
@@ -260,7 +467,7 @@ class ApisController extends AppController {
             $FBsettings = $this->_getFBsettings($data);
             if ($FBsettings['status']['code'] == 200) {
                 $this->writelog($FBsettings['status']['code'], "Api Validated");
-              //  $data['user_id'] = null;
+                //  $data['user_id'] = null;
                 //passing the post data to real send funtion.
                 $sendQ = $this->getTableLocator()->get('SendQueues');
                 $sendQrow = $sendQ->newEmptyEntity();
@@ -282,9 +489,9 @@ class ApisController extends AppController {
         } else {
             $this->writelog($data, "Not Post data");
             http_response_code(400); // Bad Request
-                $response['error'] = 'Bad  request';
+            $response['error'] = 'Bad  request';
             $this->set('result', $response);
-              //  return;
+            //  return;
         }
 
         $this->set('response', $return['result']);
@@ -294,7 +501,8 @@ class ApisController extends AppController {
 
 
 
-    function _send_schedule($data) {
+    function _send_schedule($data)
+    {
         //   debug("_Send Schdule");
         $this->writelog($data, "Processing shedule data from _send_scheduel function");
         //checking schdule name.
@@ -302,10 +510,10 @@ class ApisController extends AppController {
         //Checking shedule name exists or not. 
         $schedTable = $this->getTableLocator()->get('Schedules');
         $schedQuery = $schedTable->find()
-                ->where(['Schedules.name' => $data['schedule_name']])
-                ->select(['Campaigns.template_id', 'Schedules.campaign_id', 'id'])
-                ->innerJoinWith('Campaigns')
-                ->first();
+            ->where(['Schedules.name' => $data['schedule_name']])
+            ->select(['Campaigns.template_id', 'Schedules.campaign_id', 'id'])
+            ->innerJoinWith('Campaigns')
+            ->first();
         ;
         if (empty($schedQuery)) {
             $this->writelog($schedQuery, "Shedule query result is empty, no matching schedule name");
@@ -333,14 +541,14 @@ class ApisController extends AppController {
             //     debug($template_id);
             $templatetable = $this->getTableLocator()->get('Templates');
             $templateQuery = $templatetable->find()
-                    ->where(['id' => $template_id])
-                    ->first();
+                ->where(['id' => $template_id])
+                ->first();
 
             $campaign_id = $schedQuery->campaign_id;
             $table = $this->getTableLocator()->get('CampaignForms');
             $CampaignForm = $table->find()
-                    ->where(['campaign_id' => $campaign_id])
-                    ->all();
+                ->where(['campaign_id' => $campaign_id])
+                ->all();
 
             $formarray = [];
 
@@ -380,7 +588,8 @@ class ApisController extends AppController {
         }
     }
 
-    function uploadfile() {
+    function uploadfile()
+    {
         $this->viewBuilder()->setLayout('ajax');
         $file = $_FILES;
         $data = $this->request->getData();
@@ -413,7 +622,8 @@ class ApisController extends AppController {
         $this->set('result', $result);
     }
 
-    function _uploadtofb($file) { //to be fixed by adding $FBSettings vars. 
+    function _uploadtofb($file)
+    { //to be fixed by adding $FBSettings vars. 
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -427,7 +637,7 @@ class ApisController extends AppController {
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => array('file' => new \CURLFILE($file['file']['tmp_name'], $file['file']['type'], 'file'), 'messaging_product' => 'whatsapp'),
             CURLOPT_HTTPHEADER => array(
-//                'Content-Type: application/json',
+                //                'Content-Type: application/json',
                 'Authorization: Bearer ' . $this->_getAccountSettings('ACCESSTOKENVALUE')
             ),
         ));
@@ -445,7 +655,8 @@ class ApisController extends AppController {
         }
     }
 
-    function _processInteractive($input, $FBSettings) {
+    function _processInteractive($input, $FBSettings)
+    {
 
         $postarray = json_decode(file_get_contents('php://input'), true);
         $this->writeinteractive($postarray, "input array ");
@@ -475,7 +686,7 @@ class ApisController extends AppController {
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
                 'APIKEY: ' . $APIKEY,
-            //  'Cookie: CAKEPHP=rn8u792v5kqp6n3lic5m43ejvc'
+                //  'Cookie: CAKEPHP=rn8u792v5kqp6n3lic5m43ejvc'
             ),
         ));
 
@@ -494,7 +705,8 @@ class ApisController extends AppController {
 
 
 
-    function writeinteractive($data, $type = null) {
+    function writeinteractive($data, $type = null)
+    {
         $file = LOGS . 'GrandInt' . '.log';
         #  $data =json_encode($event)."\n";  
         $time = date("Y-m-d H:i:s", time());
@@ -532,7 +744,8 @@ class ApisController extends AppController {
     //     }
     // }
 
-    function sendmsg() {
+    function sendmsg()
+    {
         // debug("Send Schdule");
         $this->viewBuilder()->setLayout('ajax');
         $this->writelog("Whatsapp Schedule function hit", null);
@@ -573,11 +786,12 @@ class ApisController extends AppController {
         }
     }
 
-    function chargeMe($stream_id) {
+    function chargeMe($stream_id)
+    {
         $steam_table = $this->getTableLocator()->get('Streams');
         $streaQuery = $steam_table->find()
-                ->where(['id' => $stream_id])
-                ->first();
+            ->where(['id' => $stream_id])
+            ->first();
         //   debug($streaQuery);
         //check current stauts of this account.
     }

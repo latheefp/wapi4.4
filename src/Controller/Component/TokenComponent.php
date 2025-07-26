@@ -32,6 +32,7 @@ class TokenComponent extends Component
            // $decoded = JWT::decode($token, $this->key, 'HS256');
             $decoded = JWT::decode($token, new Key($this->key, 'HS256'));
             // Perform additional validation if needed
+           // debug($decoded);
             return $decoded;
             
         } catch (\Exception $e) {
